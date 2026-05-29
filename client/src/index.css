@@ -1,0 +1,85 @@
+@import 'tailwindcss';
+
+/* 
+  Phase 6: Industrial Cyber-Minimalism 
+  STRICT AESTHETIC ENFORCEMENT
+*/
+
+@theme {
+  /* Fonts */
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  
+  /* Backgrounds: Deep obsidian and rich slate */
+  --color-obsidian: #0B0F19;
+  --color-slate-950: #020617;
+  --color-slate-900: #0f172a;
+  --color-slate-800: #1e293b;
+  
+  /* Accents: Matte digital cyan & High-vis orange */
+  --color-cyber-cyan: #06B6D4;
+  --color-cyber-cyan-hover: #0891b2;
+  --color-cyber-orange: #F97316;
+  --color-cyber-orange-hover: #ea580c;
+
+  /* Text colors */
+  --color-text-primary: #f1f5f9;
+  --color-text-muted: #94a3b8;
+  --color-text-disabled: #475569;
+
+  /* Borders */
+  --color-border-sharp: #1e293b;
+  --color-border-cyan: #06B6D4;
+}
+
+@layer base {
+  body {
+    @apply bg-obsidian text-text-primary font-sans antialiased selection:bg-cyber-cyan selection:text-obsidian;
+    /* Absolute ban on gradients - background must be flat */
+    background-image: none !important;
+  }
+  
+  /* Razor-sharp elements default to 0px border-radius, except where expressly needed */
+  * {
+    border-radius: 0;
+  }
+  
+  /* Allow max 4px for buttons/cards to stay within the <8px ban */
+  .rounded-sm { border-radius: 2px !important; }
+  .rounded { border-radius: 4px !important; }
+  .rounded-md { border-radius: 4px !important; }
+  .rounded-lg { border-radius: 6px !important; }
+  .rounded-xl { border-radius: 8px !important; }
+  .rounded-2xl { border-radius: 8px !important; } /* Cap at 8px */
+  .rounded-3xl { border-radius: 8px !important; } /* Cap at 8px */
+  .rounded-full { border-radius: 8px !important; } /* Cap at 8px - no pills */
+
+  /* Ban generic neon glows & drop shadows */
+  .shadow-sm, .shadow, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl {
+    box-shadow: none !important;
+  }
+}
+
+@layer components {
+  /* Common UI Elements */
+  .card-sharp {
+    @apply bg-slate-950 border border-border-sharp p-6;
+  }
+  
+  .btn-primary {
+    @apply bg-cyber-cyan text-obsidian px-4 py-2 font-bold tracking-wide transition-colors hover:bg-cyber-cyan-hover border border-transparent disabled:bg-slate-800 disabled:text-text-disabled disabled:cursor-not-allowed;
+  }
+  
+  .btn-outline {
+    @apply border border-cyber-cyan text-cyber-cyan px-4 py-2 font-bold tracking-wide transition-colors hover:bg-cyber-cyan hover:text-obsidian disabled:border-slate-800 disabled:text-text-disabled disabled:hover:bg-transparent disabled:cursor-not-allowed;
+  }
+
+  .input-sharp {
+    @apply w-full bg-slate-900 border border-border-sharp px-4 py-2 text-text-primary focus:outline-none focus:border-cyber-cyan transition-colors placeholder:text-text-disabled;
+  }
+
+  /* Utility class to enforce JetBrains Mono for IDs, pricing, data */
+  .font-data {
+    @apply font-mono tracking-wider;
+  }
+}

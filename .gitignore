@@ -1,0 +1,72 @@
+# ============================================================
+# ACE ERP — Comprehensive .gitignore
+# ============================================================
+# Structure: /server (Express/Node) + /client (React/Vite)
+# Each service owns its own .env — never store secrets at root.
+# ============================================================
+
+# --- SECRETS (CRITICAL — never tracked, anywhere in the tree) ---
+**/.env
+**/.env.local
+**/.env.*.local
+*.pem
+*.key
+
+# --- Node ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnp
+.pnp.js
+.agents/
+docs/
+# --- Build Outputs ---
+dist/
+build/
+.next/
+out/
+.vite/
+
+# --- Coverage & Testing ---
+coverage/
+.nyc_output/
+
+# --- Logs ---
+logs/
+*.log
+
+# --- Runtime / Cache ---
+.cache/
+.parcel-cache/
+.turbo/
+.eslintcache
+*.tsbuildinfo
+
+# --- OS Artifacts ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- IDE & Editor ---
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# --- Docker ---
+*.env.docker
+
+# --- Uploads / Temp Files ---
+uploads/
+tmp/
+temp/
+
+# --- BullMQ / Redis Dumps ---
+dump.rdb
+*.md
+!README.md
