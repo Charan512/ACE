@@ -1,60 +1,35 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { LogOut, User as UserIcon } from 'lucide-react';
-import useAuthStore from '../store/useAuthStore';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
-  const { isAuthenticated, user, logout } = useAuthStore();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border-sharp bg-obsidian/95 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link to="/" className="flex items-center gap-2">
-          {/* Strict digital cyan accents as per blueprint */}
-          <div className="flex h-8 w-8 items-center justify-center bg-cyber-cyan font-mono font-bold text-obsidian">
-            ACE
-          </div>
-          <span className="font-bold tracking-tight text-text-primary">ERP</span>
+    <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
+      <nav className="bg-white/90 backdrop-blur-md shadow-md rounded-full px-6 py-3 flex items-center justify-between w-full max-w-4xl border border-slate-100">
+        
+        {/* Brand */}
+        <Link to="/" className="text-xl font-heading font-bold tracking-tight text-slate-900">
+          SRKR <span className="text-primary">ACE</span>
         </Link>
 
-        <div className="flex items-center gap-4">
-          {isAuthenticated ? (
-            <>
-              {user?.role === 'admin' && (
-                <Link to="/admin" className="text-sm font-bold text-cyber-orange hover:text-cyber-orange-hover">
-                  Admin Panel
-                </Link>
-              )}
-              <Link
-                to="/dashboard"
-                className="flex items-center gap-2 text-sm font-medium text-text-muted hover:text-text-primary"
-              >
-                <UserIcon className="h-4 w-4" />
-                <span className="font-data hidden sm:inline-block">
-                  {user?.aceId || 'MEMBER'}
-                </span>
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="btn-outline p-2"
-                title="Logout"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
-            </>
-          ) : (
-            <Link to="/login" className="btn-primary">
-              Sign In
-            </Link>
-          )}
+        {/* Links (Desktop) */}
+        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+          <a href="/#about" className="hover:text-primary transition-colors">About</a>
+          <a href="/#department" className="hover:text-primary transition-colors">Department</a>
+          <a href="/#faculty" className="hover:text-primary transition-colors">Faculty</a>
+          <a href="/#gallery" className="hover:text-primary transition-colors">Gallery</a>
+          <a href="#contact" className="hover:text-primary transition-colors">Contact</a>
         </div>
-      </div>
-    </nav>
+
+        {/* Actions */}
+        <div className="flex items-center gap-4">
+          <Link to="/team" className="btn-primary text-sm py-1.5 px-5">
+            Team
+          </Link>
+          <Link to="/dashboard" className="text-sm font-semibold text-primary hover:text-primary-hover hidden sm:block">
+            Member Login
+          </Link>
+        </div>
+      </nav>
+    </div>
   );
 };
 

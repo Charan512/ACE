@@ -15,8 +15,8 @@ import rateLimit from 'express-rate-limit';
 import paymentRoutes from './routes/payment.routes.js';
 import certRoutes from './routes/certificate.routes.js';
 // import authRoutes from './routes/auth.routes.js';    ← Phase auth
-// import eventRoutes from './routes/event.routes.js';  ← Phase 6
-// import userRoutes from './routes/user.routes.js';    ← Phase 6
+import eventRoutes from './routes/event.routes.js';
+import userRoutes from './routes/user.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -66,8 +66,8 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/payments', paymentRoutes);
 app.use('/api/certificates', certRoutes);
 // app.use('/api/auth', authRoutes);         ← activated in auth phase
-// app.use('/api/events', eventRoutes);      ← Phase 6
-// app.use('/api/users', userRoutes);        ← Phase 6
+app.use('/api/events', eventRoutes);
+app.use('/api/users', userRoutes);
 
 // ── 404 Handler ──────────────────────────────────────────────
 app.use((_req, res) => {

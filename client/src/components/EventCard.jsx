@@ -1,7 +1,7 @@
 import { Calendar, MapPin, Tag } from 'lucide-react';
 
 const EventCard = ({ event, onRegister }) => {
-  const { title, description, eventDate, location, tags, isRegistrationOpen, memberFee, nonMemberFee } = event;
+  const { title, description, eventDate, venue, tags, isRegistrationOpen, memberFee, nonMemberFee } = event;
 
   const dateObj = new Date(eventDate);
   const formattedDate = dateObj.toLocaleDateString('en-GB', {
@@ -36,7 +36,7 @@ const EventCard = ({ event, onRegister }) => {
           </div>
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4" />
-            <span>{location}</span>
+            <span>{venue || 'TBA'}</span>
           </div>
         </div>
       </div>

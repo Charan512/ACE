@@ -12,8 +12,8 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-obsidian">
-        <Loader2 className="h-8 w-8 animate-spin text-cyber-cyan" />
+      <div className="flex h-screen w-full items-center justify-center bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }

@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
 import GuestPortal from './pages/GuestPortal';
+import TeamDirectory from './pages/TeamDirectory';
 import Login from './pages/Login';
 import MemberDashboard from './pages/MemberDashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -12,7 +13,7 @@ import AdminDashboard from './pages/AdminDashboard';
 // Layout with Navbar
 const MainLayout = () => {
   return (
-    <div className="flex min-h-screen flex-col bg-obsidian">
+    <div className="flex min-h-screen flex-col bg-background">
       <Navbar />
       <div className="flex-1">
         <Outlet />
@@ -39,6 +40,7 @@ function App() {
         {/* Public Routes */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<GuestPortal />} />
+          <Route path="/team" element={<TeamDirectory />} />
           <Route path="/login" element={<Login />} />
           
           {/* Protected Member Routes */}

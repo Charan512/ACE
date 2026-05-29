@@ -9,11 +9,11 @@ const useAuthStore = create((set, get) => ({
   user: null,
   token: localStorage.getItem('ace_token') || null,
   isAuthenticated: !!localStorage.getItem('ace_token'),
-  isLoading: true, // True initially until we verify the token with the backend
+  isLoading: !!localStorage.getItem('ace_token'), // Only load if we have a token to verify
 
   login: (token, user) => {
     localStorage.setItem('ace_token', token);
-    set({ token, user, isAuthenticated: true });
+    set({ token, user, isAuthenticated: true, isLoading: false });
   },
 
   logout: () => {
