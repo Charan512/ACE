@@ -58,7 +58,23 @@
     @apply w-full bg-surface border border-border-light px-4 py-2.5 rounded-xl text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-text-muted;
   }
 
+  .input-modern {
+    @apply w-full bg-surface border border-border-light px-4 py-2.5 rounded-xl text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-text-muted;
+  }
+
   .font-data {
     @apply font-mono tracking-wider;
   }
 }
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+@layer utilities {
+  .animate-marquee {
+    animation: marquee 25s linear infinite;
+  }
+}
+
