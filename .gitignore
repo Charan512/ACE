@@ -70,3 +70,4 @@ temp/
 dump.rdb
 *.md
 !README.md
+scripts/

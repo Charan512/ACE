@@ -35,3 +35,62 @@ export const getMyVault = catchAsync(async (req, res, next) => {
     data: vault,
   });
 });
+
+/**
+ * @desc    Get all users with basic filtering (Admin Only)
+ * @route   GET /api/users
+ * @access  Private (Admin Only)
+ */
+export const getAllUsers = catchAsync(async (req, res, next) => {
+  const filter = {};
+
+  if (req.query.role) {
+    filter.role = req.query.role;
+  }
+
+  const users = await User.find(filter).select('-password');
+
+  res.status(200).json({
+    success: true,
+    data: { users },
+  });
+});
+
+/**
+ * @desc    Update a user's role (Admin Only)
+ * @route   PATCH /api/users/:id/role
+ * @access  Private (Admin Only)
+ */
+export const updateUserRole = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  let { role } = req.body;
+
+  if (!role) {
+    return next(new AppError('Role is required.', 400));
+  }
+
+  // Map ebm or sbm to the schema-supported body_member role
+  if (role === 'ebm' || role === 'sbm') {
+    role = 'body_member';
+  }
+
+  const validRoles = ['admin', 'body_member', 'member', 'guest'];
+  if (!validRoles.includes(role)) {
+    return next(new AppError('Invalid role specified.', 400));
+  }
+
+  const user = await User.findByIdAndUpdate(
+    id,
+    { role },
+    { new: true, runValidators: true }
+  ).select('-password');
+
+  if (!user) {
+    return next(new AppError('User not found.', 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    data: { user },
+  });
+});

@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react';
  * ProtectedRoute component wraps routes that require authentication.
  * Optional `allowedRoles` array restricts access further.
  */
-const ProtectedRoute = ({ allowedRoles = [] }) => {
+const ProtectedRoute = ({ allowedRoles = [], allowPasswordChangePending = false }) => {
   const { isAuthenticated, isLoading, user } = useAuthStore();
   const location = useLocation();
 
@@ -21,6 +21,16 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
   if (!isAuthenticated) {
     // Redirect to login but save the attempted URL so we can return them later
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // If password change is forced/pending, and this route is NOT the password change handler, redirect to it.
+  if (user?.requiresPasswordChange && !allowPasswordChangePending) {
+    return <Navigate to="/force-password-change" replace />;
+  }
+
+  // If password change is NOT pending, and the user tries to access /force-password-change, send them to dashboard.
+  if (!user?.requiresPasswordChange && allowPasswordChangePending) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   // If roles are specified, check if user has permission

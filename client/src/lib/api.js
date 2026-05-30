@@ -1,4 +1,5 @@
 import axios from 'axios';
+import useAuthStore from '../store/useAuthStore';
 
 // Create a configured axios instance
 const api = axios.create({
@@ -11,7 +12,7 @@ const api = axios.create({
 // Request interceptor: attach JWT token to every request if it exists
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('ace_token');
+    const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

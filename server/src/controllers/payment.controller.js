@@ -158,7 +158,7 @@ const handleOrderPaid = async (payload) => {
         // ── Queue welcome email with temp credentials ──────────
         // Email sent via BullMQ email queue (Phase 5)
         console.log(
-          `[Webhook] New member created: ${aceId} | ${notes.guestEmail} | TempPwd: ${tempPassword}`
+          `[Webhook] New member created: ${aceId} | ${notes.guestEmail}`
         );
         await emailQueue.add('welcomeEmail', { userId: newUser._id, aceId, tempPassword });
 

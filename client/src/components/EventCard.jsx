@@ -1,6 +1,6 @@
-import { Calendar, MapPin, Tag } from 'lucide-react';
+import { Calendar, MapPin, Tag, Loader2 } from 'lucide-react';
 
-const EventCard = ({ event, onRegister }) => {
+const EventCard = ({ event, onRegister, isRegistering = false }) => {
   const { title, description, eventDate, venue, tags, isRegistrationOpen, memberFee, nonMemberFee } = event;
 
   const dateObj = new Date(eventDate);
@@ -57,10 +57,15 @@ const EventCard = ({ event, onRegister }) => {
 
         <button 
           onClick={() => onRegister(event._id)}
-          disabled={!isRegistrationOpen}
+          disabled={!isRegistrationOpen || isRegistering}
           className="btn-primary w-full"
         >
-          {isRegistrationOpen ? 'SECURE TICKET' : 'REGISTRATION CLOSED'}
+          {isRegistering ? (
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              PROCESSING...
+            </span>
+          ) : isRegistrationOpen ? 'SECURE TICKET' : 'REGISTRATION CLOSED'}
         </button>
       </div>
     </div>

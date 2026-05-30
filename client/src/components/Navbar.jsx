@@ -49,7 +49,7 @@ const Navbar = () => {
 
         {/* Actions */}
         <div className="flex items-center gap-4">
-          <Link to="/team" className="btn-outline text-sm py-1.5 px-5 shadow-sm">
+          <Link to="/team" className="btn-outline text-sm py-1.5 px-5 shadow-sm hidden sm:block">
             Team
           </Link>
           <Link to="/login" className="btn-primary text-sm py-1.5 px-5 shadow-sm">
