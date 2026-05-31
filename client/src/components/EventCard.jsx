@@ -1,7 +1,8 @@
 import { Calendar, MapPin, Tag, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const EventCard = ({ event, onRegister, isRegistering = false }) => {
-  const { title, description, eventDate, venue, tags, isRegistrationOpen, memberFee, nonMemberFee } = event;
+  const { title, description, eventDate, venue, tags, isRegistrationOpen, memberFee, standardFee } = event;
 
   const dateObj = new Date(eventDate);
   const formattedDate = dateObj.toLocaleDateString('en-GB', {
@@ -21,9 +22,11 @@ const EventCard = ({ event, onRegister, isRegistering = false }) => {
           ))}
         </div>
 
-        <h3 className="mb-2 text-xl font-bold leading-tight text-text-primary">
-          {title}
-        </h3>
+        <Link to={`/events/${event._id}`}>
+          <h3 className="mb-2 text-xl font-bold leading-tight text-text-primary hover:text-blue-600 hover:underline transition-colors">
+            {title}
+          </h3>
+        </Link>
         
         <p className="mb-6 line-clamp-3 text-sm text-text-muted">
           {description}
@@ -46,12 +49,12 @@ const EventCard = ({ event, onRegister, isRegistering = false }) => {
         <div className="mb-4 flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <span className="text-sm font-bold text-text-muted">GUEST PASS</span>
-            <span className="font-data text-lg text-text-primary">₹{(nonMemberFee / 100).toLocaleString('en-IN')}</span>
+            <span className="font-data text-lg text-text-primary">₹{standardFee}</span>
           </div>
           {/* Member Pricing Highlight */}
           <div className="flex items-center justify-between bg-cyber-cyan/10 px-2 py-1 border border-cyber-cyan/30">
             <span className="text-xs font-bold text-cyber-cyan">ACE MEMBER PASS</span>
-            <span className="font-data font-bold text-cyber-cyan">₹{(memberFee / 100).toLocaleString('en-IN')}</span>
+            <span className="font-data font-bold text-cyber-cyan">₹{memberFee}</span>
           </div>
         </div>
 

@@ -114,6 +114,16 @@ const eventSchema = new mongoose.Schema(
       type: String, // R2 public URL for the event banner
       default: null,
     },
+    posterImage: {
+      type: String, // A4 aspect ratio horizontal image
+      default: null,
+    },
+    coordinators: [
+      {
+        name: { type: String, required: true },
+        phone: { type: String, required: true }
+      }
+    ],
     venue: {
       type: String,
       trim: true,
@@ -137,17 +147,17 @@ const eventSchema = new mongoose.Schema(
     /**
      * Amount in PAISE (₹1 = 100 paise) to match Razorpay's native unit.
      * memberFee:    price for users with role 'member' or 'body_member'
-     * nonMemberFee: price for guests or non-members
+     * standardFee: price for guests or non-members
      */
     memberFee: {
       type: Number,
       required: [true, 'Member fee is required.'],
       min: [0, 'Member fee cannot be negative.'],
     },
-    nonMemberFee: {
+    standardFee: {
       type: Number,
-      required: [true, 'Non-member fee is required.'],
-      min: [0, 'Non-member fee cannot be negative.'],
+      required: [true, 'Standard fee is required.'],
+      min: [0, 'Standard fee cannot be negative.'],
     },
 
     // ── Capacity ───────────────────────────────────────────

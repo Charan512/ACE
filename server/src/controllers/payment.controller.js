@@ -256,7 +256,7 @@ export const createOrder = catchAsync(async (req, res, next) => {
   // ── Determine pricing tier ─────────────────────────────────
   const isMember = currentUser && ['member', 'body_member', 'admin'].includes(currentUser.role);
   const tier = isMember ? 'member' : 'non_member';
-  const amount = isMember ? event.memberFee : event.nonMemberFee; // already in paise
+  const amount = (isMember ? event.memberFee : event.standardFee) * 100; // convert INR to paise for Razorpay
 
   // ── Create Razorpay order ──────────────────────────────────
   const razorpayOrder = await razorpay.orders.create({

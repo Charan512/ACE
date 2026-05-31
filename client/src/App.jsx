@@ -12,6 +12,8 @@ import TeamDirectory from './pages/TeamDirectory';
 import Registration from './pages/Registration';
 import Login from './pages/Login';
 import MemberDashboard from './pages/MemberDashboard';
+import GuestCheckout from './pages/GuestCheckout';
+import EventDetailPage from './pages/EventDetailPage';
 import AdminDashboard from './pages/AdminDashboard';
 import ForcePasswordChange from './pages/ForcePasswordChange';
 
@@ -57,9 +59,11 @@ function App() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<GuestPortal />} />
           <Route path="/events" element={<EventsPage />} />
+          <Route path="/events/:eventId" element={<EventDetailPage />} />
           <Route path="/team" element={<TeamDirectory />} />
           <Route path="/register" element={<Registration />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/events/checkout/:eventId" element={<GuestCheckout />} />
 
           {/* Protected Member Routes */}
           <Route element={<ProtectedRoute />}>

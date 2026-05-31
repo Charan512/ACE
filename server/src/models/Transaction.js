@@ -79,7 +79,7 @@ const transactionSchema = new mongoose.Schema(
     /**
      * The pricing tier applied to this transaction.
      * 'member'     → memberFee was charged
-     * 'non_member' → nonMemberFee was charged
+     * 'non_member' → standardFee was charged
      */
     tier: {
       type: String,

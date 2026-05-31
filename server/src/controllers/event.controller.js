@@ -22,7 +22,7 @@ const sanitizeEventUpdate = (body) => {
     'venue',
     'bannerImage',
     'memberFee',
-    'nonMemberFee',
+    'standardFee',
     'maxCapacity',
     'certificateTemplate',
     'tags',
@@ -113,7 +113,7 @@ export const getEventById = catchAsync(async (req, res, next) => {
  * Creates a new club event.
  * Admin / Body Member only — enforced by `restrictTo` in the route layer.
  *
- * Required fields:  title, eventDate, memberFee, nonMemberFee
+ * Required fields:  title, eventDate, memberFee, standardFee
  * Optional fields:  description, venue, registrationDeadline, maxCapacity,
  *                   bannerImage, certificateTemplate, tags
  *
@@ -129,7 +129,7 @@ export const createEvent = catchAsync(async (req, res, next) => {
     venue,
     bannerImage,
     memberFee,
-    nonMemberFee,
+    standardFee,
     maxCapacity,
     certificateTemplate,
     tags,
@@ -141,18 +141,18 @@ export const createEvent = catchAsync(async (req, res, next) => {
   }
 
   if (memberFee === undefined || memberFee === null) {
-    return next(new AppError('memberFee is required (in paise).', 400));
+    return next(new AppError('memberFee is required (in INR).', 400));
   }
 
-  if (nonMemberFee === undefined || nonMemberFee === null) {
-    return next(new AppError('nonMemberFee is required (in paise).', 400));
+  if (standardFee === undefined || standardFee === null) {
+    return next(new AppError('standardFee is required (in INR).', 400));
   }
 
   // ── Fee sanity check ──────────────────────────────────────
-  // nonMemberFee should never be cheaper than memberFee (would defeat the purpose)
-  if (Number(nonMemberFee) < Number(memberFee)) {
+  // standardFee should never be cheaper than memberFee (would defeat the purpose)
+  if (Number(standardFee) < Number(memberFee)) {
     return next(
-      new AppError('nonMemberFee cannot be less than memberFee.', 400)
+      new AppError('standardFee cannot be less than memberFee.', 400)
     );
   }
 
@@ -175,7 +175,7 @@ export const createEvent = catchAsync(async (req, res, next) => {
     venue,
     bannerImage,
     memberFee: Number(memberFee),
-    nonMemberFee: Number(nonMemberFee),
+    standardFee: Number(standardFee),
     maxCapacity: maxCapacity ? Number(maxCapacity) : null,
     certificateTemplate: certificateTemplate || null,
     tags: Array.isArray(tags) ? tags : [],
@@ -232,9 +232,9 @@ export const updateEvent = catchAsync(async (req, res, next) => {
 
   // ── Fee sanity check if both are being updated ────────────
   const newMemberFee   = updates.memberFee   !== undefined ? Number(updates.memberFee)    : event.memberFee;
-  const newNonMemberFee = updates.nonMemberFee !== undefined ? Number(updates.nonMemberFee) : event.nonMemberFee;
+  const newNonMemberFee = updates.standardFee !== undefined ? Number(updates.standardFee) : event.standardFee;
   if (newNonMemberFee < newMemberFee) {
-    return next(new AppError('nonMemberFee cannot be less than memberFee.', 400));
+    return next(new AppError('standardFee cannot be less than memberFee.', 400));
   }
 
   // ── Apply update atomically ───────────────────────────────
