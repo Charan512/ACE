@@ -30,7 +30,7 @@ const EventDetailPage = () => {
 
   const handleRegistrationClick = () => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate('/member/dashboard');
     } else {
       setIsInterceptModalOpen(true);
     }

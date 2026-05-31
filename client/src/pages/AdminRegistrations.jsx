@@ -8,6 +8,7 @@ import {
   Clock,
   Users,
   Search,
+  Download,
 } from 'lucide-react';
 import api from '../lib/api';
 
@@ -123,6 +124,37 @@ const AdminRegistrations = () => {
   const confirmed = registrations.filter((r) => r.status === 'confirmed').length;
   const pending = registrations.filter((r) => r.status === 'pending').length;
 
+  // ── Export to CSV ─────────────────────────────────────────
+  const handleExportCSV = () => {
+    if (!filtered.length) return;
+    
+    const headers = ['Name', 'Phone', 'Email', 'ACE ID', 'Tier', 'Status', 'Registered At'];
+    
+    const rows = filtered.map(reg => {
+      const name = reg.name || reg.userId?.name || '';
+      const phone = reg.phone || reg.userId?.phone || '';
+      const email = reg.email || reg.userId?.email || '';
+      const aceId = reg.userId?.aceId || '';
+      const tier = reg.tier || '';
+      const status = reg.status || '';
+      const date = formatDateTime(reg.createdAt);
+      
+      // Escape commas by wrapping in quotes
+      return [name, phone, email, aceId, tier, status, date].map(val => `"${val}"`).join(',');
+    });
+    
+    const csvContent = [headers.join(','), ...rows].join('\\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${selectedEventTitle.replace(/\\s+/g, '_')}_Registrations.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="px-6 py-8 max-w-6xl mx-auto">
 
@@ -135,32 +167,44 @@ const AdminRegistrations = () => {
       </div>
 
       {/* ── Event Selector ───────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-6">
-        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
-          Select Active Event
-        </label>
-        {eventsLoading ? (
-          <div className="flex items-center gap-2 text-slate-400 py-2">
-            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-            <span className="text-sm">Loading events...</span>
-          </div>
-        ) : events.length === 0 ? (
-          <p className="text-sm text-red-500 font-semibold">No events found in the system.</p>
-        ) : (
-          <div className="relative max-w-md">
-            <select
-              value={selectedEventId}
-              onChange={handleEventChange}
-              className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer pr-10"
-            >
-              {events.map((ev) => (
-                <option key={ev._id} value={ev._id}>
-                  {ev.title} {ev.isActive ? '• LIVE' : '• Inactive'}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-          </div>
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="flex-1 w-full max-w-md">
+          <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
+            Select Active Event
+          </label>
+          {eventsLoading ? (
+            <div className="flex items-center gap-2 text-slate-400 py-2">
+              <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+              <span className="text-sm">Loading events...</span>
+            </div>
+          ) : events.length === 0 ? (
+            <p className="text-sm text-red-500 font-semibold">No events found in the system.</p>
+          ) : (
+            <div className="relative">
+              <select
+                value={selectedEventId}
+                onChange={handleEventChange}
+                className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer pr-10"
+              >
+                {events.map((ev) => (
+                  <option key={ev._id} value={ev._id}>
+                    {ev.title} {ev.isActive ? '• LIVE' : '• Inactive'}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
+          )}
+        </div>
+        
+        {selectedEventId && !regsLoading && filtered.length > 0 && (
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-sm transition-colors cursor-pointer h-[46px] shrink-0"
+          >
+            <Download className="w-4 h-4" />
+            Export to CSV
+          </button>
         )}
       </div>
 

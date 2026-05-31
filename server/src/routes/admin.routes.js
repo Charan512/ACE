@@ -30,9 +30,10 @@ router
   .get(getAdminEvents)
   .post(createEvent);
 
-// PATCH /api/admin/events/:id          → update event details
+// PUT /api/admin/events/:id          → full update event details (editing)
 // PATCH /api/admin/events/:id/toggle   → flip isActive status
 router.patch('/events/:id', updateEvent);
+router.put('/events/:id', updateEvent);
 router.patch('/events/:id/toggle', toggleEventStatus);
 
 // ── Registration Management ───────────────────────────────────

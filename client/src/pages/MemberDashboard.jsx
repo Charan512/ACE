@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import useAuthStore from '../store/useAuthStore';
 import DigitalIdCard from '../components/DigitalIdCard';
 import EventCard from '../components/EventCard';
-import { Download, ShieldCheck, CheckCircle, XCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { Download, ShieldCheck, CheckCircle, XCircle, Loader2, Calendar, TerminalSquare, AlertTriangle } from 'lucide-react';
 import api from '../lib/api';
 
 // ─────────────────────────────────────────────────────────────
@@ -13,10 +13,10 @@ const Toast = ({ toast }) => {
   const isSuccess = toast.type === 'success';
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 flex items-start gap-3 max-w-sm w-full p-4 rounded-xl shadow-2xl border transition-all
+      className={`fixed bottom-6 right-6 z-50 flex items-start gap-3 max-w-sm w-full p-4 rounded-xl shadow-2xl border transition-all backdrop-blur-md
         ${isSuccess
-          ? 'bg-slate-900 border-cyber-cyan/40 text-cyber-cyan'
-          : 'bg-slate-900 border-red-500/40 text-red-400'
+          ? 'bg-emerald-950/80 border-emerald-500/30 text-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.1)]'
+          : 'bg-red-950/80 border-red-500/30 text-red-400 shadow-[0_0_20px_rgba(248,113,113,0.1)]'
         }`}
     >
       {isSuccess
@@ -38,10 +38,6 @@ const MemberDashboard = () => {
   const [vaultEvents, setVaultEvents]       = useState([]);
   const [loading, setLoading]               = useState(true);
 
-  // Profile Update State
-  const [collegeIdInput, setCollegeIdInput] = useState('');
-  const [isSubmittingProfile, setIsSubmittingProfile] = useState(false);
-
   // Per-event loading states to disable individual buttons while in-flight
   const [registeringId, setRegisteringId]   = useState(null); // eventId being registered
   const [downloadingId, setDownloadingId]   = useState(null); // eventId being downloaded
@@ -53,22 +49,6 @@ const MemberDashboard = () => {
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  const handleProfileUpdate = async (e) => {
-    e.preventDefault();
-    if (!collegeIdInput.trim()) return;
-
-    setIsSubmittingProfile(true);
-    try {
-      await updateProfile({ collegeId: collegeIdInput.trim() });
-      showToast('Profile updated successfully.', 'success');
-    } catch (err) {
-      console.error('[Dashboard] Profile update failed:', err.message);
-      showToast(err.response?.data?.message || 'Failed to update profile.', 'error');
-    } finally {
-      setIsSubmittingProfile(false);
-    }
   };
 
   // ── Data Fetching ────────────────────────────────────────
@@ -105,17 +85,6 @@ const MemberDashboard = () => {
   }, [user, fetchVault]);
 
   // ── Event Registration ───────────────────────────────────
-  /**
-   * Handles ticket purchase flow.
-   *
-   * DEV MODE (import.meta.env.DEV === true):
-   *   Skips Razorpay entirely, simulates a 1-second delay, then shows a
-   *   success banner. Useful for testing the dashboard without live Razorpay keys.
-   *
-   * PROD MODE:
-   *   Creates a Razorpay order via POST /api/payments/order, then opens the
-   *   Razorpay checkout modal. On payment success, refreshes the vault.
-   */
   const handleRegister = async (eventId) => {
     if (registeringId) return; // Prevent double-click
     setRegisteringId(eventId);
@@ -125,7 +94,6 @@ const MemberDashboard = () => {
         // ── DEV BYPASS ─────────────────────────────────────
         await new Promise((resolve) => setTimeout(resolve, 1000));
         showToast('[DEV MODE] Payment bypassed. Registration confirmed.', 'success');
-        // In dev, we don't actually update the DB, so no vault refresh needed.
         return;
       }
 
@@ -142,7 +110,7 @@ const MemberDashboard = () => {
           name: 'SRKR ACE',
           description: 'Event Registration',
           order_id: orderId,
-          theme: { color: '#00d4ff' },
+          theme: { color: '#3b82f6' }, // blue-500
           handler: async (response) => {
             // Payment succeeded — refresh vault so the new entry appears
             await fetchVault();
@@ -181,15 +149,6 @@ const MemberDashboard = () => {
   };
 
   // ── Certificate Download ─────────────────────────────────
-  /**
-   * Streams the PNG certificate from the backend and triggers a browser download.
-   *
-   * The backend generates it on-the-fly (zero-storage):
-   *   GET /api/certificates/download/:eventId
-   *
-   * We receive a binary blob, wrap it in a temporary object URL, click a
-   * synthetic anchor, then immediately revoke the URL to free memory.
-   */
   const handleDownloadCert = async (eventId, eventTitle) => {
     if (downloadingId) return;
     setDownloadingId(eventId);
@@ -199,7 +158,6 @@ const MemberDashboard = () => {
         responseType: 'blob',
       });
 
-      // Build a safe filename from the event title
       const safeTitle = (eventTitle || 'certificate')
         .replace(/[^a-zA-Z0-9_\- ]/g, '')
         .trim()
@@ -207,8 +165,6 @@ const MemberDashboard = () => {
         .substring(0, 50);
 
       const filename = `ACE_Certificate_${safeTitle}.png`;
-
-      // Create a temporary object URL and trigger the download
       const blobUrl = URL.createObjectURL(response.data);
       const anchor  = document.createElement('a');
       anchor.href     = blobUrl;
@@ -217,9 +173,7 @@ const MemberDashboard = () => {
       anchor.click();
       document.body.removeChild(anchor);
 
-      // Revoke the object URL immediately — frees the in-memory blob
       URL.revokeObjectURL(blobUrl);
-
       showToast('Certificate downloaded successfully.', 'success');
     } catch (err) {
       console.error('[Dashboard] Certificate download error:', err.message);
@@ -232,56 +186,41 @@ const MemberDashboard = () => {
     }
   };
 
-  // ── Render ───────────────────────────────────────────────
+  // ── Render ─────────────────────────────────────────
   return (
-    <div className="pt-20 pb-24 min-h-screen bg-obsidian">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-16">
+    <div className="pb-24 min-h-[calc(100vh-4rem)] bg-[#0a0a0a] text-slate-300">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-16">
 
-        {/* Profile Incomplete Warning Banner */}
-        {(!user?.collegeId) && (
-          <div className="bg-slate-900 border border-amber-500/40 rounded-[2rem] p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl shadow-amber-500/5">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-amber-400">
-                <AlertTriangle className="h-5 w-5 shrink-0" />
-                <h3 className="text-lg font-black tracking-tight uppercase">Profile Incomplete</h3>
+        {/* Profile Incomplete Warning Banner - TERMINAL STYLE */}
+        {(!user?.registrationNumber) && (
+          <div className="bg-black/50 border border-amber-500/30 rounded-xl p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-[0_0_20px_rgba(245,158,11,0.05)] backdrop-blur-sm relative overflow-hidden group">
+            {/* Subtle glow behind */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+            
+            <div className="flex items-start gap-4 relative z-10">
+              <div className="w-10 h-10 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(245,158,11,0.1)]">
+                <AlertTriangle className="h-5 w-5 text-amber-500 animate-pulse" />
               </div>
-              <p className="text-slate-400 text-sm leading-relaxed max-w-xl">
-                Your profile is missing a **College ID / Roll Number**. Please update this to ensure your member identity and event credentials generate correctly.
-              </p>
+              <div>
+                <h3 className="text-sm font-mono font-bold text-amber-500 tracking-wider">SYSTEM_WARNING: PROFILE_INCOMPLETE</h3>
+                <p className="text-xs text-amber-200/60 mt-1 max-w-md font-mono leading-relaxed">
+                  &gt; Roll Number and academic parameters missing.<br/>
+                  &gt; Required for accurate certificate generation.
+                </p>
+              </div>
             </div>
-            <form onSubmit={handleProfileUpdate} className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
-              <input
-                id="dashboard-college-id"
-                type="text"
-                required
-                className="bg-slate-950 border border-slate-800 focus:border-amber-500/50 focus:outline-none px-4 py-3 rounded-xl text-sm font-mono text-white placeholder:text-slate-600 min-w-[200px]"
-                placeholder="Enter College ID"
-                value={collegeIdInput}
-                onChange={(e) => setCollegeIdInput(e.target.value)}
-                disabled={isSubmittingProfile}
-              />
-              <button
-                id="dashboard-update-profile-btn"
-                type="submit"
-                disabled={isSubmittingProfile}
-                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3 rounded-xl text-sm transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {isSubmittingProfile ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-slate-955" />
-                ) : (
-                  'Update Profile'
-                )}
-              </button>
-            </form>
+            <a href="/member/profile" className="relative z-10 text-xs font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 hover:border-amber-500/50 px-5 py-2.5 rounded-lg transition-all shrink-0 hover:shadow-[0_0_15px_rgba(245,158,11,0.15)] flex items-center gap-2">
+              INITIATE_UPDATE <span className="text-amber-500/50">_</span>
+            </a>
           </div>
         )}
 
-        {/* ── Section 1: Member Passport ─────────────────── */}
+        {/* ── Section 1: Member Passport ───────────────────────── */}
         <section>
-          <div className="flex items-center gap-2 mb-6">
-            <ShieldCheck className="h-6 w-6 text-cyber-cyan" />
-            <h1 className="text-2xl font-bold tracking-tight text-text-primary">
-              MEMBER PASSPORT
+          <div className="flex items-center gap-3 mb-6">
+            <ShieldCheck className="h-5 w-5 text-blue-500" />
+            <h1 className="text-lg font-mono font-bold tracking-widest text-white uppercase">
+              Member_Passport
             </h1>
           </div>
           <DigitalIdCard
@@ -291,21 +230,21 @@ const MemberDashboard = () => {
 
         {/* ── Section 2: The Arena (Active Events) ────────── */}
         <section>
-          <h2 className="text-xl font-bold tracking-tight text-text-primary mb-6 border-b border-border-sharp pb-2">
-            THE ARENA (ACTIVE EVENTS)
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-800/50">
+            <TerminalSquare className="h-5 w-5 text-blue-500" />
+            <h2 className="text-lg font-mono font-bold tracking-widest text-white uppercase">
+              Active_Modules [Arena]
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {loading ? (
               <div className="col-span-full flex h-40 items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyber-cyan border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-md border-2 border-blue-500 border-t-transparent" />
               </div>
             ) : upcomingEvents.length === 0 ? (
-              <div className="col-span-full card-sharp text-center py-12 border-dashed border-border-sharp">
-                <p className="text-lg text-text-primary font-bold tracking-wider">
-                  NO UPCOMING EVENTS SCHEDULED RIGHT NOW
-                </p>
-                <p className="mt-2 text-text-muted font-data text-sm">
-                  CHECK BACK SOON FOR UPDATES.
+              <div className="col-span-full bg-slate-900/30 border border-dashed border-slate-800 rounded-xl text-center py-16">
+                <p className="text-sm text-slate-500 font-mono tracking-widest">
+                  &gt; NO_ACTIVE_MODULES_FOUND
                 </p>
               </div>
             ) : (
@@ -321,22 +260,22 @@ const MemberDashboard = () => {
           </div>
         </section>
 
-        {/* ── Section 3: The Vault (History & Certs) ──────── */}
+        {/* ── Section 3: Event History (The Vault) ───────────────── */}
         <section>
-          <h2 className="text-xl font-bold tracking-tight text-text-primary mb-6 border-b border-border-sharp pb-2">
-            THE VAULT (HISTORY)
-          </h2>
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-800/50">
+            <Calendar className="w-5 h-5 text-blue-500" />
+            <h2 className="text-lg font-mono font-bold tracking-widest text-white uppercase">
+              System_Vault [History]
+            </h2>
+          </div>
           {loading ? (
             <div className="flex h-40 items-center justify-center w-full">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyber-cyan border-t-transparent" />
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
             </div>
           ) : vaultEvents.length === 0 ? (
-            <div className="card-sharp text-center py-12 border-dashed border-border-sharp w-full">
-              <p className="text-lg text-text-primary font-bold tracking-wider">
-                VAULT IS EMPTY
-              </p>
-              <p className="mt-2 text-text-muted font-data text-sm">
-                ATTEND EVENTS TO UNLOCK SECURE CERTIFICATES.
+            <div className="bg-slate-900/30 border border-dashed border-slate-800 rounded-xl text-center py-16 w-full">
+              <p className="text-sm text-slate-500 font-mono tracking-widest">
+                &gt; VAULT_EMPTY
               </p>
             </div>
           ) : (
@@ -344,19 +283,20 @@ const MemberDashboard = () => {
               {vaultEvents.map((ev) => (
                 <div
                   key={ev._id}
-                  className="card-sharp flex flex-col justify-between h-44 group hover:border-cyber-cyan transition-colors"
+                  className="bg-slate-900/50 border border-slate-800 hover:border-blue-500/50 rounded-xl p-5 flex flex-col justify-between h-44 shadow-[0_0_0_rgba(37,99,235,0)] hover:shadow-[0_0_15px_rgba(37,99,235,0.1)] transition-all group relative overflow-hidden"
                 >
-                  <div>
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <ShieldCheck className="w-16 h-16 text-blue-500" />
+                  </div>
+                  <div className="relative z-10">
                     <h3
-                      className="font-bold text-text-primary truncate"
+                      className="font-bold text-white truncate group-hover:text-blue-400 transition-colors"
                       title={ev.title}
                     >
                       {ev.title}
                     </h3>
-                    <p className="font-data text-xs text-text-muted mt-2">
-                      {new Date(ev.eventDate).toLocaleDateString('en-GB', {
-                        day: '2-digit', month: 'short', year: 'numeric',
-                      })}
+                    <p className="text-[10px] text-slate-500 font-mono mt-2 tracking-widest uppercase">
+                      TS: {new Date(ev.eventDate).toISOString().slice(0, 10)}
                     </p>
                   </div>
 
@@ -364,17 +304,17 @@ const MemberDashboard = () => {
                     id={`download-cert-${ev._id}`}
                     onClick={() => handleDownloadCert(ev._id, ev.title)}
                     disabled={downloadingId === ev._id}
-                    className="flex items-center justify-between text-sm font-bold text-cyber-cyan opacity-80 group-hover:opacity-100 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="relative z-10 flex items-center justify-between text-xs font-mono font-bold text-slate-400 hover:text-blue-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed w-full mt-4"
                   >
                     {downloadingId === ev._id ? (
                       <>
-                        <span>GENERATING...</span>
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>&gt; GENERATING_</span>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       </>
                     ) : (
                       <>
-                        <span>DOWNLOAD CERT</span>
-                        <Download className="h-4 w-4" />
+                        <span>&gt; FETCH_CERT</span>
+                        <Download className="h-3.5 w-3.5" />
                       </>
                     )}
                   </button>
@@ -386,7 +326,7 @@ const MemberDashboard = () => {
 
       </div>
 
-      {/* Global Toast Notification */}
+      {/* Global Toast */}
       <Toast toast={toast} />
     </div>
   );

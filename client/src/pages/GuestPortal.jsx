@@ -31,7 +31,7 @@ const GuestPortal = () => {
 
   const handleRegistrationClick = (event) => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate('/member/dashboard');
     } else {
       setSelectedEvent(event);
       setIsInterceptModalOpen(true);

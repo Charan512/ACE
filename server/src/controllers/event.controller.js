@@ -21,10 +21,13 @@ const sanitizeEventUpdate = (body) => {
     'registrationDeadline',
     'venue',
     'bannerImage',
+    'posterImage',
+    'coordinators',
     'memberFee',
     'standardFee',
     'maxCapacity',
     'certificateTemplate',
+    'customFormFields',
     'tags',
     'isActive',
   ];
@@ -132,6 +135,7 @@ export const createEvent = catchAsync(async (req, res, next) => {
     standardFee,
     maxCapacity,
     certificateTemplate,
+    customFormFields,
     tags,
   } = req.body;
 
@@ -178,6 +182,7 @@ export const createEvent = catchAsync(async (req, res, next) => {
     standardFee: Number(standardFee),
     maxCapacity: maxCapacity ? Number(maxCapacity) : null,
     certificateTemplate: certificateTemplate || null,
+    customFormFields: Array.isArray(customFormFields) ? customFormFields : [],
     tags: Array.isArray(tags) ? tags : [],
     createdBy: req.user._id, // injected by `protect` middleware
   });

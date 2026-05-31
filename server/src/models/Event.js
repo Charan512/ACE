@@ -88,6 +88,41 @@ const certificateTemplateSchema = new mongoose.Schema(
   { _id: false }
 );
 
+/**
+ * A single admin-defined field in the event's dynamic registration form.
+ * Guests must fill these out; members bypass via Fast-Pass.
+ */
+const customFormFieldSchema = new mongoose.Schema(
+  {
+    // Human-readable label shown to the guest (e.g. "T-Shirt Size", "Roll Number")
+    fieldName: {
+      type: String,
+      required: [true, 'Field name is required.'],
+      trim: true,
+    },
+    // The HTML input type to render on the guest checkout form
+    fieldType: {
+      type: String,
+      enum: {
+        values: ['text', 'number', 'select', 'radio'],
+        message: '{VALUE} is not a valid field type.',
+      },
+      default: 'text',
+    },
+    // Whether the guest must provide an answer
+    required: {
+      type: Boolean,
+      default: false,
+    },
+    // Populated only for 'select' and 'radio' types
+    options: {
+      type: [String],
+      default: [],
+    },
+  },
+  { _id: false }
+);
+
 // ── Main Event Schema ─────────────────────────────────────────
 
 const eventSchema = new mongoose.Schema(
@@ -175,6 +210,17 @@ const eventSchema = new mongoose.Schema(
     certificateTemplate: {
       type: certificateTemplateSchema,
       default: null, // Not all events may have certificates
+    },
+
+    // ── Dynamic Guest Registration Form ────────────────────
+    /**
+     * Admin-defined custom fields that guests must fill on checkout.
+     * Members bypass these fields entirely (Fast-Pass).
+     * Each entry references `customFormFieldSchema` for shape validation.
+     */
+    customFormFields: {
+      type: [customFormFieldSchema],
+      default: [],
     },
 
     // ── Metadata ───────────────────────────────────────────

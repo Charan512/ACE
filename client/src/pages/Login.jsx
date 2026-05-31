@@ -28,7 +28,7 @@ const Login = () => {
       if (user.role === 'admin' || user.role === 'body_member') {
         navigate('/admin', { replace: true });
       } else {
-        navigate('/dashboard', { replace: true });
+        navigate('/member/dashboard', { replace: true });
       }
     } catch (err) {
       // Surface the server's message (e.g. "Invalid email or password.")

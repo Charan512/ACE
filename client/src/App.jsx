@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './components/AdminLayout';
+import MemberLayout from './components/MemberLayout';
 import useAuthStore from './store/useAuthStore';
 
 // ── Public Pages ─────────────────────────────────────────────
@@ -12,10 +13,14 @@ import EventsPage from './pages/EventsPage';
 import TeamDirectory from './pages/TeamDirectory';
 import Registration from './pages/Registration';
 import Login from './pages/Login';
-import MemberDashboard from './pages/MemberDashboard';
 import GuestCheckout from './pages/GuestCheckout';
 import EventDetailPage from './pages/EventDetailPage';
 import ForcePasswordChange from './pages/ForcePasswordChange';
+
+// ── Member Pages ──────────────────────────────────────────────
+import MemberDashboard from './pages/MemberDashboard';
+import MemberProfile from './pages/MemberProfile';
+import MemberHistory from './pages/MemberHistory';
 
 // ── Admin Pages ───────────────────────────────────────────────
 import AdminDashboard from './pages/AdminDashboard';
@@ -66,14 +71,26 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/events/checkout/:eventId" element={<GuestCheckout />} />
 
-          {/* ── Protected Member Routes ─────────────── */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<MemberDashboard />} />
-          </Route>
-
           {/* ── Force Password Change ───────────────── */}
           <Route element={<ProtectedRoute allowPasswordChangePending={true} />}>
             <Route path="/force-password-change" element={<ForcePasswordChange />} />
+          </Route>
+        </Route>
+
+        {/* ── Legacy redirect: /dashboard → /member/dashboard */}
+        <Route path="/dashboard" element={<Navigate to="/member/dashboard" replace />} />
+
+        {/* ── Protected Member Routes ──────────────────────────── */}
+        {/* Access: member, sbm, ebm, admin — wrapped in top-nav MemberLayout */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['member', 'sbm', 'ebm', 'admin']} />
+          }
+        >
+          <Route element={<MemberLayout />}>
+            <Route path="/member/dashboard" element={<MemberDashboard />} />
+            <Route path="/member/profile"   element={<MemberProfile />} />
+            <Route path="/member/history"   element={<MemberHistory />} />
           </Route>
         </Route>
 
@@ -85,11 +102,11 @@ function App() {
           }
         >
           <Route element={<AdminLayout />}>
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/events" element={<AdminEvents />} />
-            <Route path="/admin/registrations" element={<AdminRegistrations />} />
-            <Route path="/admin/certificates" element={<AdminCertificates />} />
-            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin"                  element={<AdminDashboard />} />
+            <Route path="/admin/events"           element={<AdminEvents />} />
+            <Route path="/admin/registrations"    element={<AdminRegistrations />} />
+            <Route path="/admin/certificates"     element={<AdminCertificates />} />
+            <Route path="/admin/users"            element={<AdminUsers />} />
           </Route>
         </Route>
       </Routes>

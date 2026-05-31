@@ -28,15 +28,15 @@ const ProtectedRoute = ({ allowedRoles = [], allowPasswordChangePending = false 
     return <Navigate to="/force-password-change" replace />;
   }
 
-  // If password change is NOT pending, and the user tries to access /force-password-change, send them to dashboard.
+  // If password change is NOT pending, and the user tries to access /force-password-change, send them to member dashboard.
   if (!user?.requiresPasswordChange && allowPasswordChangePending) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/member/dashboard" replace />;
   }
 
   // If roles are specified, check if user has permission
   if (allowedRoles.length > 0 && user && !allowedRoles.includes(user.role)) {
-    // If not allowed, send back to dashboard or home
-    return <Navigate to="/dashboard" replace />;
+    // Redirect to member dashboard (or home if member portal is also restricted)
+    return <Navigate to="/member/dashboard" replace />;
   }
 
   return <Outlet />;

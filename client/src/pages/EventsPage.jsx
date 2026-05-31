@@ -15,7 +15,7 @@ const EventsPage = () => {
 
   const handleRegistrationClick = (event) => {
     if (useAuthStore.getState().isAuthenticated) {
-      navigate('/dashboard');
+      navigate('/member/dashboard');
     } else {
       // Trigger intercept modal
       setSelectedEvent(event);

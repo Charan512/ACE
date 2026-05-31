@@ -47,7 +47,7 @@ const ForcePasswordChange = () => {
       
       // Delay navigation slightly so the user reads the success message
       setTimeout(() => {
-        navigate('/dashboard', { replace: true });
+        navigate('/member/dashboard', { replace: true });
       }, 1500);
     } catch (err) {
       setError(

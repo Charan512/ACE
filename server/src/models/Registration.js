@@ -11,6 +11,9 @@ import mongoose from 'mongoose';
  *   Converter BullMQ worker to auto-migrate history when a guest gets a membership.
  * - `transactionId` links back to the payment record for reconciliation.
  * - NO financial amount fields are stored here — amounts live in Transaction only.
+ * - `customResponses` is a flexible Mixed object: { [fieldName]: answer }
+ *   It stores the guest's answers to the event's dynamic custom form fields.
+ *   Members bypass this entirely (Fast-Pass); their customResponses is always {}.
  */
 const registrationSchema = new mongoose.Schema(
   {
@@ -45,7 +48,7 @@ const registrationSchema = new mongoose.Schema(
       default: null,
     },
 
-    // ── Contact Info ────────────────────────────────────────
+    // ── Core Contact Info ────────────────────────────────────
     // Denormalised here so admin registration tables don't require deep population
     name: {
       type: String,
@@ -55,11 +58,29 @@ const registrationSchema = new mongoose.Schema(
     phone: {
       type: String,
       trim: true,
+      default: null,
     },
     email: {
       type: String,
       lowercase: true,
       trim: true,
+    },
+
+    // ── Dynamic Custom Form Responses ────────────────────────
+    /**
+     * Stores guest answers to the event's `customFormFields`.
+     * Shape: { [fieldName: string]: string | number }
+     *
+     * Using Schema.Types.Mixed (plain JS object) instead of Map for simplicity:
+     * - No type-casting complexity on the frontend
+     * - Dot-notation access works without .get() calls
+     * - Mongoose marks Mixed fields dirty via markModified() on mutation
+     *
+     * For member registrations (Fast-Pass), this defaults to {}.
+     */
+    customResponses: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
 
     // ── Pricing Tier ────────────────────────────────────────

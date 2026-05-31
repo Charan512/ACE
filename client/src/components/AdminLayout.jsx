@@ -183,7 +183,7 @@ const AdminLayout = () => {
         <header className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
             <span className="text-slate-300">/</span>
-            <span className="text-slate-700 font-semibold">ACE ERP</span>
+            <span className="text-slate-700 font-semibold">ACE Portal</span>
             <span className="text-slate-300">/</span>
             <span>Admin Portal</span>
           </div>
