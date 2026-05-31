@@ -105,6 +105,21 @@ const useAuthStore = create((set, get) => ({
 
     return user;
   },
+
+  // ── updateProfile ────────────────────────────────────────
+  /**
+   * Calls PATCH /users/me to update user profile details.
+   * Updates state with the returned updated user object.
+   *
+   * @param {Object} profileData - { collegeId, phone, branch, year }
+   * @returns {Object} user - updated user profile object
+   */
+  updateProfile: async (profileData) => {
+    const response = await api.patch('/users/me', profileData);
+    const user = response.data.data.user;
+    set({ user });
+    return user;
+  },
 }));
 
 // ── Global 401 listener ──────────────────────────────────────

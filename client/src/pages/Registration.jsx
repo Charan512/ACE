@@ -10,7 +10,8 @@ const Registration = () => {
     phone: '',
     gender: '',
     branch: '',
-    year: ''
+    year: '',
+    collegeId: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -271,6 +272,25 @@ const Registration = () => {
                   <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* College ID (Optional) */}
+          <div>
+            <label htmlFor="registration-college-id" className="block text-sm font-bold text-slate-700 mb-2">
+              College ID / Roll Number <span className="text-slate-400 font-normal text-xs">(Optional for Freshers - Add later in profile)</span>
+            </label>
+            <div className="relative">
+              <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
+              <input
+                id="registration-college-id"
+                type="text"
+                name="collegeId"
+                className="input-modern pl-12"
+                placeholder="e.g. 23B91A0501"
+                value={formData.collegeId}
+                onChange={handleChange}
+              />
             </div>
           </div>
 

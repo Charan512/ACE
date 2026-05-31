@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import useAuthStore from '../store/useAuthStore';
 import DigitalIdCard from '../components/DigitalIdCard';
 import EventCard from '../components/EventCard';
-import { Download, ShieldCheck, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Download, ShieldCheck, CheckCircle, XCircle, Loader2, AlertTriangle } from 'lucide-react';
 import api from '../lib/api';
 
 // ─────────────────────────────────────────────────────────────
@@ -32,11 +32,15 @@ const Toast = ({ toast }) => {
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────
 const MemberDashboard = () => {
-  const { user } = useAuthStore();
+  const { user, updateProfile } = useAuthStore();
 
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [vaultEvents, setVaultEvents]       = useState([]);
   const [loading, setLoading]               = useState(true);
+
+  // Profile Update State
+  const [collegeIdInput, setCollegeIdInput] = useState('');
+  const [isSubmittingProfile, setIsSubmittingProfile] = useState(false);
 
   // Per-event loading states to disable individual buttons while in-flight
   const [registeringId, setRegisteringId]   = useState(null); // eventId being registered
@@ -49,6 +53,22 @@ const MemberDashboard = () => {
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
+  };
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    if (!collegeIdInput.trim()) return;
+
+    setIsSubmittingProfile(true);
+    try {
+      await updateProfile({ collegeId: collegeIdInput.trim() });
+      showToast('Profile updated successfully.', 'success');
+    } catch (err) {
+      console.error('[Dashboard] Profile update failed:', err.message);
+      showToast(err.response?.data?.message || 'Failed to update profile.', 'error');
+    } finally {
+      setIsSubmittingProfile(false);
+    }
   };
 
   // ── Data Fetching ────────────────────────────────────────
@@ -216,6 +236,45 @@ const MemberDashboard = () => {
   return (
     <div className="pt-20 pb-24 min-h-screen bg-obsidian">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-16">
+
+        {/* Profile Incomplete Warning Banner */}
+        {(!user?.collegeId) && (
+          <div className="bg-slate-900 border border-amber-500/40 rounded-[2rem] p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl shadow-amber-500/5">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-amber-400">
+                <AlertTriangle className="h-5 w-5 shrink-0" />
+                <h3 className="text-lg font-black tracking-tight uppercase">Profile Incomplete</h3>
+              </div>
+              <p className="text-slate-400 text-sm leading-relaxed max-w-xl">
+                Your profile is missing a **College ID / Roll Number**. Please update this to ensure your member identity and event credentials generate correctly.
+              </p>
+            </div>
+            <form onSubmit={handleProfileUpdate} className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+              <input
+                id="dashboard-college-id"
+                type="text"
+                required
+                className="bg-slate-950 border border-slate-800 focus:border-amber-500/50 focus:outline-none px-4 py-3 rounded-xl text-sm font-mono text-white placeholder:text-slate-600 min-w-[200px]"
+                placeholder="Enter College ID"
+                value={collegeIdInput}
+                onChange={(e) => setCollegeIdInput(e.target.value)}
+                disabled={isSubmittingProfile}
+              />
+              <button
+                id="dashboard-update-profile-btn"
+                type="submit"
+                disabled={isSubmittingProfile}
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3 rounded-xl text-sm transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {isSubmittingProfile ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-slate-955" />
+                ) : (
+                  'Update Profile'
+                )}
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* ── Section 1: Member Passport ─────────────────── */}
         <section>

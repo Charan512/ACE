@@ -3,49 +3,57 @@ import { Cpu, Terminal, Shield, Zap, Users } from 'lucide-react';
 
 const GuestPortal = () => {
   return (
-    <div className="bg-slate-50 min-h-screen pb-24 overflow-hidden">
+    <div className="bg-slate-50 overflow-hidden">
 
-      {/* 1. The Hero Section (Asymmetric & Overlapping) */}
-      <section className="min-h-[90vh] flex flex-col justify-center relative overflow-hidden bg-slate-50">
+      {/* 1. The Hero Section */}
+      <section className="min-h-[90vh] flex flex-col justify-center relative overflow-hidden bg-white">
+        {/* Ambient Background Orbs */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-100/60 rounded-full blur-3xl pointer-events-none -translate-y-1/4 translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-cyan-100/40 rounded-full blur-3xl pointer-events-none translate-y-1/4 -translate-x-1/4" />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-7xl mx-auto px-6 w-full relative z-10 py-20">
-          
+
           {/* Left Column (col-span-7) */}
           <div className="col-span-7">
-            <h1 className="text-7xl lg:text-8xl font-heading font-extrabold tracking-tighter leading-[0.95] text-slate-900">
-              Empower Your Engineering.
+            <p className="text-sm font-bold tracking-widest text-blue-600 uppercase mb-5">SRKR Engineering College · Dept. of CSE</p>
+            <h1 className="text-7xl lg:text-8xl font-heading font-extrabold tracking-tighter leading-[0.9] text-slate-900 mb-6">
+              Empower Your <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500">Engineering.</span>
             </h1>
-            <div className="flex gap-4 mt-10">
-              <Link to="/register" className="bg-slate-950 text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-primary transition-colors shadow-xl hover:-translate-y-1">
+            <p className="text-xl text-slate-500 font-medium max-w-lg leading-relaxed mb-10">
+              The official technical club of SRKR Engineering College. Build real systems, compete in hackathons, and grow your network.
+            </p>
+            <div className="flex flex-wrap gap-4 mb-12">
+              <Link to="/register" className="bg-blue-600 text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/25 hover:-translate-y-1">
                 Join the Club
               </Link>
-              <Link to="/events" className="text-slate-600 font-bold px-8 py-4 hover:text-slate-950 transition-colors underline-offset-4 hover:underline">
-                Explore Events
+              <Link to="/events" className="bg-white text-slate-700 border border-slate-200 px-8 py-4 rounded-full font-bold text-lg hover:border-slate-400 hover:text-slate-900 transition-all shadow-sm">
+                Explore Events →
               </Link>
             </div>
           </div>
 
-          {/* Right Column (col-span-5 relative h-full min-h-[500px] hidden lg:block) */}
-          <div className="col-span-5 relative h-full min-h-[500px] hidden lg:block">
-            <div className="absolute top-10 right-0 w-64 h-64 bg-white rounded-full shadow-2xl overflow-hidden border-4 border-white z-20">
-              <img src="https://placehold.co/400x400/e2e8f0/475569?text=AI" alt="AI" className="w-full h-full object-cover" />
-            </div>
-            <div className="absolute bottom-0 left-10 w-72 h-80 bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-800 z-10">
-              <img src="https://placehold.co/400x500/1e293b/94a3b8?text=Hackathon" alt="Hackathon" className="w-full h-full object-cover opacity-80 mix-blend-luminosity" />
-            </div>
-            <div className="absolute top-1/2 left-1/4 w-48 h-48 bg-primary rounded-3xl shadow-2xl overflow-hidden border-4 border-white z-30 flex items-center justify-center -translate-y-1/2">
-              <span className="text-4xl font-black text-white tracking-tighter">ACE</span>
+          {/* Right Column (col-span-5 hidden lg:block) */}
+          <div className="col-span-5 hidden lg:block">
+            <div className="grid grid-cols-2 gap-4 h-[450px] w-full">
+              <div className="col-span-1 row-span-2 bg-slate-200 rounded-3xl overflow-hidden shadow-sm">
+                <img src="https://placehold.co/400x500/e2e8f0/475569?text=Hackathon" alt="Hackathon" className="w-full h-full object-cover" />
+              </div>
+              <div className="col-span-1 row-span-1 bg-slate-200 rounded-3xl overflow-hidden shadow-sm">
+                <img src="https://placehold.co/400x400/e2e8f0/475569?text=AI" alt="AI" className="w-full h-full object-cover" />
+              </div>
+              <div className="col-span-1 row-span-1 bg-slate-200 rounded-3xl overflow-hidden shadow-sm flex items-center justify-center">
+                <span className="text-4xl font-black text-blue-600 tracking-tighter">ACE</span>
+              </div>
             </div>
           </div>
 
         </div>
 
-        {/* The Marquee */}
-        <div className="absolute bottom-0 left-0 w-full whitespace-nowrap overflow-hidden bg-primary text-white py-3 font-mono font-bold tracking-widest flex z-20">
-          <div className="animate-marquee flex gap-8">
-            <span>ARTIFICIAL INTELLIGENCE • WEB3 • ROBOTICS • CLOUD ARCHITECTURE • </span>
-            <span>ARTIFICIAL INTELLIGENCE • WEB3 • ROBOTICS • CLOUD ARCHITECTURE • </span>
-            <span>ARTIFICIAL INTELLIGENCE • WEB3 • ROBOTICS • CLOUD ARCHITECTURE • </span>
-            <span>ARTIFICIAL INTELLIGENCE • WEB3 • ROBOTICS • CLOUD ARCHITECTURE • </span>
+        {/* The Marquee — subtle light mode ticker */}
+        <div className="absolute bottom-0 left-0 w-full whitespace-nowrap overflow-hidden bg-slate-100 border-t border-slate-200 text-slate-400 py-2.5 font-mono text-xs font-semibold tracking-widest flex z-20">
+          <div className="animate-marquee flex gap-12">
+            <span>ARTIFICIAL INTELLIGENCE &nbsp;·&nbsp; WEB3 &amp; BLOCKCHAIN &nbsp;·&nbsp; CYBER SECURITY &nbsp;·&nbsp; CLOUD COMPUTING &nbsp;·&nbsp; OPEN SOURCE &nbsp;·&nbsp; MACHINE LEARNING &nbsp;·&nbsp; </span>
+            <span>ARTIFICIAL INTELLIGENCE &nbsp;·&nbsp; WEB3 &amp; BLOCKCHAIN &nbsp;·&nbsp; CYBER SECURITY &nbsp;·&nbsp; CLOUD COMPUTING &nbsp;·&nbsp; OPEN SOURCE &nbsp;·&nbsp; MACHINE LEARNING &nbsp;·&nbsp; </span>
+            <span>ARTIFICIAL INTELLIGENCE &nbsp;·&nbsp; WEB3 &amp; BLOCKCHAIN &nbsp;·&nbsp; CYBER SECURITY &nbsp;·&nbsp; CLOUD COMPUTING &nbsp;·&nbsp; OPEN SOURCE &nbsp;·&nbsp; MACHINE LEARNING &nbsp;·&nbsp; </span>
           </div>
         </div>
       </section>
@@ -53,7 +61,7 @@ const GuestPortal = () => {
       {/* 2. The Mission Section (Bento Box Grid) */}
       <section id="about" className="max-w-7xl mx-auto py-24 px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6">
-          
+
           {/* Card 1 (The Main Feature) */}
           <div className="md:col-span-2 md:row-span-2 bg-slate-900 text-white p-10 rounded-3xl relative overflow-hidden group hover:-translate-y-1 transition-transform">
             <Cpu className="absolute -bottom-8 -right-8 w-64 h-64 text-slate-800 opacity-50 group-hover:rotate-12 transition-transform duration-700" />
@@ -78,7 +86,7 @@ const GuestPortal = () => {
 
           {/* Card 3 (Bottom Right) */}
           <div className="md:col-span-2 md:row-span-1 bg-blue-50 border border-blue-100 p-8 rounded-3xl hover:bg-blue-100 transition-colors">
-             <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between">
               <div>
                 <h4 className="text-2xl font-bold text-slate-950 mb-2 tracking-tight">Peer Networking</h4>
                 <p className="text-slate-600 font-medium">Connect with top-tier developers, alumni, and industry professionals. The network is your ultimate utility.</p>
@@ -190,58 +198,7 @@ const GuestPortal = () => {
         </div>
       </section>
 
-      {/* 6. Communication Protocol (Contact & Footer) */}
-      <section id="contact" className="py-24 bg-white px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-slate-50 rounded-[3rem] p-10 sm:p-16 border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-12 shadow-sm relative overflow-hidden">
 
-            {/* Abstract Background Element */}
-            <div className="absolute -right-20 -top-20 w-96 h-96 bg-blue-100/50 rounded-full blur-3xl pointer-events-none"></div>
-
-            <div className="max-w-xl relative z-10 text-center md:text-left">
-              <h2 className="text-4xl font-heading font-black text-slate-950 tracking-tighter mb-4">Establish Connection.</h2>
-              <p className="text-slate-500 text-lg font-medium mb-8">
-                Ready to elevate your engineering capabilities? Reach out to the core team for collaborations, sponsorships, or membership queries.
-              </p>
-              <div className="flex flex-col gap-6">
-                <div>
-                  <a href="mailto:srkraceofficial@gmail.com" className="inline-flex w-full sm:w-auto items-center justify-center bg-slate-950 text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-primary transition-all shadow-xl hover:shadow-primary/30 hover:-translate-y-1">
-                    Initialize Email
-                  </a>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-                  <a href="https://www.instagram.com/srkr_ace" target="_blank" rel="noreferrer" className="px-6 py-2.5 rounded-full font-bold text-sm text-white bg-gradient-to-tr from-yellow-500 via-pink-500 to-purple-600 hover:shadow-lg hover:shadow-pink-500/30 hover:-translate-y-0.5 transition-all">
-                    Instagram
-                  </a>
-                  <a href="https://whatsapp.com/channel/0029VaA6ohD2kNFpm5oRiu1B" target="_blank" rel="noreferrer" className="px-6 py-2.5 rounded-full font-bold text-sm text-white bg-[#25D366] hover:bg-[#128C7E] hover:shadow-lg hover:shadow-[#25D366]/30 hover:-translate-y-0.5 transition-all">
-                    WhatsApp
-                  </a>
-                  <a href="https://www.linkedin.com/company/association-of-computer-engineers-ace/" target="_blank" rel="noreferrer" className="px-6 py-2.5 rounded-full font-bold text-sm text-white bg-[#0A66C2] hover:bg-[#004182] hover:shadow-lg hover:shadow-[#0A66C2]/30 hover:-translate-y-0.5 transition-all">
-                    LinkedIn
-                  </a>
-                  <a href="https://www.youtube.com/@srkrcse212" target="_blank" rel="noreferrer" className="px-6 py-2.5 rounded-full font-bold text-sm text-white bg-[#FF0000] hover:bg-[#CC0000] hover:shadow-lg hover:shadow-[#FF0000]/30 hover:-translate-y-0.5 transition-all">
-                    YouTube
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative z-10 flex gap-12 text-left">
-              <div>
-                <h4 className="font-black text-slate-950 uppercase tracking-wider mb-4">Headquarters</h4>
-                <p className="text-slate-500 font-medium">Department of CSE<br />SRKR Engineering College<br />Bhimavaram, AP 534204</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-16 text-center border-t border-slate-100 pt-8">
-            <p className="text-slate-400 font-medium font-mono text-sm uppercase tracking-widest">
-              © {new Date().getFullYear()} SRKR ACE. Protocol Active.
-            </p>
-          </div>
-        </div>
-      </section>
 
     </div>
   );

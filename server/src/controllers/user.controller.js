@@ -94,3 +94,34 @@ export const updateUserRole = catchAsync(async (req, res, next) => {
     data: { user },
   });
 });
+
+/**
+ * @desc    Update current user's profile info (e.g. collegeId, phone, branch, year)
+ * @route   PATCH /api/users/me
+ * @access  Private
+ */
+export const updateMe = catchAsync(async (req, res, next) => {
+  const { collegeId, phone, branch, year } = req.body;
+
+  const updates = {};
+  if (collegeId !== undefined) updates.collegeId = collegeId;
+  if (phone !== undefined) updates.phone = phone;
+  if (branch !== undefined) updates.branch = branch;
+  if (year !== undefined) updates.year = year;
+
+  // Run Mongoose schema validation on updates
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    { $set: updates },
+    { new: true, runValidators: true }
+  ).select('-password');
+
+  if (!user) {
+    return next(new AppError('User not found.', 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    data: { user },
+  });
+});

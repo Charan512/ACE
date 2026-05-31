@@ -121,6 +121,11 @@ const userSchema = new mongoose.Schema(
     otp: otpSchema,
 
     // ── Profile ─────────────────────────────────────────────
+    collegeId: {
+      type: String,
+      default: '',
+      trim: true,
+    },
     phone: {
       type: String,
       trim: true,
