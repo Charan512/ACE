@@ -53,7 +53,7 @@ const sanitizeEventUpdate = (body) => {
  * `toObject({ virtuals: true })` before sending the response.
  */
 export const getAllEvents = catchAsync(async (req, res, _next) => {
-  const isAdmin = req.user && ['admin', 'body_member'].includes(req.user.role);
+  const isAdmin = req.user && ['admin', 'ebm', 'sbm'].includes(req.user.role);
 
   // ── Build query filter ────────────────────────────────────
   // Non-admins only see active events. The `isRegistrationOpen` virtual further
@@ -96,7 +96,7 @@ export const getEventById = catchAsync(async (req, res, next) => {
   }
 
   // Non-admins cannot view explicitly deactivated events
-  const isAdmin = req.user && ['admin', 'body_member'].includes(req.user.role);
+  const isAdmin = req.user && ['admin', 'ebm', 'sbm'].includes(req.user.role);
   if (!isAdmin && !event.isActive) {
     return next(new AppError('Event not found.', 404)); // intentionally vague
   }

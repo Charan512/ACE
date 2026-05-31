@@ -43,6 +43,10 @@ const sendAuthResponse = (user, statusCode, res) => {
     isEmailVerified: user.isEmailVerified,
     branch: user.branch ?? null,
     year: user.year ?? null,
+    section: user.section ?? null,
+    registrationNumber: user.registrationNumber ?? null,
+    domain: user.domain ?? null,
+    designation: user.designation ?? null,
     profilePhoto: user.profilePhoto ?? null,
     createdAt: user.createdAt,
   };

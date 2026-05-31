@@ -63,7 +63,7 @@ router.get('/:id', getEventById);
 router.post(
   '/',
   protect,
-  restrictTo('admin'),
+  restrictTo('admin', 'ebm', 'sbm'),
   adminMutationLimiter,
   createEvent
 );
@@ -78,7 +78,7 @@ router.post(
 router.patch(
   '/:id',
   protect,
-  restrictTo('admin'),
+  restrictTo('admin', 'ebm', 'sbm'),
   adminMutationLimiter,
   updateEvent
 );
@@ -96,7 +96,7 @@ router.patch(
 router.patch(
   '/:id/toggle',
   protect,
-  restrictTo('admin'),
+  restrictTo('admin', 'ebm', 'sbm'),
   adminMutationLimiter,
   toggleRegistration
 );

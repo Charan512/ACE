@@ -99,8 +99,16 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: {
-        values: ['admin', 'body_member', 'member', 'guest'],
-        message: '{VALUE} is not a valid role.',
+        /**
+         * Role hierarchy (highest → lowest):
+         *   admin   → Full system access
+         *   ebm     → Executive Body Member (EBM)
+         *   sbm     → Student Body Member (SBM)
+         *   member  → Verified ACE Member
+         *   guest   → Public / pre-membership user
+         */
+        values: ['admin', 'ebm', 'sbm', 'member', 'guest'],
+        message: '{VALUE} is not a valid role. Must be one of: admin, ebm, sbm, member, guest.',
       },
       default: 'guest',
     },
@@ -136,10 +144,54 @@ const userSchema = new mongoose.Schema(
       trim: true,
       maxlength: [100, 'Branch name cannot exceed 100 characters.'],
     },
+    /**
+     * Section within the branch (e.g., 'A', 'B', 'C').
+     * Optional — not required during public registration.
+     */
+    section: {
+      type: String,
+      trim: true,
+      maxlength: [10, 'Section cannot exceed 10 characters.'],
+    },
     year: {
       type: Number,
       min: [1, 'Year must be between 1 and 4.'],
       max: [4, 'Year must be between 1 and 4.'],
+    },
+    /**
+     * College registration number (e.g., "22B91A0501").
+     * Unique per student — sparse so multiple nulls are allowed
+     * (guests and body members may not have one).
+     */
+    registrationNumber: {
+      type: String,
+      trim: true,
+      sparse: true,
+      unique: true,
+    },
+
+    // ── Body Member Fields (SBM / EBM) ──────────────────────
+    /**
+     * The club functional domain the body member operates in.
+     * Only relevant for role: 'sbm' | 'ebm'.
+     */
+    domain: {
+      type: String,
+      enum: {
+        values: ['Tech', 'Marketing', 'Editing', 'Documentation'],
+        message: '{VALUE} is not a valid domain.',
+      },
+      default: null,
+    },
+    /**
+     * Official designation within the body (e.g., 'Secretary', 'Treasurer').
+     * Only relevant for role: 'ebm'.
+     */
+    designation: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Designation cannot exceed 100 characters.'],
+      default: null,
     },
     profilePhoto: {
       type: String, // R2 public URL

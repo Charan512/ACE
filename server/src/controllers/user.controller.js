@@ -63,20 +63,16 @@ export const getAllUsers = catchAsync(async (req, res, next) => {
  */
 export const updateUserRole = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  let { role } = req.body;
+  const { role } = req.body;
 
   if (!role) {
     return next(new AppError('Role is required.', 400));
   }
 
-  // Map ebm or sbm to the schema-supported body_member role
-  if (role === 'ebm' || role === 'sbm') {
-    role = 'body_member';
-  }
-
-  const validRoles = ['admin', 'body_member', 'member', 'guest'];
+  // Validate against the canonical role enum
+  const validRoles = ['admin', 'ebm', 'sbm', 'member', 'guest'];
   if (!validRoles.includes(role)) {
-    return next(new AppError('Invalid role specified.', 400));
+    return next(new AppError(`Invalid role. Must be one of: ${validRoles.join(', ')}.`, 400));
   }
 
   const user = await User.findByIdAndUpdate(
@@ -101,13 +97,18 @@ export const updateUserRole = catchAsync(async (req, res, next) => {
  * @access  Private
  */
 export const updateMe = catchAsync(async (req, res, next) => {
-  const { collegeId, phone, branch, year } = req.body;
+  const { collegeId, phone, branch, year, section, registrationNumber, domain, designation } = req.body;
 
   const updates = {};
   if (collegeId !== undefined) updates.collegeId = collegeId;
   if (phone !== undefined) updates.phone = phone;
   if (branch !== undefined) updates.branch = branch;
   if (year !== undefined) updates.year = year;
+  if (section !== undefined) updates.section = section;
+  if (registrationNumber !== undefined) updates.registrationNumber = registrationNumber;
+  // Body member fields — only write if provided; don't overwrite with null if absent
+  if (domain !== undefined) updates.domain = domain;
+  if (designation !== undefined) updates.designation = designation;
 
   // Run Mongoose schema validation on updates
   const user = await User.findByIdAndUpdate(

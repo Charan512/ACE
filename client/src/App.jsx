@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminLayout from './components/AdminLayout';
 import useAuthStore from './store/useAuthStore';
 
-// Pages
+// ── Public Pages ─────────────────────────────────────────────
 import GuestPortal from './pages/GuestPortal';
 import EventsPage from './pages/EventsPage';
 import TeamDirectory from './pages/TeamDirectory';
@@ -14,31 +15,31 @@ import Login from './pages/Login';
 import MemberDashboard from './pages/MemberDashboard';
 import GuestCheckout from './pages/GuestCheckout';
 import EventDetailPage from './pages/EventDetailPage';
-import AdminDashboard from './pages/AdminDashboard';
 import ForcePasswordChange from './pages/ForcePasswordChange';
 
-// Layout with Navbar
-const MainLayout = () => {
-  return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <Navbar />
-      <div className="flex-1">
-        <Outlet />
-      </div>
-      <Footer />
-    </div>
-  );
-};
+// ── Admin Pages ───────────────────────────────────────────────
+import AdminDashboard from './pages/AdminDashboard';
+import AdminEvents from './pages/AdminEvents';
+import AdminRegistrations from './pages/AdminRegistrations';
+import AdminCertificates from './pages/AdminCertificates';
+import AdminUsers from './pages/AdminUsers';
 
-// Admin Layout (no navbar — specialized command-bar header lives inside AdminDashboard)
-const AdminLayout = () => {
-  return (
-    <>
+// ── Layout with Navbar + Footer ───────────────────────────────
+import { Outlet } from 'react-router-dom';
+
+const MainLayout = () => (
+  <div className="flex min-h-screen flex-col bg-background">
+    <Navbar />
+    <div className="flex-1">
       <Outlet />
-    </>
-  );
-};
+    </div>
+    <Footer />
+  </div>
+);
 
+// ─────────────────────────────────────────────────────────────
+// APP ROOT
+// ─────────────────────────────────────────────────────────────
 function App() {
   const fetchProfile = useAuthStore((state) => state.fetchProfile);
 
@@ -55,7 +56,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
+        {/* ── Public Routes ───────────────────────────── */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<GuestPortal />} />
           <Route path="/events" element={<EventsPage />} />
@@ -65,21 +66,30 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/events/checkout/:eventId" element={<GuestCheckout />} />
 
-          {/* Protected Member Routes */}
+          {/* ── Protected Member Routes ─────────────── */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<MemberDashboard />} />
           </Route>
 
-          {/* Force Password Change Route */}
+          {/* ── Force Password Change ───────────────── */}
           <Route element={<ProtectedRoute allowPasswordChangePending={true} />}>
             <Route path="/force-password-change" element={<ForcePasswordChange />} />
           </Route>
         </Route>
 
-        {/* Protected Admin Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['admin', 'body_member']} />}>
+        {/* ── Protected Admin Routes ───────────────────────────── */}
+        {/* Access: admin, ebm, sbm — all wrapped inside the sidebar AdminLayout */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'ebm', 'sbm']} />
+          }
+        >
           <Route element={<AdminLayout />}>
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/events" element={<AdminEvents />} />
+            <Route path="/admin/registrations" element={<AdminRegistrations />} />
+            <Route path="/admin/certificates" element={<AdminCertificates />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
           </Route>
         </Route>
       </Routes>
