@@ -4,7 +4,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-6">
 
         {/* CTA Card */}
-        <div className="relative max-w-5xl mx-auto mb-20 rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 p-14 text-center shadow-2xl">
+        <div className="relative max-w-5xl mx-auto mb-20 rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 p-8 sm:p-10 md:p-14 text-center shadow-2xl">
           {/* Decorative Glow Orbs */}
           <div className="absolute -top-24 -left-24 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
@@ -12,17 +12,17 @@ const Footer = () => {
           {/* Eyebrow Label */}
           <p className="relative z-10 text-blue-400 text-sm font-bold tracking-widest uppercase mb-4">Get In Touch</p>
 
-          <h2 className="relative z-10 text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-5">
+          <h2 className="relative z-10 text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-5">
             Ready to join the club?
           </h2>
-          <p className="relative z-10 text-slate-400 max-w-xl mx-auto mb-10 text-lg leading-relaxed">
+          <p className="relative z-10 text-slate-400 max-w-xl mx-auto mb-10 text-base sm:text-lg leading-relaxed">
             Reach out to the core team for collaborations, sponsorships, or membership queries. We are always looking for passionate engineers.
           </p>
 
           {/* Primary CTA */}
           <a
             href="mailto:srkraceofficial@gmail.com"
-            className="relative z-10 inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-full font-semibold text-base transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30 mb-10"
+            className="relative z-10 inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 sm:px-8 py-3.5 rounded-full font-semibold text-sm sm:text-base transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30 mb-10 w-full sm:w-auto"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
