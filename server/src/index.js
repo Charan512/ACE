@@ -49,9 +49,7 @@ const globalLimiter = rateLimit({
 app.use('/api', globalLimiter);
 
 // ── Body Parsers ─────────────────────────────────────────────
-// CRITICAL: Webhook route needs the raw Buffer to verify HMAC SHA256.
-// This MUST be registered BEFORE express.json() consumes the body.
-app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
+// PhonePe webhooks are processed using standard JSON payload parsing.
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 

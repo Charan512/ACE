@@ -1,35 +1,37 @@
 import mongoose from 'mongoose';
 
 /**
- * Transaction Schema — the immutable audit log for every Razorpay payment attempt.
+ * Transaction Schema — the immutable audit log for every PhonePe payment attempt.
  *
  * Design decisions:
- * - `razorpayOrderId` is set when the order is CREATED (before payment).
- * - `razorpayPaymentId` and `razorpaySignature` are set AFTER the webhook fires
- *   and the HMAC SHA256 signature is verified. Never written before verification.
- * - Guest support: `user` is sparse (null for guests); `guestEmail` captures their identity
- *   so the Late Converter worker can migrate their history if they later buy a membership.
- * - `webhookPayload` stores the raw Razorpay event object for dispute resolution / audit.
+ * - `merchantTransactionId` is set when the order is CREATED (before payment).
+ *   It is a unique ID we generate (format: ace_<timestamp>) used to track the
+ *   payment through PhonePe's redirect and callback flow.
+ * - `phonePeTransactionId` is set AFTER the webhook/callback fires and the
+ *   X-VERIFY checksum is verified. Never written before verification.
+ * - Guest support: `user` is sparse (null for guests); `guestEmail` captures identity
+ *   so the Late Converter worker can migrate history if they later buy a membership.
+ * - `webhookPayload` stores the raw PhonePe callback object for dispute resolution.
  */
 const transactionSchema = new mongoose.Schema(
   {
-    // ── Razorpay References ─────────────────────────────────
-    razorpayOrderId: {
+    // ── PhonePe References ──────────────────────────────────
+    /**
+     * Our own unique transaction ID sent to PhonePe as merchantTransactionId.
+     * Format: ace_<timestamp>_<random> — max 35 chars per PhonePe spec.
+     * Used as the primary lookup key throughout the payment lifecycle.
+     */
+    merchantTransactionId: {
       type: String,
-      required: [true, 'Razorpay Order ID is required.'],
+      required: [true, 'Merchant Transaction ID is required.'],
       unique: true,
       trim: true,
     },
-    // Set only after successful webhook verification
-    razorpayPaymentId: {
+    // Set only after PhonePe webhook/callback fires and signature is verified
+    phonePeTransactionId: {
       type: String,
       default: null,
       trim: true,
-    },
-    // The HMAC signature from Razorpay — stored for audit, verified before writing
-    razorpaySignature: {
-      type: String,
-      default: null,
     },
 
     // ── User / Guest Identity ───────────────────────────────
@@ -64,7 +66,7 @@ const transactionSchema = new mongoose.Schema(
     },
 
     // ── Financial Details ───────────────────────────────────
-    // Stored in PAISE to match Razorpay's native unit (₹1 = 100 paise)
+    // Stored in PAISE to match PhonePe's native unit (₹1 = 100 paise)
     amount: {
       type: Number,
       required: [true, 'Transaction amount is required.'],
@@ -101,7 +103,7 @@ const transactionSchema = new mongoose.Schema(
     },
 
     // ── Audit Trail ─────────────────────────────────────────
-    // Raw Razorpay webhook payload — stored for dispute resolution, never used for logic
+    // Raw PhonePe callback payload — stored for dispute resolution, never used for logic
     webhookPayload: {
       type: mongoose.Schema.Types.Mixed,
       default: null,

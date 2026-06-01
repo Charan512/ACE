@@ -1,6 +1,14 @@
 import crypto from 'crypto';
 import mongoose from 'mongoose';
-import razorpay from '../config/razorpay.js';
+import fetch from 'node-fetch'; // Node 18+ has native fetch; use node-fetch for Node 16
+import {
+  PHONEPE_MERCHANT_ID,
+  PHONEPE_BASE_URL,
+  SALT_INDEX,
+  generateChecksum,
+  generateStatusChecksum,
+  verifyWebhookChecksum,
+} from '../config/phonepe.js';
 import Transaction from '../models/Transaction.js';
 import Registration from '../models/Registration.js';
 import Event from '../models/Event.js';
@@ -15,240 +23,176 @@ import { emailQueue, scheduleTreasurerFlush, lateConverterQueue } from '../queue
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Verifies a Razorpay webhook signature using HMAC SHA256.
- *
- * Razorpay signs the raw request body with RAZORPAY_WEBHOOK_SECRET.
- * We recompute the HMAC and compare using timingSafeEqual to prevent
- * timing-based side-channel attacks.
- *
- * MUST be called before any database reads or writes.
- *
- * @param {Buffer} rawBody  - The raw request body buffer (from express.raw())
- * @param {string} signature - Value of the X-Razorpay-Signature header
- * @returns {boolean} true if signature is valid
+ * Generates a unique merchantTransactionId for PhonePe.
+ * Must be ≤ 35 characters and alphanumeric + underscore only.
  */
-const verifyWebhookSignature = (rawBody, signature) => {
-  if (!rawBody || !signature) return false;
-
-  const expectedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET)
-    .update(rawBody)
-    .digest('hex');
-
-  // timingSafeEqual prevents timing attacks by always comparing all bytes
-  try {
-    return crypto.timingSafeEqual(
-      Buffer.from(expectedSignature, 'hex'),
-      Buffer.from(signature, 'hex')
-    );
-  } catch {
-    // Buffers of different length throw — means signature is definitely wrong
-    return false;
-  }
+const generateMerchantTxnId = () => {
+  const ts  = Date.now().toString(36).toUpperCase(); // ~8 chars
+  const rnd = crypto.randomBytes(4).toString('hex').toUpperCase(); // 8 chars
+  return `ACE_${ts}_${rnd}`; // e.g. ACE_LSDKJ2_A3F9B1C2 — always ≤ 35
 };
 
 /**
- * Handles the `order.paid` / `payment.captured` webhook event.
+ * Core business logic: handles a confirmed payment from PhonePe.
+ * Called by both the webhook handler and the dev-confirm endpoint.
  *
- * This is the core business logic trigger:
- *  1. Find the pending Transaction by razorpayOrderId
- *  2. Idempotency guard — skip if already processed
- *  3. Atomically update Transaction to 'paid'
- *  4. Increment event.registeredCount
- *  5. If a registered user exists — update their Member Vault
- *  6. If it's a NEW MEMBER purchase — generate aceId, set temp password, queue email
+ * Atomically:
+ *  1. Marks Transaction as 'paid'
+ *  2. Increments event.registeredCount
+ *  3. Pushes event to member's history vault
+ *  4. Creates a confirmed Registration record
+ *  5. If membership purchase → creates new User account with temp password + email
  *
- * @param {Object} payload - Parsed Razorpay webhook payload
+ * Fully idempotent — safe for webhook replay.
+ *
+ * @param {string} merchantTransactionId
+ * @param {string} phonePeTransactionId
+ * @param {Object} rawPayload - The full webhook payload (for audit storage)
+ * @param {Object} notes      - Metadata: { purpose, guestEmail, guestName, eventId }
  */
-const handleOrderPaid = async (payload) => {
-  const paymentEntity = payload?.payload?.payment?.entity;
-  if (!paymentEntity) {
-    console.error('[Webhook] order.paid: Missing payment entity in payload.');
-    return;
-  }
-
-  const razorpayOrderId = paymentEntity.order_id;
-  const razorpayPaymentId = paymentEntity.id;
-  // Razorpay sends the signature in the event-level metadata for order.paid
-  const razorpaySignature = payload?.payload?.payment?.entity?.acquirer_data?.rrn ?? null;
-
-  // ── 1. Find transaction ────────────────────────────────────
-  const transaction = await Transaction.findOne({ razorpayOrderId }).populate('event user');
+const handlePaymentSuccess = async (merchantTransactionId, phonePeTransactionId, rawPayload, notes = {}) => {
+  // ── 1. Find transaction ──────────────────────────────────────
+  const transaction = await Transaction.findOne({ merchantTransactionId }).populate('event user');
   if (!transaction) {
-    console.error(`[Webhook] order.paid: No transaction found for orderId=${razorpayOrderId}`);
+    console.error(`[PhonePe] handlePaymentSuccess: No transaction for ${merchantTransactionId}`);
     return;
   }
 
-  // ── 2. Idempotency guard ───────────────────────────────────
-  // Razorpay can retry webhooks — if we've already processed this payment, silently skip.
+  // ── 2. Idempotency guard ─────────────────────────────────────
   if (transaction.status === 'paid') {
-    console.log(`[Webhook] order.paid: Transaction ${razorpayOrderId} already processed. Skipping.`);
+    console.log(`[PhonePe] ${merchantTransactionId} already processed. Skipping.`);
     return;
   }
 
-  // ── 3. Start a Mongoose session for atomic multi-document updates ──
+  // ── 3. Atomic multi-document update ─────────────────────────
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    // ── 4. Update Transaction to paid ─────────────────────────
-    transaction.status = 'paid';
-    transaction.razorpayPaymentId = razorpayPaymentId;
-    transaction.razorpaySignature = razorpaySignature;
-    transaction.processedAt = new Date();
-    transaction.webhookPayload = payload;
+    // Mark transaction as paid
+    transaction.status             = 'paid';
+    transaction.phonePeTransactionId = phonePeTransactionId;
+    transaction.processedAt        = new Date();
+    transaction.webhookPayload     = rawPayload;
     await transaction.save({ session });
 
-    // ── 5. Increment event registration count (atomic) ────────
+    // Increment event registration count
     await Event.findByIdAndUpdate(
       transaction.event._id,
       { $inc: { registeredCount: 1 } },
       { session }
     );
 
-    // ── 6. Check if this is tied to an existing member ────────
+    // Push to member vault if this is a logged-in member
     if (transaction.user) {
-      // Push attendance into their Member Vault
       await User.findByIdAndUpdate(
         transaction.user._id,
         {
           $push: {
             'history.attendedEvents': {
-              event: transaction.event._id,
+              event:       transaction.event._id,
               transaction: transaction._id,
-              attendedAt: new Date(),
+              attendedAt:  new Date(),
             },
           },
         },
         { session }
       );
 
-      // ── Create confirmed Registration record ────────────────
-      // This is the canonical attendance record for the AdminRegistrations panel.
-      // Uses upsert-style insertOne to stay idempotent on webhook replay.
+      // Create confirmed Registration record (idempotent)
       const existingReg = await Registration.findOne({
         eventId: transaction.event._id,
-        userId: transaction.user._id,
+        userId:  transaction.user._id,
       }).session(session);
 
       if (!existingReg) {
         await Registration.create(
           [{
-            eventId: transaction.event._id,
-            userId: transaction.user._id,
-            name: transaction.user.name || 'ACE Member',
-            email: transaction.user.email || '',
-            tier: transaction.tier,
-            status: 'confirmed',
-            transactionId: transaction._id,
-            customResponses: {}, // Members bypass form fields via Fast-Pass
+            eventId:         transaction.event._id,
+            userId:          transaction.user._id,
+            name:            transaction.user.name || 'ACE Member',
+            email:           transaction.user.email || '',
+            tier:            transaction.tier,
+            status:          'confirmed',
+            transactionId:   transaction._id,
+            customResponses: {},
           }],
           { session }
         );
       }
     }
 
-    // ── 7. New Member account creation ────────────────────────
-    // notes.purpose === 'membership' indicates the user is buying ACE membership.
-    // The order creation endpoint sets this via Razorpay order notes.
-    const notes = paymentEntity.notes || {};
+    // ── New Member account creation ──────────────────────────
     const isMembershipPurchase = notes.purpose === 'membership';
 
     if (isMembershipPurchase && notes.guestEmail) {
-      // Check if user already exists (idempotency in case of webhook replay)
       const existingUser = await User.findOne({ email: notes.guestEmail }).session(session);
 
       if (!existingUser) {
-        // Generate aceId atomically — single findOneAndUpdate + $inc, no race condition
-        const aceId = await User.generateAceId();
-
-        // Generate a CSPRNG 8-char temporary password
+        const aceId        = await User.generateAceId();
         const tempPassword = generateTempPassword();
 
         const newUser = new User({
-          name: notes.guestName || 'ACE Member',
-          email: notes.guestEmail,
-          password: tempPassword, // pre-save hook will bcrypt this
+          name:                   notes.guestName || 'ACE Member',
+          email:                  notes.guestEmail,
+          password:               tempPassword, // pre-save hook bcrypts this
           aceId,
-          role: 'member',
-          requiresPasswordChange: true, // Forces change on first login
-          isEmailVerified: true,        // Verified via Razorpay payment flow
+          role:                   'member',
+          requiresPasswordChange: true,
+          isEmailVerified:        true,
         });
         await newUser.save({ session });
 
-        // Link the transaction to the new user
         transaction.user = newUser._id;
         await transaction.save({ session });
 
-        // ── Queue welcome email with temp credentials ──────────
-        // Email sent via BullMQ email queue (Phase 5)
-        console.log(
-          `[Webhook] New member created: ${aceId} | ${notes.guestEmail}`
-        );
         await emailQueue.add('welcomeEmail', { userId: newUser._id, aceId, tempPassword });
-
-        // ── Queue Late Converter ────────────────────────────────
-        // Migrate any past guest history to their new Member Vault
         await lateConverterQueue.add('migrate', { userId: newUser._id, email: notes.guestEmail });
+
+        console.log(`[PhonePe] New member created: ${aceId} | ${notes.guestEmail}`);
       }
     }
 
     await session.commitTransaction();
-    console.log(`[Webhook] order.paid processed successfully for orderId=${razorpayOrderId}`);
+    console.log(`[PhonePe] Payment success processed: ${merchantTransactionId}`);
 
-    // ── 8. Schedule Treasurer Digest Flush (Debounce & Flush) ─
     await scheduleTreasurerFlush({ transactionId: transaction._id });
   } catch (error) {
     await session.abortTransaction();
-    console.error(`[Webhook] order.paid transaction aborted: ${error.message}`);
-    throw error; // Re-throw so the webhook handler returns 500 and Razorpay retries
+    console.error(`[PhonePe] Transaction aborted for ${merchantTransactionId}:`, error.message);
+    throw error;
   } finally {
     session.endSession();
   }
 };
 
 /**
- * Handles the `payment.failed` webhook event.
- *
- * Updates the Transaction status to 'failed' and stores the raw payload for audit.
- *
- * @param {Object} payload - Parsed Razorpay webhook payload
+ * Marks a transaction as failed and sends a failure email.
  */
-const handlePaymentFailed = async (payload) => {
-  const paymentEntity = payload?.payload?.payment?.entity;
-  if (!paymentEntity) {
-    console.error('[Webhook] payment.failed: Missing payment entity in payload.');
-    return;
-  }
-
-  const razorpayOrderId = paymentEntity.order_id;
-  const razorpayPaymentId = paymentEntity.id;
-
-  const transaction = await Transaction.findOne({ razorpayOrderId }).populate('user event');
+const handlePaymentFailure = async (merchantTransactionId, rawPayload) => {
+  const transaction = await Transaction.findOne({ merchantTransactionId }).populate('user event');
   if (!transaction) {
-    console.error(`[Webhook] payment.failed: No transaction found for orderId=${razorpayOrderId}`);
+    console.error(`[PhonePe] handlePaymentFailure: No transaction for ${merchantTransactionId}`);
     return;
   }
 
-  // Idempotency: don't overwrite a 'paid' status with 'failed' (Razorpay edge case)
   if (transaction.status === 'paid') {
-    console.warn(`[Webhook] payment.failed: Transaction ${razorpayOrderId} is already paid. Ignoring failure event.`);
+    console.warn(`[PhonePe] ${merchantTransactionId} already paid — ignoring failure.`);
     return;
   }
 
-  transaction.status = 'failed';
-  transaction.razorpayPaymentId = razorpayPaymentId;
-  transaction.processedAt = new Date();
-  transaction.webhookPayload = payload;
+  transaction.status         = 'failed';
+  transaction.processedAt    = new Date();
+  transaction.webhookPayload = rawPayload;
   await transaction.save();
 
   await emailQueue.add('paymentFailedEmail', {
-    email: transaction.guestEmail || transaction.user?.email,
-    name: transaction.guestName || transaction.user?.name,
+    email:      transaction.guestEmail || transaction.user?.email,
+    name:       transaction.guestName  || transaction.user?.name,
     eventTitle: transaction.event?.title,
   });
 
-  console.log(`[Webhook] payment.failed processed for orderId=${razorpayOrderId}`);
+  console.log(`[PhonePe] Payment failure recorded: ${merchantTransactionId}`);
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -258,63 +202,83 @@ const handlePaymentFailed = async (payload) => {
 /**
  * POST /api/payments/order
  *
- * Creates a Razorpay order for event registration.
- * Determines pricing tier from user role.
- * Stores a Transaction document immediately (status: 'created').
+ * Creates a PhonePe payment for event registration.
+ * Returns a redirectUrl — the frontend navigates the user to this URL.
  *
- * Protected: requires JWT auth (guests use a separate guest-checkout route).
+ * Protected: requires JWT auth.
  */
 export const createOrder = catchAsync(async (req, res, next) => {
-  const { eventId, guestEmail, guestName } = req.body;
-  const currentUser = req.user || null; // May be null for guest flow
+  const { eventId } = req.body;
+  const currentUser = req.user;
 
-  if (!eventId) {
-    return next(new AppError('Event ID is required.', 400));
-  }
+  if (!eventId) return next(new AppError('Event ID is required.', 400));
 
   const event = await Event.findById(eventId);
-  if (!event) return next(new AppError('Event not found.', 404));
-  if (!event.isRegistrationOpen) {
-    return next(new AppError('Registration is closed for this event.', 400));
-  }
+  if (!event)                    return next(new AppError('Event not found.', 404));
+  if (!event.isRegistrationOpen) return next(new AppError('Registration is closed for this event.', 400));
 
-  // ── Determine pricing tier ─────────────────────────────────
+  // Determine pricing tier
   const isMember = currentUser && ['member', 'sbm', 'ebm', 'admin'].includes(currentUser.role);
-  const tier = isMember ? 'member' : 'non_member';
-  const amount = (isMember ? event.memberFee : event.standardFee) * 100; // convert INR to paise for Razorpay
+  const tier      = isMember ? 'member' : 'non_member';
+  const amount    = (isMember ? event.memberFee : event.standardFee) * 100; // paise
 
-  // ── Create Razorpay order (or Mock in DEV) ─────────────────
-  let razorpayOrder;
-  if (process.env.NODE_ENV === 'production') {
-    razorpayOrder = await razorpay.orders.create({
+  const merchantTransactionId = generateMerchantTxnId();
+  const redirectUrl           = `${process.env.CLIENT_URL}/payment/callback`;
+  const callbackUrl           = `${process.env.SERVER_URL || 'http://localhost:5000'}/api/payments/webhook`;
+
+  // ── DEV: Skip PhonePe API, return mock redirect ─────────────
+  if (process.env.NODE_ENV !== 'production') {
+    await Transaction.create({
+      merchantTransactionId,
+      user:      currentUser._id,
+      event:     eventId,
       amount,
-      currency: 'INR',
-      receipt: `ace_${Date.now()}`,
-      notes: {
-        eventId: eventId.toString(),
-        userId: currentUser?._id.toString() || null,
-        guestEmail: guestEmail || null,
-        guestName: guestName || null,
-        tier,
-        purpose: 'event_registration',
+      tier,
+      status:    'created',
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        merchantTransactionId,
+        redirectUrl: `${process.env.CLIENT_URL}/payment/callback?txnId=${merchantTransactionId}&mode=dev`,
       },
     });
-  } else {
-    // Mock Razorpay order for dev mode to avoid 401 from Razorpay API
-    razorpayOrder = {
-      id: `order_dev_${Date.now()}`,
-      amount,
-      currency: 'INR',
-    };
   }
 
-  // ── Persist Transaction (status: 'created') ────────────────
+  // ── PRODUCTION: Call PhonePe /pg/v1/pay ─────────────────────
+  const payPayload = {
+    merchantId:            PHONEPE_MERCHANT_ID,
+    merchantTransactionId,
+    merchantUserId:        currentUser._id.toString(),
+    amount,
+    redirectUrl,
+    redirectMode:          'REDIRECT',
+    callbackUrl,
+    paymentInstrument:     { type: 'PAY_PAGE' },
+  };
+
+  const base64Payload = Buffer.from(JSON.stringify(payPayload)).toString('base64');
+  const xVerify       = generateChecksum(base64Payload, '/pg/v1/pay');
+
+  const phonePeRes = await fetch(`${PHONEPE_BASE_URL}/pg/v1/pay`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', 'X-VERIFY': xVerify },
+    body:    JSON.stringify({ request: base64Payload }),
+  });
+
+  const phonePeData = await phonePeRes.json();
+
+  if (!phonePeData.success) {
+    console.error('[PhonePe] Order creation failed:', phonePeData);
+    return next(new AppError(phonePeData.message || 'PhonePe order creation failed.', 502));
+  }
+
+  // Persist Transaction
   await Transaction.create({
-    razorpayOrderId: razorpayOrder.id,
-    user: currentUser?._id || null,
-    guestEmail: guestEmail || null,
-    guestName: guestName || null,
-    event: eventId,
+    merchantTransactionId,
+    user:   currentUser._id,
+    event:  eventId,
     amount,
     tier,
     status: 'created',
@@ -323,10 +287,8 @@ export const createOrder = catchAsync(async (req, res, next) => {
   res.status(201).json({
     success: true,
     data: {
-      orderId: razorpayOrder.id,
-      amount: razorpayOrder.amount,
-      currency: razorpayOrder.currency,
-      keyId: process.env.RAZORPAY_KEY_ID, // Safe: public key only
+      merchantTransactionId,
+      redirectUrl: phonePeData.data.instrumentResponse.redirectInfo.url,
     },
   });
 });
@@ -334,196 +296,264 @@ export const createOrder = catchAsync(async (req, res, next) => {
 /**
  * POST /api/payments/membership-order
  *
- * Creates a Razorpay order specifically for buying an ACE Membership.
- * Guest-only route (authenticated members don't need a membership order).
- * Sets purpose: 'membership' in Razorpay notes so the webhook knows to create a User account.
+ * Creates a PhonePe payment for purchasing an ACE Membership (guest flow).
+ * Returns redirectUrl — user is sent to PhonePe's hosted page.
  */
 export const createMembershipOrder = catchAsync(async (req, res, next) => {
-  const { email, name, eventId } = req.body;
+  const { email, name, eventId, phone, customResponses } = req.body;
 
   if (!email || !name) {
     return next(new AppError('Email and name are required for membership registration.', 400));
   }
 
-  // Prevent duplicate memberships
   const existingUser = await User.findOne({ email: email.toLowerCase() });
   if (existingUser && existingUser.role !== 'guest') {
     return next(new AppError('An ACE membership already exists for this email.', 409));
   }
 
-  // If bundling with event registration, validate the event
-  let event = null;
-  let totalAmount = 0; // In paise — define membership fee via env or a config collection
+  let totalAmount = 50000; // ₹500 default membership fee (in paise)
+  let event       = null;
+
   if (eventId) {
     event = await Event.findById(eventId);
     if (!event) return next(new AppError('Event not found.', 404));
-    totalAmount += event.memberFee; // Member gets the lower rate after joining
+    totalAmount = event.memberFee * 100;
   }
 
-  let razorpayOrder;
-  if (process.env.NODE_ENV === 'production') {
-    razorpayOrder = await razorpay.orders.create({
-      amount: totalAmount || 50000, // ₹500 membership fee (50000 paise) if no event
-      currency: 'INR',
-      receipt: `ace_mem_${Date.now()}`,
-      notes: {
-        purpose: 'membership',
-        guestEmail: email.toLowerCase(),
-        guestName: name,
-        eventId: eventId?.toString() || null,
+  const merchantTransactionId = generateMerchantTxnId();
+  const redirectUrl           = `${process.env.CLIENT_URL}/payment/callback`;
+  const callbackUrl           = `${process.env.SERVER_URL || 'http://localhost:5000'}/api/payments/webhook`;
+
+  // ── DEV: Mock redirect ───────────────────────────────────────
+  if (process.env.NODE_ENV !== 'production') {
+    await Transaction.create({
+      merchantTransactionId,
+      user:        null,
+      guestEmail:  email.toLowerCase(),
+      guestName:   name,
+      event:       eventId || null,
+      amount:      totalAmount,
+      tier:        'member',
+      status:      'created',
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        merchantTransactionId,
+        redirectUrl: `${process.env.CLIENT_URL}/payment/callback?txnId=${merchantTransactionId}&mode=dev&purpose=membership&guestEmail=${encodeURIComponent(email)}&guestName=${encodeURIComponent(name)}`,
       },
     });
-  } else {
-    razorpayOrder = {
-      id: `order_dev_${Date.now()}`,
-      amount: totalAmount || 50000,
-      currency: 'INR',
-    };
   }
 
-  // Store transaction — no user yet (will be created when webhook fires)
+  // ── PRODUCTION ───────────────────────────────────────────────
+  const payPayload = {
+    merchantId:            PHONEPE_MERCHANT_ID,
+    merchantTransactionId,
+    merchantUserId:        `GUEST_${Date.now()}`,
+    amount:                totalAmount,
+    redirectUrl,
+    redirectMode:          'REDIRECT',
+    callbackUrl,
+    paymentInstrument:     { type: 'PAY_PAGE' },
+  };
+
+  const base64Payload = Buffer.from(JSON.stringify(payPayload)).toString('base64');
+  const xVerify       = generateChecksum(base64Payload, '/pg/v1/pay');
+
+  const phonePeRes = await fetch(`${PHONEPE_BASE_URL}/pg/v1/pay`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', 'X-VERIFY': xVerify },
+    body:    JSON.stringify({ request: base64Payload }),
+  });
+
+  const phonePeData = await phonePeRes.json();
+
+  if (!phonePeData.success) {
+    console.error('[PhonePe] Membership order creation failed:', phonePeData);
+    return next(new AppError(phonePeData.message || 'PhonePe order creation failed.', 502));
+  }
+
   await Transaction.create({
-    razorpayOrderId: razorpayOrder.id,
-    user: null,
-    guestEmail: email.toLowerCase(),
-    guestName: name,
-    event: eventId || null,
-    amount: razorpayOrder.amount,
-    tier: 'member', // They're buying membership so member rate applies
-    status: 'created',
+    merchantTransactionId,
+    user:        null,
+    guestEmail:  email.toLowerCase(),
+    guestName:   name,
+    event:       eventId || null,
+    amount:      totalAmount,
+    tier:        'member',
+    status:      'created',
   });
 
   res.status(201).json({
     success: true,
     data: {
-      orderId: razorpayOrder.id,
-      amount: razorpayOrder.amount,
-      currency: razorpayOrder.currency,
-      keyId: process.env.RAZORPAY_KEY_ID,
+      merchantTransactionId,
+      redirectUrl: phonePeData.data.instrumentResponse.redirectInfo.url,
     },
   });
 });
 
 /**
+ * GET /api/payments/verify/:merchantTransactionId
+ *
+ * SECURITY-CRITICAL: Called by the frontend PaymentCallback page
+ * after the user returns from PhonePe's hosted payment page.
+ *
+ * We NEVER trust the redirect URL params — always verify via
+ * a server-to-server call to PhonePe's Status API.
+ *
+ * Returns: { status: 'SUCCESS' | 'PENDING' | 'FAILED' }
+ */
+export const verifyAndConfirm = catchAsync(async (req, res, next) => {
+  const { merchantTransactionId } = req.params;
+
+  // ── DEV: Skip PhonePe API ────────────────────────────────────
+  if (process.env.NODE_ENV !== 'production') {
+    const txn = await Transaction.findOne({ merchantTransactionId });
+    if (!txn) return next(new AppError('Transaction not found.', 404));
+
+    // Check if dev-confirm already ran
+    if (txn.status === 'paid') {
+      return res.status(200).json({ success: true, data: { status: 'SUCCESS' } });
+    }
+
+    return res.status(200).json({ success: true, data: { status: 'PENDING' } });
+  }
+
+  // ── PRODUCTION: PhonePe Status API ──────────────────────────
+  const xVerify = generateStatusChecksum(merchantTransactionId);
+  const url     = `${PHONEPE_BASE_URL}/pg/v1/status/${PHONEPE_MERCHANT_ID}/${merchantTransactionId}`;
+
+  const statusRes  = await fetch(url, {
+    method:  'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-VERIFY':      xVerify,
+      'X-MERCHANT-ID': PHONEPE_MERCHANT_ID,
+    },
+  });
+
+  const statusData = await statusRes.json();
+
+  const code           = statusData.code;            // e.g. PAYMENT_SUCCESS
+  const phonePeTxnId   = statusData.data?.transactionId;
+
+  if (code === 'PAYMENT_SUCCESS') {
+    // Process if not already done (idempotent)
+    await handlePaymentSuccess(
+      merchantTransactionId,
+      phonePeTxnId,
+      statusData,
+      statusData.data?.merchantOrderId ? { purpose: 'event_registration' } : {}
+    );
+    return res.status(200).json({ success: true, data: { status: 'SUCCESS' } });
+  }
+
+  if (code === 'PAYMENT_ERROR' || code === 'PAYMENT_CANCELLED' || code === 'TIMED_OUT') {
+    await handlePaymentFailure(merchantTransactionId, statusData);
+    return res.status(200).json({ success: true, data: { status: 'FAILED', code } });
+  }
+
+  // PAYMENT_PENDING or unknown
+  return res.status(200).json({ success: true, data: { status: 'PENDING', code } });
+});
+
+/**
  * POST /api/payments/webhook
  *
- * SECURITY-CRITICAL ENDPOINT
+ * SECURITY-CRITICAL: PhonePe server-to-server callback.
  *
- * This route receives raw Buffer bodies (express.raw middleware applied in index.js).
- * ALL database writes are gated behind HMAC SHA256 signature verification.
- * No user input is trusted before the signature check passes.
- *
- * Razorpay may retry failed webhooks up to 5 times — all handlers are idempotent.
- * We always return HTTP 200 to Razorpay to prevent unnecessary retries after processing.
+ * PhonePe POSTs a JSON body to this URL with an X-VERIFY header.
+ * We verify the checksum before any database operations.
+ * This is the primary payment confirmation mechanism.
  */
 export const handleWebhook = async (req, res) => {
-  const signature = req.headers['x-razorpay-signature'];
-  const rawBody = req.body; // Buffer — from express.raw() applied in index.js
+  const xVerify       = req.headers['x-verify'];
+  const rawBodyString = JSON.stringify(req.body); // PhonePe sends regular JSON
 
-  // ── STEP 1: Verify HMAC SHA256 signature ──────────────────
-  // This is the FIRST thing we do. Nothing proceeds without a valid signature.
-  if (!verifyWebhookSignature(rawBody, signature)) {
-    console.error('[Webhook] Invalid signature — request rejected.');
-    // Return 400 to signal rejection, but do NOT reveal why to the caller
+  // ── Verify X-VERIFY checksum ─────────────────────────────────
+  if (!verifyWebhookChecksum(rawBodyString, xVerify)) {
+    console.error('[PhonePe Webhook] Invalid X-VERIFY — request rejected.');
     return res.status(400).json({ success: false, message: 'Invalid signature.' });
   }
 
-  // ── STEP 2: Parse the raw body as JSON ────────────────────
-  let payload;
+  const payload = req.body;
+  const code    = payload.code; // PAYMENT_IS_INSTRUMENTED, PAYMENT_ERROR, etc.
+
+  console.log(`[PhonePe Webhook] Verified. Code: ${code}`);
+
+  // Decode the base64 response if present
+  let responseData = {};
   try {
-    payload = JSON.parse(rawBody.toString('utf8'));
+    if (payload.response) {
+      responseData = JSON.parse(Buffer.from(payload.response, 'base64').toString('utf8'));
+    }
   } catch {
-    console.error('[Webhook] Failed to parse JSON payload.');
+    console.error('[PhonePe Webhook] Failed to decode response.');
     return res.status(400).json({ success: false, message: 'Invalid payload.' });
   }
 
-  const eventType = payload.event;
-  console.log(`[Webhook] Signature verified. Processing event: ${eventType}`);
+  const merchantTransactionId = responseData.merchantTransactionId || responseData.data?.merchantTransactionId;
+  const phonePeTxnId          = responseData.transactionId || responseData.data?.transactionId;
 
-  // ── STEP 3: Route to the correct handler ─────────────────
   try {
-    switch (eventType) {
-      case 'order.paid':
-      case 'payment.captured':
-        await handleOrderPaid(payload);
-        break;
+    if (code === 'PAYMENT_IS_INSTRUMENTED' || code === 'PAYMENT_SUCCESS') {
+      const notes = responseData.merchantOrderId?.includes('mem')
+        ? { purpose: 'membership', guestEmail: responseData.guestEmail, guestName: responseData.guestName }
+        : { purpose: 'event_registration' };
 
-      case 'payment.failed':
-        await handlePaymentFailed(payload);
-        break;
-
-      default:
-        // Acknowledge unknown events — Razorpay sends many event types
-        console.log(`[Webhook] Unhandled event type: ${eventType}. Acknowledged.`);
+      await handlePaymentSuccess(merchantTransactionId, phonePeTxnId, payload, notes);
+    } else if (code === 'PAYMENT_ERROR' || code === 'PAYMENT_CANCELLED') {
+      await handlePaymentFailure(merchantTransactionId, payload);
+    } else {
+      console.log(`[PhonePe Webhook] Unhandled code: ${code}`);
     }
   } catch (error) {
-    // Log the error but return 500 so Razorpay retries the webhook
-    console.error(`[Webhook] Handler threw an error for ${eventType}:`, error.message);
-    return res.status(500).json({ success: false, message: 'Internal processing error.' });
+    console.error(`[PhonePe Webhook] Error processing ${code}:`, error.message);
+    return res.status(500).json({ success: false, message: 'Internal error.' });
   }
 
-  // ── STEP 4: Acknowledge to Razorpay ──────────────────────
-  // Razorpay considers a 2xx response as successful delivery.
+  // PhonePe requires a 200 to confirm receipt
   res.status(200).json({ success: true, received: true });
 };
 
 /**
  * POST /api/payments/dev-confirm  (DEV ONLY)
  *
- * Simulates the Razorpay webhook for local development:
- *   1. Finds the pending Transaction by razorpayOrderId
- *   2. Marks it paid
- *   3. Pushes the event to the user's history.attendedEvents vault
- *   4. Creates a confirmed Registration document
+ * Simulates PhonePe webhook confirmation for local development.
+ * Directly calls handlePaymentSuccess without any network call.
  *
- * Body: { razorpayOrderId: string }
- * Auth: JWT (protect middleware applied in route)
+ * Body: { merchantTransactionId: string, purpose?: 'membership', guestEmail?: string, guestName?: string }
  */
 export const devConfirm = catchAsync(async (req, res, next) => {
-  // Hard guard — never runs in production even if somehow routed
   if (process.env.NODE_ENV === 'production') {
     return next(new AppError('Not available in production.', 403));
   }
 
-  const { razorpayOrderId } = req.body;
-  if (!razorpayOrderId) {
-    return next(new AppError('razorpayOrderId is required.', 400));
+  const { merchantTransactionId, purpose, guestEmail, guestName } = req.body;
+  if (!merchantTransactionId) {
+    return next(new AppError('merchantTransactionId is required.', 400));
   }
 
-  const transaction = await Transaction.findOne({ razorpayOrderId });
+  const transaction = await Transaction.findOne({ merchantTransactionId });
   if (!transaction) {
-    return next(new AppError(`No transaction found for orderId: ${razorpayOrderId}`, 404));
+    return next(new AppError(`No transaction found for: ${merchantTransactionId}`, 404));
   }
 
   if (transaction.status === 'paid') {
     return res.status(200).json({ success: true, message: 'Already confirmed.' });
   }
 
-  // Derive purpose for the mock payload
-  // If user is null and tier is member, it's a membership purchase
-  const isMembership = !transaction.user && transaction.tier === 'member';
-
-  const mockPayload = {
-    event: 'order.paid',
-    payload: {
-      payment: {
-        entity: {
-          id: `dev_pay_${Date.now()}`,
-          order_id: razorpayOrderId,
-          notes: {
-            purpose: isMembership ? 'membership' : 'event_registration',
-            guestEmail: transaction.guestEmail,
-            guestName: transaction.guestName,
-            eventId: transaction.event?.toString(),
-          },
-          acquirer_data: { rrn: 'dev_mock_signature' }
-        }
-      }
-    }
+  const mockPhonePeTxnId = `dev_phonepe_${Date.now()}`;
+  const notes = {
+    purpose:    purpose || (transaction.user ? 'event_registration' : 'membership'),
+    guestEmail: guestEmail || transaction.guestEmail,
+    guestName:  guestName  || transaction.guestName,
   };
 
   try {
-    await handleOrderPaid(mockPayload);
+    await handlePaymentSuccess(merchantTransactionId, mockPhonePeTxnId, { dev: true }, notes);
     res.status(200).json({ success: true, message: 'Dev confirmation successful.' });
   } catch (err) {
     console.error(`[DevConfirm] Error: ${err.message}`);

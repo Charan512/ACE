@@ -16,6 +16,7 @@ import Login from './pages/Login';
 import GuestCheckout from './pages/GuestCheckout';
 import EventDetailPage from './pages/EventDetailPage';
 import ForcePasswordChange from './pages/ForcePasswordChange';
+import PaymentCallback from './pages/PaymentCallback';
 
 // ── Member Pages ──────────────────────────────────────────────
 import MemberDashboard from './pages/MemberDashboard';
@@ -76,6 +77,7 @@ function App() {
           <Route path="/register" element={<Registration />} />
           <Route path="/login" element={<Login />} />
           <Route path="/events/checkout/:eventId" element={<GuestCheckout />} />
+          <Route path="/payment/callback" element={<PaymentCallback />} />
 
           {/* ── Force Password Change ───────────────── */}
           <Route element={<ProtectedRoute allowPasswordChangePending={true} />}>

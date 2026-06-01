@@ -3,6 +3,7 @@ import {
   createOrder,
   createMembershipOrder,
   handleWebhook,
+  verifyAndConfirm,
 } from '../controllers/payment.controller.js';
 import { protect, requirePasswordChange } from '../middleware/auth.middleware.js';
 import rateLimit from 'express-rate-limit';
@@ -25,9 +26,8 @@ const orderLimiter = rateLimit({
 /**
  * POST /api/payments/webhook
  *
- * NOTE: This route MUST NOT have auth middleware — Razorpay calls it server-to-server.
- *     Security is handled entirely by HMAC SHA256 signature verification inside the controller.
- *     express.raw() body parsing for this route is set in index.js BEFORE express.json().
+ * NOTE: This route MUST NOT have auth middleware — PhonePe calls it server-to-server.
+ *     Security is handled entirely by X-VERIFY SHA256 signature verification inside the controller.
  */
 router.post('/webhook', handleWebhook);
 
@@ -49,10 +49,16 @@ router.post('/membership-order', orderLimiter, createMembershipOrder);
 router.post('/order', protect, requirePasswordChange, orderLimiter, createOrder);
 
 /**
+ * GET /api/payments/verify/:merchantTransactionId
+ * Securely verifies a PhonePe transaction by querying the Status API.
+ * Called when the user returns to the PaymentCallback page.
+ */
+router.get('/verify/:merchantTransactionId', verifyAndConfirm);
+
+/**
  * POST /api/payments/dev-confirm
  *
- * DEV ONLY — simulates the Razorpay webhook's order.paid handler.
- * Marks a Transaction as paid, writes to User vault, and creates a Registration.
+ * DEV ONLY — simulates PhonePe payment success.
  * NEVER exposed in production.
  */
 if (process.env.NODE_ENV !== 'production') {

@@ -105,44 +105,13 @@ const MemberDashboard = () => {
     setRegisteringId(eventId);
     try {
       const orderRes = await api.post('/payments/order', { eventId });
-      const { orderId, amount, keyId } = orderRes.data.data;
+      const { merchantTransactionId, redirectUrl } = orderRes.data.data;
 
-      if (import.meta.env.DEV) {
-        await api.post('/payments/dev-confirm', { razorpayOrderId: orderId });
-        await fetchVault();
-        showToast('Dev mode: Registration confirmed and added to vault.', 'success');
-        return;
-      }
+      // Store txn ID to verify when user returns
+      sessionStorage.setItem('ace_pending_txn', merchantTransactionId);
 
-      await new Promise((resolve, reject) => {
-        const options = {
-          key: keyId,
-          amount,
-          currency: 'INR',
-          name: 'ACE',
-          description: 'Event Registration',
-          order_id: orderId,
-          theme: { color: '#818cf8' },
-          handler: async (response) => {
-            await fetchVault();
-            showToast('Payment successful. Registration confirmed.', 'success');
-            resolve(response);
-          },
-          modal: {
-            ondismiss: () => {
-              showToast('Payment cancelled.', 'error');
-              resolve(null);
-            },
-          },
-        };
-        if (!window.Razorpay) { reject(new Error('Razorpay SDK not loaded.')); return; }
-        const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', (resp) => {
-          showToast(`Payment failed: ${resp.error.description}`, 'error');
-          reject(new Error(resp.error.description));
-        });
-        rzp.open();
-      });
+      // Redirect to PhonePe or Dev mock callback
+      window.location.href = redirectUrl;
     } catch (err) {
       console.error('[Dashboard] Registration error:', err.message);
       showToast(err.response?.data?.message || 'Registration failed. Please try again.', 'error');

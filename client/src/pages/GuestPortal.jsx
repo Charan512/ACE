@@ -9,7 +9,7 @@ const GuestPortal = () => {
   const [loading, setLoading] = useState(true);
   const [isInterceptModalOpen, setIsInterceptModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  
+
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
 
@@ -108,8 +108,8 @@ const GuestPortal = () => {
               <h3 className="text-3xl font-bold mb-2">{upcomingEvent.title}</h3>
               <p className="text-slate-400 font-medium">Date: {new Date(upcomingEvent.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
             </div>
-            <Link 
-              to={`/events/${upcomingEvent._id}`} 
+            <Link
+              to={`/events/${upcomingEvent._id}`}
               className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-full font-bold transition-all shadow-md whitespace-nowrap"
             >
               View Event Details
@@ -191,18 +191,18 @@ const GuestPortal = () => {
             {/* HOD Profile */}
             <div className="flex flex-col items-center text-center group">
               <div className="w-48 aspect-square rounded-full mb-6 overflow-hidden border-4 border-slate-100 shadow-lg group-hover:border-primary transition-colors duration-500">
-                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop" alt="Dr. V. Chandrasekhar" className="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 transition-all duration-500" />
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop" alt="Dr. Bh. V. S. R. K. Raju" className="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 transition-all duration-500" />
               </div>
-              <h4 className="text-2xl font-black text-slate-950 tracking-tight mb-1">Dr. V. Chandrasekhar</h4>
+              <h4 className="text-2xl font-black text-slate-950 tracking-tight mb-1">Dr. Bh. V. S. R. K. Raju</h4>
               <p className="text-primary font-bold tracking-wide text-sm uppercase">Head of Department</p>
             </div>
 
             {/* Coordinator Profile 1 */}
             <div className="flex flex-col items-center text-center group">
               <div className="w-48 aspect-square rounded-full mb-6 overflow-hidden border-4 border-slate-100 shadow-lg group-hover:border-primary transition-colors duration-500">
-                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=400&auto=format&fit=crop" alt="Dr. K. N. S. R. P. Reddy" className="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 transition-all duration-500" />
+                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=400&auto=format&fit=crop" alt="Dr. V. Chandrasekhar" className="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 transition-all duration-500" />
               </div>
-              <h4 className="text-2xl font-black text-slate-950 tracking-tight mb-1">Dr. K. N. S. R. P. Reddy</h4>
+              <h4 className="text-2xl font-black text-slate-950 tracking-tight mb-1">Dr. V. Chandrasekhar</h4>
               <p className="text-slate-500 font-bold tracking-wide text-sm uppercase">Faculty Coordinator</p>
             </div>
 
@@ -262,32 +262,32 @@ const GuestPortal = () => {
       {isInterceptModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full p-8 relative animate-in fade-in zoom-in duration-200">
-            <button 
+            <button
               onClick={() => setIsInterceptModalOpen(false)}
               className="absolute top-6 right-6 text-slate-400 hover:text-slate-900 transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
-            
+
             <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
               <Shield className="w-8 h-8 text-blue-600" />
             </div>
-            
+
             <h3 className="text-2xl font-black text-slate-950 tracking-tight mb-2">Registration Options</h3>
             <p className="text-slate-500 mb-8 font-medium">
               You are currently not logged in. ACE Members receive exclusive discounts on all operations.
             </p>
-            
+
             <div className="flex flex-col gap-4">
-              <Link 
-                to="/login" 
+              <Link
+                to="/login"
                 className="w-full bg-blue-600 text-white py-4 rounded-xl shadow-md hover:bg-blue-700 transition-colors flex justify-center items-center gap-2"
               >
                 <span className="font-bold">Login as ACE Member</span>
                 {selectedEvent && <span className="opacity-90 font-mono text-sm">(₹{selectedEvent.memberFee})</span>}
               </Link>
-              
-              <button 
+
+              <button
                 onClick={() => {
                   setIsInterceptModalOpen(false);
                   navigate(`/events/checkout/${selectedEvent?._id}?type=guest`);

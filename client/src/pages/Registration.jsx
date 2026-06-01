@@ -23,20 +23,6 @@ const Registration = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handlePaymentSuccess = async (response) => {
-    setSuccess(true);
-  };
-
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -44,48 +30,10 @@ const Registration = () => {
 
     try {
       const response = await api.post('/payments/membership-order', formData);
-      const { orderId, keyId, amount } = response.data;
+      const { merchantTransactionId, redirectUrl } = response.data.data;
 
-      if (import.meta.env.DEV) {
-        console.warn('%c[DEV MODE] Razorpay checkout bypassed. Simulating success.', 'color: #0ea5e9; font-weight: bold; font-size: 14px;');
-        try {
-          await api.post('/payments/dev-confirm', { razorpayOrderId: orderId });
-          handlePaymentSuccess({ razorpay_payment_id: 'dev_mock_' + orderId });
-        } catch (confirmErr) {
-          console.error('[DEV MODE] dev-confirm failed:', confirmErr);
-          setError('Dev mode confirmation failed.');
-        } finally {
-          setIsLoading(false);
-        }
-        return;
-      }
-
-      const res = await loadRazorpayScript();
-      if (!res) {
-        throw new Error('Razorpay SDK failed to load. Are you offline?');
-      }
-
-      const options = {
-        key: keyId,
-        amount: amount,
-        currency: 'INR',
-        name: 'SRKR ACE',
-        description: 'ACE Membership Registration',
-        order_id: orderId,
-        handler: handlePaymentSuccess,
-        prefill: {
-          name: formData.name,
-          email: formData.email,
-          contact: formData.phone
-        },
-        theme: {
-          color: '#2563EB'
-        }
-      };
-
-      const paymentObject = new window.Razorpay(options);
-      paymentObject.open();
-
+      sessionStorage.setItem('ace_pending_txn', merchantTransactionId);
+      window.location.href = redirectUrl;
     } catch (err) {
       if (err.response && err.response.status === 409) {
         setError(
@@ -97,7 +45,6 @@ const Registration = () => {
       } else {
         setError(err.response?.data?.message || err.message || 'Registration failed. Please try again.');
       }
-    } finally {
       setIsLoading(false);
     }
   };

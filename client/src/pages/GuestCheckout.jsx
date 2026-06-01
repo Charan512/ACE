@@ -163,32 +163,6 @@ const GuestCheckout = () => {
     setIsProcessing(true);
 
     try {
-      if (import.meta.env.DEV) {
-        try {
-          // In DEV, first create the mock order
-          const orderRes = await api.post('/payments/membership-order', {
-            name:            coreData.name,
-            email:           coreData.email,
-            phone:           coreData.phone || undefined,
-            customResponses: customResponses,
-            eventId,
-          });
-          const { orderId } = orderRes.data.data;
-          
-          // Then confirm it
-          await api.post('/payments/dev-confirm', { razorpayOrderId: orderId });
-          
-          alert('[DEV MODE] Payment successful. You are now registered!');
-          navigate('/');
-        } catch (confirmErr) {
-          console.error('[DEV MODE] GuestCheckout failed:', confirmErr);
-          alert(confirmErr.response?.data?.message || 'Checkout failed in DEV mode.');
-        } finally {
-          setIsProcessing(false);
-        }
-        return;
-      }
-
       const orderRes = await api.post('/payments/membership-order', {
         name:            coreData.name,
         email:           coreData.email,
@@ -197,37 +171,13 @@ const GuestCheckout = () => {
         eventId,
       });
 
-      const { orderId, amount, keyId } = orderRes.data.data;
+      const { merchantTransactionId, redirectUrl } = orderRes.data.data;
 
-      const options = {
-        key:         keyId,
-        amount,
-        currency:    'INR',
-        name:        'SRKR ACE',
-        description: `Registration for ${event?.title}`,
-        order_id:    orderId,
-        theme:       { color: '#2563eb' },
-        handler: function (response) {
-          alert('Payment Successful! Welcome to ACE. Check your email for login details.');
-          navigate('/login');
-        },
-        modal: {
-          ondismiss: function () {
-            setIsProcessing(false);
-          },
-        },
-      };
+      // Store txn ID to verify when user returns
+      sessionStorage.setItem('ace_pending_txn', merchantTransactionId);
 
-      if (!window.Razorpay) {
-        throw new Error('Razorpay SDK not loaded');
-      }
-
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', function (response) {
-        alert(`Payment failed: ${response.error.description}`);
-        setIsProcessing(false);
-      });
-      rzp.open();
+      // Redirect to PhonePe or Dev mock callback
+      window.location.href = redirectUrl;
     } catch (err) {
       console.error('[GuestCheckout]', err);
       alert(err.response?.data?.message || 'Checkout failed.');
