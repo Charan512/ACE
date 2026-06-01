@@ -29,6 +29,12 @@ import AdminRegistrations from './pages/AdminRegistrations';
 import AdminCertificates from './pages/AdminCertificates';
 import AdminUsers from './pages/AdminUsers';
 
+// ── Ops Pages ────────────────────────────────────────────────
+import OpsLayout          from './components/OpsLayout';
+import OpsDashboard       from './pages/OpsDashboard';
+import EventControlRoom   from './pages/EventControlRoom';
+import OpsScanner         from './pages/OpsScanner';
+
 // ── Layout with Navbar + Footer ───────────────────────────────
 import { Outlet } from 'react-router-dom';
 
@@ -107,6 +113,19 @@ function App() {
             <Route path="/admin/certificates"     element={<AdminCertificates />} />
             <Route path="/admin/users"            element={<AdminUsers />} />
           </Route>
+        </Route>
+        {/* ── Protected Ops Routes (EBM/SBM/Admin) ───────────────── */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'ebm', 'sbm']} />
+          }
+        >
+          <Route element={<OpsLayout />}>
+            <Route path="/ops"                        element={<OpsDashboard />} />
+            <Route path="/ops/events/:eventId"        element={<EventControlRoom />} />
+          </Route>
+          {/* Scanner is full-screen (no OpsLayout chrome) */}
+          <Route path="/ops/scan" element={<OpsScanner />} />
         </Route>
       </Routes>
     </Router>

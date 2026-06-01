@@ -81,11 +81,11 @@ const treasurerWorker = new Worker(
 );
 
 treasurerWorker.on('completed', (job) => {
-  console.log(`[TreasurerWorker] ✅ Flush complete (id: ${job.id})`);
+  console.log(`[TreasurerWorker] Flush complete (id: ${job.id})`);
 });
 
 treasurerWorker.on('failed', (job, err) => {
-  console.error(`[TreasurerWorker] ❌ Flush failed (id: ${job?.id}): ${err.message}`);
+  console.error(`[TreasurerWorker] Flush failed (id: ${job?.id}): ${err.message}`);
 });
 
 export default treasurerWorker;

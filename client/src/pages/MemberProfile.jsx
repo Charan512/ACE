@@ -1,9 +1,71 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   User, Phone, BookOpen, Hash, GraduationCap, Building,
-  CheckCircle2, AlertTriangle, Loader2, ShieldCheck, TerminalSquare,
+  CheckCircle2, AlertTriangle, Loader2, ShieldCheck, UserCog,
+  ChevronDown
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
+import BlurText from '../components/react-bits/BlurText';
+
+// ── Shared Styles ─────────────────────────────────────────────
+const SECTION = {
+  background: 'rgba(255, 255, 255, 0.7)',
+  backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
+  border: '1px solid rgba(226, 232, 240, 0.8)',
+  borderRadius: '16px',
+  overflow: 'hidden',
+  boxShadow: '0 4px 20px -2px rgba(0,0,0,0.02)',
+};
+const SECTION_HEADER = {
+  borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
+  padding: '14px 22px',
+  background: 'rgba(248, 250, 252, 0.6)',
+};
+
+// ── Form Field Wrapper with Floating Labels & Micro-Animations 
+const Field = ({ label, icon: Icon, children, focused, hasValue }) => {
+  return (
+    <div className="relative pt-4">
+      {/* Floating Label */}
+      <label
+        className={`absolute left-10 transition-all duration-200 pointer-events-none z-10 ${
+          focused || hasValue
+            ? '-top-1 text-[10px] font-bold text-indigo-500 uppercase tracking-wider bg-white/80 px-1 rounded backdrop-blur-sm'
+            : 'top-[26px] text-[13px] text-slate-400 font-mono'
+        }`}
+      >
+        {label}
+      </label>
+      
+      <div className="relative group">
+        {Icon && (
+          <Icon
+            className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-all duration-300 ${
+              focused ? 'text-indigo-500 scale-110' : 'text-slate-400'
+            }`}
+          />
+        )}
+        {children}
+      </div>
+    </div>
+  );
+};
+
+// ── Shared input style ────────────────────────────────────────
+const inputStyle = (focused) => ({
+  width: '100%',
+  background: focused ? '#ffffff' : 'rgba(255,255,255,0.6)',
+  border: focused ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(226,232,240,1)',
+  boxShadow: focused ? '0 0 0 3px rgba(99,102,241,0.1)' : 'none',
+  borderRadius: '12px',
+  padding: '11px 16px 11px 40px',
+  fontSize: '13px',
+  fontFamily: 'JetBrains Mono, monospace',
+  color: '#0f172a',
+  outline: 'none',
+  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+});
 
 // ─────────────────────────────────────────────────────────────
 // MEMBER PROFILE — Profile Editor
@@ -18,8 +80,18 @@ const MemberProfile = () => {
     year:               user?.year               || '',
     registrationNumber: user?.registrationNumber || '',
   });
+  
   const [saving, setSaving] = useState(false);
   const [toast, setToast]   = useState(null);
+  
+  // Track focus states for floating labels
+  const [focusState, setFocusState] = useState({
+    phone: false,
+    branch: false,
+    section: false,
+    year: false,
+    registrationNumber: false,
+  });
 
   const setField = (field) => (e) =>
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
@@ -48,183 +120,319 @@ const MemberProfile = () => {
     }
   };
 
-  // ── Reusable dark input ────────────────────────────────────
-  const DarkInput = ({ icon: Icon, label, children, ...props }) => (
-    <div>
-      <label className="block text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest mb-1.5">
-        {label}
-      </label>
-      {children || (
-        <div className="relative">
-          {Icon && (
-            <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
-          )}
-          <input
-            {...props}
-            className={`w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-sm font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/40 transition-all ${Icon ? 'pl-10 pr-4' : 'px-4'}`}
-          />
-        </div>
-      )}
-    </div>
-  );
+  const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
+
+  // Calculate profile completion
+  const fieldsToCheck = ['phone', 'branch', 'section', 'year', 'registrationNumber'];
+  const filledFields = fieldsToCheck.filter(field => !!formData[field]).length;
+  const completionPercentage = Math.round((filledFields / fieldsToCheck.length) * 100);
+  
+  // SVG Circle Progress properties
+  const radius = 32;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (completionPercentage / 100) * circumference;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-950 text-slate-300">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div className="min-h-screen pb-10">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
 
-        {/* Toast */}
+        {/* ── Toast ────────────────────────────────────────── */}
         {toast && (
-          <div className={`fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl text-sm font-mono font-semibold backdrop-blur-md max-w-sm
-            ${toast.type === 'success'
-              ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-400'
-              : 'bg-red-950/90 border-red-500/30 text-red-400'
-            }`}>
-            {toast.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
+          <div
+            className="fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl text-sm font-medium max-w-sm animate-in slide-in-from-bottom-5"
+            style={{
+              background: toast.type === 'success' ? 'rgba(6,78,59,0.95)' : 'rgba(69,10,10,0.95)',
+              border: toast.type === 'success' ? '1px solid rgba(52,211,153,0.3)' : '1px solid rgba(248,113,113,0.3)',
+              backdropFilter: 'blur(16px)',
+              color: toast.type === 'success' ? '#6ee7b7' : '#fca5a5',
+            }}
+          >
+            {toast.type === 'success'
+              ? <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: '#34d399' }} />
+              : <AlertTriangle className="w-4 h-4 shrink-0" style={{ color: '#f87171' }} />
+            }
             {toast.message}
           </div>
         )}
 
-        {/* Page Header */}
-        <div className="flex items-center gap-3 mb-8 sm:mb-10">
-          <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-            <TerminalSquare className="w-5 h-5 text-blue-400" />
+        {/* ── Page Header ──────────────────────────────────── */}
+        <div className="flex items-center gap-4 mb-8">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-indigo-50 border border-indigo-100"
+          >
+            <UserCog className="w-5 h-5 text-indigo-500" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-mono font-bold text-white uppercase tracking-widest">My_Profile</h1>
-            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-0.5">Update parameters</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex">
+              <BlurText text="My Profile" delay={50} animateBy="letters" direction="bottom" />
+            </h1>
+            <p className="text-xs font-mono mt-0.5 text-slate-500">
+              Update your academic and contact information
+            </p>
           </div>
         </div>
 
-        {/* Identity Card (read-only) */}
-        <div className="relative bg-slate-900/60 border border-slate-800 rounded-2xl p-5 sm:p-6 mb-8 overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="flex items-center gap-4 relative z-10">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-lg font-mono font-black text-slate-300 shrink-0">
-              {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
+        {/* ── Identity Card with Progress Ring ────────────── */}
+        <div className="relative p-5 sm:p-6 mb-8 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-indigo-200" style={{
+          background: 'rgba(255,255,255,0.7)',
+          border: '1px solid rgba(226,232,240,0.8)',
+          backdropFilter: 'blur(12px)',
+        }}>
+          {/* Subtle corner glow */}
+          <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none" style={{
+            background: 'radial-gradient(circle at top right, rgba(99,102,241,0.05) 0%, transparent 65%)',
+          }} />
+          
+          <div className="flex items-center justify-between relative z-10 gap-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <div
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center text-base font-mono font-black text-white shrink-0 shadow-inner"
+                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+              >
+                {initials}
+              </div>
+              <div className="min-w-0">
+                <p className="text-base sm:text-lg font-bold text-slate-800 truncate">{user?.name || '—'}</p>
+                <p className="text-xs font-mono mt-0.5 truncate text-slate-500">
+                  {user?.email || '—'}
+                </p>
+                {/* ACE ID on mobile & desktop */}
+                {user?.aceId && (
+                  <div className="mt-2 flex items-center gap-1.5 px-2.5 py-1 rounded-md w-fit bg-indigo-50 border border-indigo-100/50">
+                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
+                    <span className="text-[10px] font-mono font-bold tracking-widest text-indigo-600">
+                      {user.aceId}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-base sm:text-lg font-bold text-white truncate">{user?.name || '—'}</p>
-              <p className="text-xs font-mono text-slate-500 truncate">{user?.email || '—'}</p>
+
+            {/* Profile Completion Ring */}
+            <div className="relative flex flex-col items-center justify-center shrink-0 w-20 h-20 group" title={`Profile is ${completionPercentage}% complete`}>
+              <svg className="w-20 h-20 transform -rotate-90">
+                <circle
+                  cx="40"
+                  cy="40"
+                  r={radius}
+                  stroke="rgba(226,232,240,0.8)"
+                  strokeWidth="6"
+                  fill="transparent"
+                />
+                <circle
+                  cx="40"
+                  cy="40"
+                  r={radius}
+                  stroke={completionPercentage === 100 ? '#10b981' : '#6366f1'}
+                  strokeWidth="6"
+                  fill="transparent"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  className="transition-all duration-1000 ease-out"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className={`text-[13px] font-black font-mono transition-colors duration-500 ${completionPercentage === 100 ? 'text-emerald-500' : 'text-indigo-600'}`}>
+                  {completionPercentage}%
+                </span>
+              </div>
             </div>
-            <div className="hidden sm:flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2 shrink-0">
-              <ShieldCheck className="w-4 h-4 text-blue-400" />
-              <span className="text-[10px] font-mono font-bold text-blue-400 uppercase tracking-widest">
-                {user?.aceId || 'UNASSIGNED'}
-              </span>
-            </div>
-          </div>
-          {/* ACE ID on mobile — below the row */}
-          <div className="sm:hidden mt-3 flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2 w-fit">
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-            <span className="text-[10px] font-mono font-bold text-blue-400 uppercase tracking-widest">
-              {user?.aceId || 'UNASSIGNED'}
-            </span>
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+        {/* ── Form ─────────────────────────────────────────── */}
+        <form onSubmit={handleSubmit} className="space-y-6">
 
           {/* Contact Section */}
-          <div className="bg-slate-900/30 border border-slate-800 rounded-2xl overflow-hidden">
-            <div className="px-5 sm:px-6 py-4 border-b border-slate-800/60 bg-slate-900/50">
-              <h2 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">
-                Contact_Params
-              </h2>
+          <div style={SECTION}>
+            <div style={SECTION_HEADER}>
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-slate-500">
+                Contact Information
+              </p>
             </div>
-            <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              <DarkInput label="Full_Name" icon={User}>
+            <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-3">
+              {/* Full Name (read-only) */}
+              <div className="relative pt-4">
+                <label className="absolute -top-1 left-10 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-white/80 px-1 rounded backdrop-blur-sm z-10">
+                  Full Name
+                </label>
                 <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700 pointer-events-none" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type="text"
                     value={user?.name || ''}
                     disabled
-                    className="w-full bg-slate-800/30 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm font-mono text-slate-600 cursor-not-allowed"
+                    style={{ ...inputStyle(false), color: '#64748b', cursor: 'not-allowed', background: '#f8fafc' }}
                   />
                 </div>
-              </DarkInput>
+              </div>
 
-              <DarkInput
-                label="Phone_Number"
-                icon={Phone}
-                type="tel"
-                placeholder="+91 98765 43210"
-                value={formData.phone}
-                onChange={setField('phone')}
-              />
+              {/* Phone */}
+              <Field 
+                label="Phone Number" 
+                icon={Phone} 
+                focused={focusState.phone} 
+                hasValue={!!formData.phone}
+              >
+                <input
+                  type="tel"
+                  placeholder={focusState.phone ? "+91 98765 43210" : ""}
+                  value={formData.phone}
+                  onChange={setField('phone')}
+                  style={inputStyle(focusState.phone)}
+                  onFocus={() => setFocusState(prev => ({ ...prev, phone: true }))}
+                  onBlur={() => setFocusState(prev => ({ ...prev, phone: false }))}
+                />
+              </Field>
             </div>
           </div>
 
           {/* Academic Section */}
-          <div className="bg-slate-900/30 border border-slate-800 rounded-2xl overflow-hidden">
-            <div className="px-5 sm:px-6 py-4 border-b border-slate-800/60 bg-slate-900/50">
-              <h2 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">
-                Academic_Params
-              </h2>
+          <div style={SECTION}>
+            <div style={SECTION_HEADER}>
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-slate-500">
+                Academic Details
+              </p>
             </div>
-            <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              <DarkInput
-                label="Branch / Department"
-                icon={Building}
-                type="text"
-                placeholder="CSE, ECE, MECH…"
-                value={formData.branch}
-                onChange={setField('branch')}
-              />
-              <DarkInput
-                label="Section"
-                icon={BookOpen}
-                type="text"
-                placeholder="A, B, C…"
-                value={formData.section}
-                onChange={setField('section')}
-              />
+            <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-3">
 
-              {/* Year select */}
-              <div>
-                <label className="block text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest mb-1.5">
-                  Year_of_Study
-                </label>
-                <div className="relative">
-                  <GraduationCap className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
-                  <select
-                    value={formData.year}
-                    onChange={setField('year')}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm font-mono text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/40 appearance-none cursor-pointer transition-all"
-                  >
-                    <option value="" className="text-slate-600">Select year…</option>
-                    <option value="1">1st Year</option>
-                    <option value="2">2nd Year</option>
-                    <option value="3">3rd Year</option>
-                    <option value="4">4th Year</option>
-                  </select>
-                </div>
-              </div>
+              {/* Branch (Dropdown) */}
+              <Field 
+                label="Branch / Department" 
+                icon={Building} 
+                focused={focusState.branch} 
+                hasValue={!!formData.branch}
+              >
+                <select
+                  value={formData.branch}
+                  onChange={setField('branch')}
+                  style={{
+                    ...inputStyle(focusState.branch),
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                  }}
+                  onFocus={() => setFocusState(prev => ({ ...prev, branch: true }))}
+                  onBlur={() => setFocusState(prev => ({ ...prev, branch: false }))}
+                >
+                  <option value="" disabled></option>
+                  <option value="CSE">CSE</option>
+                  <option value="AIML">AIML</option>
+                  <option value="AIDS">AIDS</option>
+                  <option value="CSBS">CSBS</option>
+                  <option value="CSD">CSD</option>
+                  <option value="CIC">CIC</option>
+                  <option value="IT">IT</option>
+                  <option value="CSIT">CSIT</option>
+                  <option value="ECE">ECE</option>
+                  <option value="EEE">EEE</option>
+                  <option value="Mechanical">Mechanical</option>
+                  <option value="Civil">Civil</option>
+                </select>
+                <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-transform duration-300 ${focusState.branch ? 'rotate-180 text-indigo-500' : 'text-slate-400'}`} />
+              </Field>
 
-              <DarkInput
-                label="Roll_Number"
-                icon={Hash}
-                type="text"
-                placeholder="21CE1A0501"
-                value={formData.registrationNumber}
-                onChange={setField('registrationNumber')}
-              />
+              {/* Section (Dropdown) */}
+              <Field 
+                label="Section" 
+                icon={BookOpen} 
+                focused={focusState.section} 
+                hasValue={!!formData.section}
+              >
+                <select
+                  value={formData.section}
+                  onChange={setField('section')}
+                  style={{
+                    ...inputStyle(focusState.section),
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                  }}
+                  onFocus={() => setFocusState(prev => ({ ...prev, section: true }))}
+                  onBlur={() => setFocusState(prev => ({ ...prev, section: false }))}
+                >
+                  <option value="" disabled></option>
+                  <option value="A">Section A</option>
+                  <option value="B">Section B</option>
+                  <option value="C">Section C</option>
+                  <option value="D">Section D</option>
+                  <option value="E">Section E</option>
+                  <option value="F">Section F</option>
+                  <option value="NA">N/A</option>
+                </select>
+                <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-transform duration-300 ${focusState.section ? 'rotate-180 text-indigo-500' : 'text-slate-400'}`} />
+              </Field>
+
+              {/* Year of Study (Dropdown) */}
+              <Field 
+                label="Year of Study" 
+                icon={GraduationCap} 
+                focused={focusState.year} 
+                hasValue={!!formData.year}
+              >
+                <select
+                  value={formData.year}
+                  onChange={setField('year')}
+                  style={{
+                    ...inputStyle(focusState.year),
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                  }}
+                  onFocus={() => setFocusState(prev => ({ ...prev, year: true }))}
+                  onBlur={() => setFocusState(prev => ({ ...prev, year: false }))}
+                >
+                  <option value="" disabled></option>
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3">3rd Year</option>
+                  <option value="4">4th Year</option>
+                </select>
+                <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-transform duration-300 ${focusState.year ? 'rotate-180 text-indigo-500' : 'text-slate-400'}`} />
+              </Field>
+
+              {/* Roll Number */}
+              <Field 
+                label="Roll Number" 
+                icon={Hash} 
+                focused={focusState.registrationNumber} 
+                hasValue={!!formData.registrationNumber}
+              >
+                <input
+                  type="text"
+                  placeholder={focusState.registrationNumber ? "21CE1A0501" : ""}
+                  value={formData.registrationNumber}
+                  onChange={setField('registrationNumber')}
+                  style={inputStyle(focusState.registrationNumber)}
+                  onFocus={() => setFocusState(prev => ({ ...prev, registrationNumber: true }))}
+                  onBlur={() => setFocusState(prev => ({ ...prev, registrationNumber: false }))}
+                />
+              </Field>
             </div>
           </div>
 
           {/* Submit */}
           <button
             type="submit"
-            disabled={saving}
-            className="w-full sm:w-auto flex items-center justify-center gap-2.5 bg-blue-600 hover:bg-blue-500 text-white font-mono font-bold px-8 py-3.5 rounded-xl shadow-[0_0_15px_rgba(37,99,235,0.25)] hover:shadow-[0_0_25px_rgba(37,99,235,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-blue-500/50 uppercase tracking-widest text-sm min-h-[44px]"
+            disabled={saving || (completionPercentage === 100 && Object.keys(formData).every(k => formData[k] === (user[k] || '')))}
+            className="w-full sm:w-auto flex items-center justify-center gap-2.5 font-mono font-bold px-8 py-3.5 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm min-h-[44px] group"
+            style={{
+              background: 'rgba(99,102,241,0.85)',
+              border: '1px solid rgba(129,140,248,0.4)',
+              color: '#ffffff',
+              boxShadow: '0 0 20px rgba(99,102,241,0.2)',
+            }}
+            onMouseEnter={e => { if (!e.currentTarget.disabled) e.currentTarget.style.background = 'rgba(99,102,241,1)'; }}
+            onMouseLeave={e => { if (!e.currentTarget.disabled) e.currentTarget.style.background = 'rgba(99,102,241,0.85)'; }}
           >
             {saving
-              ? <><Loader2 className="w-4 h-4 animate-spin" /> UPDATING_SYS…</>
-              : <><CheckCircle2 className="w-4 h-4" /> COMMIT_CHANGES</>
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
+              : <><CheckCircle2 className="w-4 h-4 transition-transform group-hover:scale-110" /> Save Changes</>
             }
           </button>
         </form>
+
       </div>
     </div>
   );

@@ -212,6 +212,10 @@ const eventSchema = new mongoose.Schema(
       type: certificateTemplateSchema,
       default: null, // Not all events may have certificates
     },
+    certificatesReleased: {
+      type: Boolean,
+      default: false,
+    },
 
     // ── Dynamic Guest Registration Form ────────────────────
     /**

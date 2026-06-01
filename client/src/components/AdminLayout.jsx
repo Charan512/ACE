@@ -1,203 +1,236 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  CalendarDays,
-  Users,
-  ClipboardList,
-  Award,
-  LogOut,
-  Shield,
-  ChevronLeft,
-  ChevronRight,
-  Command,
+  LayoutDashboard, CalendarDays, Users, ClipboardList, Award,
+  LogOut, Shield, Menu, X
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
+import PortalBackground from './ui/PortalBackground';
 
-// ── Sidebar Navigation Items ─────────────────────────────────
+// ── Nav Items ─────────────────────────────────────────────────
 const NAV_ITEMS = [
-  {
-    label: 'Dashboard',
-    to: '/admin',
-    icon: LayoutDashboard,
-    end: true,
-  },
-  {
-    label: 'Events',
-    to: '/admin/events',
-    icon: CalendarDays,
-    end: false,
-  },
-  {
-    label: 'Registrations',
-    to: '/admin/registrations',
-    icon: ClipboardList,
-    end: false,
-  },
-  {
-    label: 'Certificates',
-    to: '/admin/certificates',
-    icon: Award,
-    end: false,
-  },
-  {
-    label: 'Users',
-    to: '/admin/users',
-    icon: Users,
-    end: false,
-  },
+  { label: 'Dashboard',     to: '/admin',               icon: LayoutDashboard, end: true  },
+  { label: 'Events',        to: '/admin/events',        icon: CalendarDays,    end: false },
+  { label: 'Registrations', to: '/admin/registrations', icon: ClipboardList,   end: false },
+  { label: 'Certificates',  to: '/admin/certificates',  icon: Award,           end: false },
+  { label: 'Users',         to: '/admin/users',         icon: Users,           end: false },
 ];
 
 // ── Role label mapping ────────────────────────────────────────
 const ROLE_LABELS = {
-  admin: 'Admin',
+  admin: 'System Admin',
   ebm: 'Exec. Body Member',
-  sbm: 'Student Body Member',
+  sbm: 'Body Member',
   member: 'Member',
 };
 
-const ROLE_COLORS = {
-  admin: 'bg-red-50 text-red-600 border-red-100',
-  ebm: 'bg-purple-50 text-purple-600 border-purple-100',
-  sbm: 'bg-blue-50 text-blue-600 border-blue-100',
-  member: 'bg-green-50 text-green-600 border-green-100',
-};
-
 // ─────────────────────────────────────────────────────────────
-// ADMIN LAYOUT — Fixed Sidebar + Main Content
+// ADMIN LAYOUT — Premium Floating Island Navigation (Desktop)
 // ─────────────────────────────────────────────────────────────
 const AdminLayout = () => {
   const { logout, user } = useAuthStore();
   const navigate = useNavigate();
-  const [collapsed, setCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleLogout = () => { logout(); navigate('/'); };
+
+  const roleLabel = ROLE_LABELS[user?.role] || 'Admin';
+  const initials  = user?.name
+    ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : '—';
+  const firstName = user?.name?.split(' ')[0] || 'Admin';
 
   return (
-    <div className="flex min-h-screen bg-slate-50 font-sans">
-      {/* ── Sidebar ─────────────────────────────────────── */}
-      <aside
-        className={`fixed top-0 left-0 h-screen z-40 flex flex-col bg-white border-r border-slate-200 shadow-sm transition-all duration-300 ease-in-out
-          ${collapsed ? 'w-[72px]' : 'w-[240px]'}`}
+    <div className="min-h-screen text-slate-700 flex flex-col bg-slate-50 selection:bg-blue-100">
+      <PortalBackground />
+
+      {/* ──────────────────────────────────────────────────────
+          PREMIUM FLOATING DESKTOP HEADER + MOBILE HEADER
+      ────────────────────────────────────────────────────── */}
+      <header
+        className={`fixed inset-x-0 z-30 transition-all duration-500 ease-out flex items-center justify-between
+          ${scrolled ? 'lg:top-3' : 'lg:top-6'} 
+          top-0 h-16 lg:h-auto px-4 lg:px-5 py-0 lg:py-3 lg:mx-auto lg:max-w-[1200px] lg:rounded-[24px]`}
+        style={{
+          background: 'rgba(255, 255, 255, 0.75)',
+          borderBottom: '1px solid rgba(226, 232, 240, 0.8)', // Mobile border
+          border: '1px solid rgba(226, 232, 240, 0.8)',      // Desktop border overrides bottom
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          boxShadow: '0 10px 40px -10px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)',
+        }}
       >
-        {/* Brand Header */}
-        <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-100 min-h-[72px] shrink-0">
-          <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-sm">
-            <Shield className="w-5 h-5 text-white" />
-          </div>
-          {!collapsed && (
-            <div className="overflow-hidden">
-              <p className="text-sm font-black text-slate-900 tracking-tight leading-tight truncate">
-                ACE Control
-              </p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                Admin Portal
-              </p>
+        <div className="flex items-center gap-6 overflow-x-auto no-scrollbar">
+          {/* Logo */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner"
+              style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.1), rgba(79,70,229,0.1))', border: '1px solid rgba(37,99,235,0.2)' }}
+            >
+              <Shield className="w-5 h-5" style={{ color: '#2563eb' }} />
             </div>
-          )}
+            <div className="flex flex-col leading-tight hidden xl:flex">
+              <span className="text-sm font-black text-slate-900 tracking-tight">ACE Control</span>
+              <span className="text-[9px] font-mono font-bold uppercase tracking-widest" style={{ color: '#4f46e5' }}>admin.access</span>
+            </div>
+          </div>
+
+          {/* Desktop Segmented Nav Links */}
+          <nav className="hidden lg:flex items-center gap-1 bg-slate-100/50 p-1 rounded-2xl border border-slate-200/60 shadow-inner shrink-0">
+            {NAV_ITEMS.map(({ label, to, icon: Icon, end }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                className={({ isActive }) =>
+                  `relative flex items-center gap-2.5 px-4 xl:px-5 py-2.5 rounded-xl text-sm transition-all duration-300 overflow-hidden shrink-0
+                  ${isActive
+                    ? 'text-blue-700 font-bold bg-white shadow-sm ring-1 ring-slate-200/80'
+                    : 'text-slate-500 font-medium hover:text-slate-800 hover:bg-slate-50'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <Icon className={`w-4 h-4 shrink-0 transition-all duration-300 ${isActive ? 'scale-110' : ''}`} style={{ color: isActive ? '#2563eb' : undefined }} />
+                    <span>{label}</span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </nav>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          {NAV_ITEMS.map(({ label, to, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 select-none
-                ${isActive
-                  ? 'bg-blue-50 text-blue-700 shadow-sm'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
-                }`
-              }
-              title={collapsed ? label : undefined}
+        {/* Right side */}
+        <div className="flex items-center gap-4 shrink-0">
+          
+          {/* Desktop: Highly Emphasized User Profile + Logout */}
+          <div className="hidden lg:flex items-center gap-2">
+            
+            {/* Unified Profile Button */}
+            <div
+              className="group flex items-center gap-3 px-3 py-1.5 rounded-[18px] transition-all duration-300 border border-transparent hover:bg-slate-100/60 hover:border-slate-200/50 hover:shadow-sm"
+              title="Admin Profile"
             >
-              {({ isActive }) => (
-                <>
-                  <Icon
-                    className={`w-5 h-5 flex-shrink-0 transition-colors ${
-                      isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'
-                    }`}
-                  />
-                  {!collapsed && (
-                    <span className="truncate">{label}</span>
-                  )}
-                  {!collapsed && isActive && (
-                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600" />
-                  )}
-                </>
-              )}
-            </NavLink>
-          ))}
-        </nav>
-
-        {/* User Identity Block */}
-        <div className="border-t border-slate-100 p-3 shrink-0">
-          {!collapsed && user && (
-            <div className="mb-2 px-2 py-2 bg-slate-50 rounded-xl">
-              <p className="text-xs font-bold text-slate-800 truncate">{user.name}</p>
-              <p className="text-[10px] text-slate-400 truncate">{user.email}</p>
-              {user.role && (
-                <span className={`inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide ${ROLE_COLORS[user.role] || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                  {ROLE_LABELS[user.role] || user.role}
-                </span>
-              )}
+              <div className="flex flex-col items-end">
+                <span className="text-sm font-bold text-slate-900 tracking-tight group-hover:text-blue-700 transition-colors">{firstName}</span>
+                <span className="text-[10px] font-mono font-bold tracking-widest text-blue-500 uppercase">{roleLabel}</span>
+              </div>
+              
+              <div
+                className="relative flex items-center justify-center w-10 h-10 rounded-xl font-mono font-black text-white shrink-0 shadow-inner group-hover:scale-[1.05] transition-transform duration-300"
+                style={{ background: 'linear-gradient(135deg, #2563eb, #4f46e5)' }}
+              >
+                {initials}
+                <div className="absolute inset-0 rounded-xl ring-2 ring-blue-400 ring-offset-2 ring-offset-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </div>
             </div>
-          )}
 
+            <div className="w-px h-8 bg-slate-200/80 mx-1" />
+
+            <button
+              onClick={handleLogout}
+              className="p-2.5 rounded-xl transition-all duration-200 cursor-pointer text-slate-400 hover:text-rose-500 hover:bg-rose-50 hover:shadow-sm"
+              title="Log out"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Mobile: Hamburger Button */}
           <button
-            onClick={handleLogout}
-            title={collapsed ? 'Terminate Session' : undefined}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 hover:text-red-700 transition-all duration-150 cursor-pointer"
+            className="lg:hidden p-2 rounded-xl bg-slate-100/80 text-slate-600 hover:bg-slate-200 transition-colors"
+            onClick={() => setIsMobileMenuOpen(true)}
           >
-            <LogOut className="w-4 h-4 flex-shrink-0" />
-            {!collapsed && <span>Terminate Session</span>}
+            <Menu className="w-5 h-5" />
           </button>
         </div>
+      </header>
 
-        {/* Collapse Toggle */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-20 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-sm text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all cursor-pointer"
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {collapsed ? (
-            <ChevronRight className="w-3.5 h-3.5" />
-          ) : (
-            <ChevronLeft className="w-3.5 h-3.5" />
-          )}
-        </button>
-      </aside>
+      {/* ──────────────────────────────────────────────────────
+          MAIN CONTENT
+      ────────────────────────────────────────────────────── */}
+      <main className="flex-1 relative z-10 pt-20 lg:pt-32 pb-20 lg:pb-10 min-h-screen w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <Outlet />
+      </main>
 
-      {/* ── Main Content Area ────────────────────────────── */}
-      <div
-        className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out ${
-          collapsed ? 'ml-[72px]' : 'ml-[240px]'
-        }`}
-      >
-        {/* Top Bar */}
-        <header className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
-            <span className="text-slate-300">/</span>
-            <span className="text-slate-700 font-semibold">ACE Portal</span>
-            <span className="text-slate-300">/</span>
-            <span>Admin Portal</span>
+      {/* ──────────────────────────────────────────────────────
+          MOBILE MENU DRAWER
+      ────────────────────────────────────────────────────── */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex flex-col bg-slate-50/95 backdrop-blur-xl transition-all">
+          <div className="flex items-center justify-between px-4 h-16 border-b border-slate-200 bg-white/50">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50 border border-blue-100">
+                <Shield className="w-4 h-4 text-blue-500" />
+              </div>
+              <span className="text-xs font-bold text-slate-900 tracking-wide">Admin Menu</span>
+            </div>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-4 py-1.5">
-            <Command className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-xs font-semibold text-slate-400">Cmd+K</span>
-          </div>
-        </header>
 
-        {/* Page Outlet */}
-        <main className="flex-1 overflow-auto">
-          <Outlet />
-        </main>
-      </div>
+          <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-8">
+            {/* Highly Emphasized Profile Section */}
+            <div className="flex flex-col items-center text-center p-6 bg-white rounded-3xl border border-slate-200 shadow-sm">
+              <div
+                className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-mono font-bold text-white mb-4 shadow-md"
+                style={{ background: 'linear-gradient(135deg, #2563eb, #4f46e5)' }}
+              >
+                {initials}
+              </div>
+              <h2 className="text-lg font-bold text-slate-900 mb-1">{user?.name || 'Admin'}</h2>
+              <span className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider">
+                {roleLabel}
+              </span>
+            </div>
+
+            {/* Nav Links */}
+            <nav className="flex flex-col gap-2">
+              {NAV_ITEMS.map(({ label, to, icon: Icon, end }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={end}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${
+                      isActive
+                        ? 'bg-blue-50 border border-blue-100 text-blue-700 font-bold'
+                        : 'bg-white border border-slate-100 text-slate-600 font-medium hover:bg-slate-50'
+                    }`
+                  }
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="text-sm">{label}</span>
+                </NavLink>
+              ))}
+            </nav>
+          </div>
+
+          {/* Logout Section */}
+          <div className="p-4 border-t border-slate-200 bg-white/50 pb-8">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 py-4 rounded-xl text-red-600 bg-red-50 border border-red-100 font-bold text-sm"
+            >
+              <LogOut className="w-4 h-4" />
+              Terminate Session
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

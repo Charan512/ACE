@@ -123,6 +123,29 @@ const registrationSchema = new mongoose.Schema(
       default: null,
       sparse: true,
     },
+
+    // ── Event Check-In (Ops Portal) ───────────────────────────
+    /**
+     * Set to true by a Body Member (EBM/SBM) via the Ops Portal scanner
+     * or manual roster check-in. Defaults false until the person physically
+     * shows up at the event.
+     * Strictly idempotent: the check-in controller rejects a second scan
+     * with 400 ALREADY_SCANNED before touching this field.
+     */
+    checkedIn: {
+      type: Boolean,
+      default: false,
+    },
+    checkedInAt: {
+      type: Date,
+      default: null,
+    },
+    // The ops user (EBM/SBM) who performed the check-in
+    checkedInBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
   },
   {
     timestamps: true, // createdAt = registration time, updatedAt = last status change
@@ -140,6 +163,8 @@ registrationSchema.index(
   { eventId: 1, userId: 1 },
   { unique: true, sparse: true, name: 'unique_user_event_registration' }
 );
+// Fast roster queries for Ops Portal
+registrationSchema.index({ eventId: 1, checkedIn: 1 });
 
 const Registration = mongoose.model('Registration', registrationSchema);
 

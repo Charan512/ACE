@@ -19,6 +19,7 @@ import eventRoutes from './routes/event.routes.js';
 import userRoutes from './routes/user.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
+import opsRoutes from './routes/ops.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -72,6 +73,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/upload', uploadRoutes);
+app.use('/api/ops', opsRoutes);
 
 // ── 404 Handler ──────────────────────────────────────────────
 app.use((_req, res) => {
@@ -105,7 +107,7 @@ app.use((err, _req, res, _next) => {
   }
 
   // Unknown/programming error — log fully, send generic message
-  console.error('💥 UNEXPECTED ERROR:', err);
+  console.error('[Server] UNEXPECTED ERROR:', err);
   return res.status(500).json({
     success: false,
     status: 'error',
@@ -119,10 +121,10 @@ const startServer = async () => {
     await connectDB();
 
     app.listen(PORT, () => {
-      console.log(`\n✅ ACE ERP Server running on port ${PORT} [${process.env.NODE_ENV}]`);
+      console.log(`\n[Server] ACE ERP running on port ${PORT} [${process.env.NODE_ENV}]`);
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error.message);
+    console.error('[Server] Failed to start:', error.message);
     process.exit(1);
   }
 };

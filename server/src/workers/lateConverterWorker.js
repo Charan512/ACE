@@ -61,7 +61,7 @@ const lateConverterWorker = new Worker(
       );
 
       await session.commitTransaction();
-      console.log(`[LateConverterWorker] ✅ Successfully migrated ${guestTransactions.length} records for ${email}.`);
+      console.log(`[LateConverterWorker] Migrated ${guestTransactions.length} records for ${email}.`);
     } catch (error) {
       await session.abortTransaction();
       throw new Error(`Migration aborted: ${error.message}`);
@@ -76,11 +76,11 @@ const lateConverterWorker = new Worker(
 );
 
 lateConverterWorker.on('completed', (job) => {
-  console.log(`[LateConverterWorker] ✅ Job complete (id: ${job.id})`);
+  console.log(`[LateConverterWorker] Job complete (id: ${job.id})`);
 });
 
 lateConverterWorker.on('failed', (job, err) => {
-  console.error(`[LateConverterWorker] ❌ Job failed (id: ${job?.id}): ${err.message}`);
+  console.error(`[LateConverterWorker] Job failed (id: ${job?.id}): ${err.message}`);
 });
 
 export default lateConverterWorker;

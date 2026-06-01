@@ -90,11 +90,11 @@ const emailWorker = new Worker(
 );
 
 emailWorker.on('completed', (job) => {
-  console.log(`[EmailWorker] ✅ Job completed: ${job.name} (id: ${job.id})`);
+  console.log(`[EmailWorker] Job completed: ${job.name} (id: ${job.id})`);
 });
 
 emailWorker.on('failed', (job, err) => {
-  console.error(`[EmailWorker] ❌ Job failed: ${job?.name} (id: ${job?.id}) — ${err.message}`);
+  console.error(`[EmailWorker] Job failed: ${job?.name} (id: ${job?.id}) — ${err.message}`);
 });
 
 export default emailWorker;

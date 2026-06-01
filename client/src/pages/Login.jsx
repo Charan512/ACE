@@ -25,8 +25,10 @@ const Login = () => {
       const user = await login(email.trim(), password);
 
       // ── Role-based redirect ─────────────────────────────
-      if (user.role === 'admin' || user.role === 'body_member') {
+      if (user.role === 'admin') {
         navigate('/admin', { replace: true });
+      } else if (user.role === 'ebm' || user.role === 'sbm') {
+        navigate('/ops', { replace: true });
       } else {
         navigate('/member/dashboard', { replace: true });
       }

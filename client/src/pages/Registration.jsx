@@ -48,10 +48,15 @@ const Registration = () => {
 
       if (import.meta.env.DEV) {
         console.warn('%c[DEV MODE] Razorpay checkout bypassed. Simulating success.', 'color: #0ea5e9; font-weight: bold; font-size: 14px;');
-        setTimeout(() => {
+        try {
+          await api.post('/payments/dev-confirm', { razorpayOrderId: orderId });
           handlePaymentSuccess({ razorpay_payment_id: 'dev_mock_' + orderId });
+        } catch (confirmErr) {
+          console.error('[DEV MODE] dev-confirm failed:', confirmErr);
+          setError('Dev mode confirmation failed.');
+        } finally {
           setIsLoading(false);
-        }, 800);
+        }
         return;
       }
 

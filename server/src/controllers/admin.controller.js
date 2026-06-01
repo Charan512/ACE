@@ -169,26 +169,32 @@ export const updateAdminUserRole = catchAsync(async (req, res, next) => {
 
   if (!role) return next(new AppError('Role is required.', 400));
 
-  const validRoles = ['admin', 'ebm', 'sbm', 'member', 'guest'];
+  const validRoles = ['admin', 'ebm', 'sbm', 'member'];
   if (!validRoles.includes(role)) {
     return next(new AppError(`Invalid role. Must be one of: ${validRoles.join(', ')}.`, 400));
   }
 
-  const updates = { role };
-  // Allow domain/designation to be set alongside role change for body members
-  if (domain !== undefined) updates.domain = domain;
-  if (designation !== undefined) updates.designation = designation;
-
-  const user = await User.findByIdAndUpdate(
-    id,
-    { $set: updates },
-    { new: true, runValidators: true }
-  ).select('-password -otp -history');
-
+  const user = await User.findById(id);
   if (!user) return next(new AppError('User not found.', 404));
+
+  if (user.role === 'guest') {
+    return next(new AppError('Guests cannot be manually promoted. They must purchase a membership first.', 403));
+  }
+
+  user.role = role;
+  if (domain !== undefined) user.domain = domain;
+  if (designation !== undefined) user.designation = designation;
+
+  await user.save();
+
+  // Strip sensitive fields before returning
+  const sanitizedUser = user.toObject();
+  delete sanitizedUser.password;
+  delete sanitizedUser.otp;
+  delete sanitizedUser.history;
 
   res.status(200).json({
     success: true,
-    data: { user },
+    data: { user: sanitizedUser },
   });
 });

@@ -164,9 +164,28 @@ const GuestCheckout = () => {
 
     try {
       if (import.meta.env.DEV) {
-        await new Promise((r) => setTimeout(r, 1000));
-        alert('[DEV MODE] Payment successful. You are now registered!');
-        navigate('/');
+        try {
+          // In DEV, first create the mock order
+          const orderRes = await api.post('/payments/membership-order', {
+            name:            coreData.name,
+            email:           coreData.email,
+            phone:           coreData.phone || undefined,
+            customResponses: customResponses,
+            eventId,
+          });
+          const { orderId } = orderRes.data.data;
+          
+          // Then confirm it
+          await api.post('/payments/dev-confirm', { razorpayOrderId: orderId });
+          
+          alert('[DEV MODE] Payment successful. You are now registered!');
+          navigate('/');
+        } catch (confirmErr) {
+          console.error('[DEV MODE] GuestCheckout failed:', confirmErr);
+          alert(confirmErr.response?.data?.message || 'Checkout failed in DEV mode.');
+        } finally {
+          setIsProcessing(false);
+        }
         return;
       }
 

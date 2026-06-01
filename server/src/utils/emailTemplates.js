@@ -97,7 +97,7 @@ export const buildWelcomeEmail = ({ name, aceId, tempPassword, loginUrl = proces
           <p style="color:#94a3b8;margin-top:24px;">Your temporary login password:</p>
           <code style="${MONO_STYLE}">${tempPassword}</code>
           <p style="color:#ef4444;font-size:13px;margin:0 0 24px;">
-            ⚠️ You will be forced to change this password on first login.
+            Note: You will be forced to change this password on first login.
           </p>
           <a href="${loginUrl}/login" style="${BTN_STYLE}">Access Your Dashboard →</a>
         </div>

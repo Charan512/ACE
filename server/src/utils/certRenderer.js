@@ -12,7 +12,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 try {
   const fontsLoaded = GlobalFonts.loadFontsFromDir(join(__dirname, '../assets/fonts'));
   if (fontsLoaded > 0) {
-    console.log(`✅ [CertRenderer] Loaded ${fontsLoaded} custom font(s) from assets/fonts/`);
+    console.log(`[CertRenderer] Loaded ${fontsLoaded} custom font(s) from assets/fonts/`);
   }
 } catch {
   console.warn('[CertRenderer] assets/fonts/ not found. Using system fonts as fallback.');

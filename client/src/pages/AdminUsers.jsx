@@ -25,7 +25,6 @@ const ROLE_OPTIONS = [
   { value: 'sbm',    label: 'SBM — Student Body Member' },
   { value: 'ebm',    label: 'EBM — Executive Body Member' },
   { value: 'admin',  label: 'Admin' },
-  { value: 'guest',  label: 'Guest' },
 ];
 
 const DOMAIN_OPTIONS = ['Tech', 'Marketing', 'Editing', 'Documentation'];

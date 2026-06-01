@@ -12,7 +12,9 @@ export const getMyVault = catchAsync(async (req, res, next) => {
   // We need to fetch the user again to deeply populate the attendedEvents references
   const user = await User.findById(req.user._id).populate({
     path: 'history.attendedEvents.event',
-    select: 'title description eventDate venue',
+    // Include certificateTemplate and certificatesReleased so the frontend can derive hasCertificate
+    // without an extra round-trip — used for the "Certificate not released" state.
+    select: 'title description eventDate venue certificateTemplate certificatesReleased',
   });
 
   if (!user) {
@@ -20,15 +22,24 @@ export const getMyVault = catchAsync(async (req, res, next) => {
   }
 
   // Map the populated history to a flat array of vault entries for the frontend
-  const vault = user.history.attendedEvents.map(entry => ({
-    _id: entry.event._id,
-    title: entry.event.title,
-    eventDate: entry.event.eventDate,
-    venue: entry.event.venue,
-    certificateUrl: `/api/certificates/${entry.event._id}?userId=${user._id}`,
-    attendedAt: entry.attendedAt,
-    transactionId: entry.transaction,
-  }));
+  const vault = user.history.attendedEvents.map((entry) => {
+    // Derive hasCertificate: true only when the admin has configured a
+    // certificate template with a valid base image URL AND the admin has dispatched them.
+    const hasCertificate = !!(entry.event.certificateTemplate?.baseImageUrl && entry.event.certificatesReleased);
+    return {
+      _id: entry.event._id,
+      title: entry.event.title,
+      eventDate: entry.event.eventDate,
+      venue: entry.event.venue,
+      // Only expose the cert download URL when a template actually exists
+      certificateUrl: hasCertificate
+        ? `/api/certificates/download/${entry.event._id}`
+        : null,
+      hasCertificate,
+      attendedAt: entry.attendedAt,
+      transactionId: entry.transaction,
+    };
+  });
 
   res.status(200).json({
     success: true,

@@ -87,7 +87,7 @@ const userSchema = new mongoose.Schema(
     // ── ACE-Specific ────────────────────────────────────────
     /**
      * Sequential member ID in format: 26ACE0001, 26ACE0002, ...
-     * Only set for role: 'member' | 'body_member' | 'admin'.
+     * Only set for role: 'member'. Admins and EBMs do not receive an aceId.
      * Generated atomically via Counter.$inc — never set manually.
      */
     aceId: {

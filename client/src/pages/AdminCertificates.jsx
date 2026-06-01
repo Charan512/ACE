@@ -246,14 +246,14 @@ const AdminCertificates = () => {
     }
   };
 
-  // ── Dispatch (stub — triggers certificate generation) ──────
+  // ── Dispatch (releases certificates to member portal) ──────
   const handleDispatch = async () => {
     if (!selectedEventId) return showToast('No event selected.', 'error');
     setDispatching(true);
     try {
-      // TODO: wire to certificate dispatch endpoint (BullMQ)
-      await new Promise((r) => setTimeout(r, 1200));
-      showToast('Certificate dispatch queued! Emails are being sent.', 'success');
+      // Set the certificatesReleased flag to true so members can see them
+      await api.patch(`/admin/events/${selectedEventId}`, { certificatesReleased: true });
+      showToast('Certificates dispatched successfully! Members can now download them.', 'success');
     } catch (err) {
       showToast('Dispatch failed.', 'error');
     } finally {

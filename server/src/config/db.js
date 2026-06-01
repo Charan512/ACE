@@ -11,9 +11,9 @@ const connectDB = async () => {
       serverSelectionTimeoutMS: 5000, // Fail fast if cluster is unreachable
     });
 
-    console.log(`✅ MongoDB connected: ${conn.connection.host}`);
+    console.log(`[DB] Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`❌ MongoDB connection failed: ${error.message}`);
+    console.error(`[DB] Connection failed: ${error.message}`);
     // A DB failure is unrecoverable — exit cleanly so a process manager restarts the server
     process.exit(1);
   }
@@ -21,11 +21,11 @@ const connectDB = async () => {
 
 // Emit warnings on connection drops (post-initial connect)
 mongoose.connection.on('disconnected', () => {
-  console.warn('⚠️  MongoDB disconnected. Attempting to reconnect...');
+  console.warn('[DB] Disconnected. Attempting to reconnect...');
 });
 
 mongoose.connection.on('reconnected', () => {
-  console.log('✅ MongoDB reconnected.');
+  console.log('[DB] Reconnected.');
 });
 
 export default connectDB;

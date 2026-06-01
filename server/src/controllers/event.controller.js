@@ -30,6 +30,7 @@ const sanitizeEventUpdate = (body) => {
     'customFormFields',
     'tags',
     'isActive',
+    'certificatesReleased',
   ];
 
   return Object.fromEntries(

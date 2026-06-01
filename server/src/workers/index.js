@@ -18,10 +18,10 @@ const startWorkers = async () => {
   try {
     // Workers often need DB access (e.g. fetching User/Transaction, updating MongoDB)
     await connectDB();
-    console.log('\n🚀 Background Workers started successfully.');
+    console.log('\n[Workers] Background workers started successfully.');
     console.log('Listening to: ace-email, ace-treasurer, ace-late-converter');
   } catch (error) {
-    console.error('❌ Failed to start workers:', error.message);
+    console.error('[Workers] Failed to start:', error.message);
     process.exit(1);
   }
 };
@@ -30,7 +30,7 @@ startWorkers();
 
 // Graceful shutdown handling
 const shutdown = () => {
-  console.log('\n🛑 Shutting down workers...');
+  console.log('\n[Workers] Shutting down...');
   process.exit(0);
 };
 

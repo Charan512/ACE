@@ -60,7 +60,7 @@ const transactionSchema = new mongoose.Schema(
     event: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Event',
-      required: [true, 'Event reference is required.'],
+      // Optional: Pure membership purchases do not have an associated event
     },
 
     // ── Financial Details ───────────────────────────────────

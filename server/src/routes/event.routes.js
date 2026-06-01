@@ -89,7 +89,7 @@ router.patch(
  * Atomically flips `isActive` to open or close ticket sales.
  * RBAC: admin only.
  *
- * ⚠️  Route order matters: this MUST be registered before `/:id` would
+ * NOTE: Route order matters: this MUST be registered before `/:id` would
  * match it as a plain ID. Express matches routes in declaration order,
  * and /:id comes AFTER /:id/toggle here, so there is no conflict.
  */

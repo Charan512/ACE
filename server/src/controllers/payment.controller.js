@@ -360,17 +360,26 @@ export const createMembershipOrder = catchAsync(async (req, res, next) => {
     totalAmount += event.memberFee; // Member gets the lower rate after joining
   }
 
-  const razorpayOrder = await razorpay.orders.create({
-    amount: totalAmount || 50000, // ₹500 membership fee (50000 paise) if no event
-    currency: 'INR',
-    receipt: `ace_mem_${Date.now()}`,
-    notes: {
-      purpose: 'membership',
-      guestEmail: email.toLowerCase(),
-      guestName: name,
-      eventId: eventId?.toString() || null,
-    },
-  });
+  let razorpayOrder;
+  if (process.env.NODE_ENV === 'production') {
+    razorpayOrder = await razorpay.orders.create({
+      amount: totalAmount || 50000, // ₹500 membership fee (50000 paise) if no event
+      currency: 'INR',
+      receipt: `ace_mem_${Date.now()}`,
+      notes: {
+        purpose: 'membership',
+        guestEmail: email.toLowerCase(),
+        guestName: name,
+        eventId: eventId?.toString() || null,
+      },
+    });
+  } else {
+    razorpayOrder = {
+      id: `order_dev_${Date.now()}`,
+      amount: totalAmount || 50000,
+      currency: 'INR',
+    };
+  }
 
   // Store transaction — no user yet (will be created when webhook fires)
   await Transaction.create({
@@ -398,7 +407,7 @@ export const createMembershipOrder = catchAsync(async (req, res, next) => {
 /**
  * POST /api/payments/webhook
  *
- * ⚠️  SECURITY-CRITICAL ENDPOINT
+ * SECURITY-CRITICAL ENDPOINT
  *
  * This route receives raw Buffer bodies (express.raw middleware applied in index.js).
  * ALL database writes are gated behind HMAC SHA256 signature verification.
@@ -414,7 +423,7 @@ export const handleWebhook = async (req, res) => {
   // ── STEP 1: Verify HMAC SHA256 signature ──────────────────
   // This is the FIRST thing we do. Nothing proceeds without a valid signature.
   if (!verifyWebhookSignature(rawBody, signature)) {
-    console.error('[Webhook] ❌ Invalid signature — request rejected.');
+    console.error('[Webhook] Invalid signature — request rejected.');
     // Return 400 to signal rejection, but do NOT reveal why to the caller
     return res.status(400).json({ success: false, message: 'Invalid signature.' });
   }
@@ -424,12 +433,12 @@ export const handleWebhook = async (req, res) => {
   try {
     payload = JSON.parse(rawBody.toString('utf8'));
   } catch {
-    console.error('[Webhook] ❌ Failed to parse JSON payload.');
+    console.error('[Webhook] Failed to parse JSON payload.');
     return res.status(400).json({ success: false, message: 'Invalid payload.' });
   }
 
   const eventType = payload.event;
-  console.log(`[Webhook] ✅ Signature verified. Processing event: ${eventType}`);
+  console.log(`[Webhook] Signature verified. Processing event: ${eventType}`);
 
   // ── STEP 3: Route to the correct handler ─────────────────
   try {
@@ -481,7 +490,7 @@ export const devConfirm = catchAsync(async (req, res, next) => {
     return next(new AppError('razorpayOrderId is required.', 400));
   }
 
-  const transaction = await Transaction.findOne({ razorpayOrderId }).populate('event user');
+  const transaction = await Transaction.findOne({ razorpayOrderId });
   if (!transaction) {
     return next(new AppError(`No transaction found for orderId: ${razorpayOrderId}`, 404));
   }
@@ -490,49 +499,31 @@ export const devConfirm = catchAsync(async (req, res, next) => {
     return res.status(200).json({ success: true, message: 'Already confirmed.' });
   }
 
-  try {
-    // Mark transaction paid
-    transaction.status = 'paid';
-    transaction.razorpayPaymentId = `dev_pay_${Date.now()}`;
-    transaction.processedAt = new Date();
-    await transaction.save();
+  // Derive purpose for the mock payload
+  // If user is null and tier is member, it's a membership purchase
+  const isMembership = !transaction.user && transaction.tier === 'member';
 
-    // Increment event registered count
-    await Event.findByIdAndUpdate(
-      transaction.event._id,
-      { $inc: { registeredCount: 1 } }
-    );
-
-    // Push to user vault
-    if (transaction.user) {
-      await User.findByIdAndUpdate(
-        transaction.user._id,
-        {
-          $push: {
-            'history.attendedEvents': {
-              event: transaction.event._id,
-              transaction: transaction._id,
-              attendedAt: new Date(),
-            },
+  const mockPayload = {
+    event: 'order.paid',
+    payload: {
+      payment: {
+        entity: {
+          id: `dev_pay_${Date.now()}`,
+          order_id: razorpayOrderId,
+          notes: {
+            purpose: isMembership ? 'membership' : 'event_registration',
+            guestEmail: transaction.guestEmail,
+            guestName: transaction.guestName,
+            eventId: transaction.event?.toString(),
           },
+          acquirer_data: { rrn: 'dev_mock_signature' }
         }
-      );
+      }
     }
+  };
 
-    // Create a confirmed Registration document
-    await Registration.create({
-      eventId: transaction.event._id,
-      userId: transaction.user?._id || null,
-      name: transaction.user?.name || transaction.guestName || 'Member',
-      email: transaction.user?.email || transaction.guestEmail || '',
-      tier: transaction.tier,
-      status: 'confirmed',
-      transactionId: transaction._id,
-      customResponses: {},
-    });
-
-    console.log(`[DevConfirm] Confirmed orderId=${razorpayOrderId} for user=${transaction.user?._id}`);
-
+  try {
+    await handleOrderPaid(mockPayload);
     res.status(200).json({ success: true, message: 'Dev confirmation successful.' });
   } catch (err) {
     console.error(`[DevConfirm] Error: ${err.message}`);
