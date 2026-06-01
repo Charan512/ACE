@@ -180,8 +180,9 @@ const eventSchema = new mongoose.Schema(
 
     // ── Dual-Tier Pricing ──────────────────────────────────
     /**
-     * Amount in PAISE (₹1 = 100 paise) to match Razorpay's native unit.
-     * memberFee:    price for users with role 'member' or 'body_member'
+     * Amounts stored in INR (rupees). Razorpay requires paise, so
+     * payment.controller.js multiplies by 100 at order-creation time.
+     * memberFee:    price for users with role 'member', 'sbm', or 'ebm'
      * standardFee: price for guests or non-members
      */
     memberFee: {

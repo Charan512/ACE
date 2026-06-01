@@ -81,10 +81,9 @@ function App() {
         <Route path="/dashboard" element={<Navigate to="/member/dashboard" replace />} />
 
         {/* ── Protected Member Routes ──────────────────────────── */}
-        {/* Access: member, sbm, ebm, admin — wrapped in top-nav MemberLayout */}
         <Route
           element={
-            <ProtectedRoute allowedRoles={['member', 'sbm', 'ebm', 'admin']} />
+            <ProtectedRoute allowedRoles={['member', 'sbm', 'ebm']} />
           }
         >
           <Route element={<MemberLayout />}>

@@ -10,6 +10,11 @@ export default defineConfig({
   ],
   server: {
     port: 5173,
+    cors: {
+      origin: '*',
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['X-Requested-With', 'content-type', 'Authorization'],
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:5000',

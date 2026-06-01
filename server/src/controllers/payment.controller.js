@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import mongoose from 'mongoose';
 import razorpay from '../config/razorpay.js';
 import Transaction from '../models/Transaction.js';
+import Registration from '../models/Registration.js';
 import Event from '../models/Event.js';
 import User from '../models/User.js';
 import AppError from '../utils/appError.js';
@@ -121,6 +122,30 @@ const handleOrderPaid = async (payload) => {
         },
         { session }
       );
+
+      // ── Create confirmed Registration record ────────────────
+      // This is the canonical attendance record for the AdminRegistrations panel.
+      // Uses upsert-style insertOne to stay idempotent on webhook replay.
+      const existingReg = await Registration.findOne({
+        eventId: transaction.event._id,
+        userId: transaction.user._id,
+      }).session(session);
+
+      if (!existingReg) {
+        await Registration.create(
+          [{
+            eventId: transaction.event._id,
+            userId: transaction.user._id,
+            name: transaction.user.name || 'ACE Member',
+            email: transaction.user.email || '',
+            tier: transaction.tier,
+            status: 'confirmed',
+            transactionId: transaction._id,
+            customResponses: {}, // Members bypass form fields via Fast-Pass
+          }],
+          { session }
+        );
+      }
     }
 
     // ── 7. New Member account creation ────────────────────────
@@ -254,24 +279,34 @@ export const createOrder = catchAsync(async (req, res, next) => {
   }
 
   // ── Determine pricing tier ─────────────────────────────────
-  const isMember = currentUser && ['member', 'body_member', 'admin'].includes(currentUser.role);
+  const isMember = currentUser && ['member', 'sbm', 'ebm', 'admin'].includes(currentUser.role);
   const tier = isMember ? 'member' : 'non_member';
   const amount = (isMember ? event.memberFee : event.standardFee) * 100; // convert INR to paise for Razorpay
 
-  // ── Create Razorpay order ──────────────────────────────────
-  const razorpayOrder = await razorpay.orders.create({
-    amount,
-    currency: 'INR',
-    receipt: `ace_${Date.now()}`,
-    notes: {
-      eventId: eventId.toString(),
-      userId: currentUser?._id.toString() || null,
-      guestEmail: guestEmail || null,
-      guestName: guestName || null,
-      tier,
-      purpose: 'event_registration',
-    },
-  });
+  // ── Create Razorpay order (or Mock in DEV) ─────────────────
+  let razorpayOrder;
+  if (process.env.NODE_ENV === 'production') {
+    razorpayOrder = await razorpay.orders.create({
+      amount,
+      currency: 'INR',
+      receipt: `ace_${Date.now()}`,
+      notes: {
+        eventId: eventId.toString(),
+        userId: currentUser?._id.toString() || null,
+        guestEmail: guestEmail || null,
+        guestName: guestName || null,
+        tier,
+        purpose: 'event_registration',
+      },
+    });
+  } else {
+    // Mock Razorpay order for dev mode to avoid 401 from Razorpay API
+    razorpayOrder = {
+      id: `order_dev_${Date.now()}`,
+      amount,
+      currency: 'INR',
+    };
+  }
 
   // ── Persist Transaction (status: 'created') ────────────────
   await Transaction.create({
@@ -422,3 +457,85 @@ export const handleWebhook = async (req, res) => {
   // Razorpay considers a 2xx response as successful delivery.
   res.status(200).json({ success: true, received: true });
 };
+
+/**
+ * POST /api/payments/dev-confirm  (DEV ONLY)
+ *
+ * Simulates the Razorpay webhook for local development:
+ *   1. Finds the pending Transaction by razorpayOrderId
+ *   2. Marks it paid
+ *   3. Pushes the event to the user's history.attendedEvents vault
+ *   4. Creates a confirmed Registration document
+ *
+ * Body: { razorpayOrderId: string }
+ * Auth: JWT (protect middleware applied in route)
+ */
+export const devConfirm = catchAsync(async (req, res, next) => {
+  // Hard guard — never runs in production even if somehow routed
+  if (process.env.NODE_ENV === 'production') {
+    return next(new AppError('Not available in production.', 403));
+  }
+
+  const { razorpayOrderId } = req.body;
+  if (!razorpayOrderId) {
+    return next(new AppError('razorpayOrderId is required.', 400));
+  }
+
+  const transaction = await Transaction.findOne({ razorpayOrderId }).populate('event user');
+  if (!transaction) {
+    return next(new AppError(`No transaction found for orderId: ${razorpayOrderId}`, 404));
+  }
+
+  if (transaction.status === 'paid') {
+    return res.status(200).json({ success: true, message: 'Already confirmed.' });
+  }
+
+  try {
+    // Mark transaction paid
+    transaction.status = 'paid';
+    transaction.razorpayPaymentId = `dev_pay_${Date.now()}`;
+    transaction.processedAt = new Date();
+    await transaction.save();
+
+    // Increment event registered count
+    await Event.findByIdAndUpdate(
+      transaction.event._id,
+      { $inc: { registeredCount: 1 } }
+    );
+
+    // Push to user vault
+    if (transaction.user) {
+      await User.findByIdAndUpdate(
+        transaction.user._id,
+        {
+          $push: {
+            'history.attendedEvents': {
+              event: transaction.event._id,
+              transaction: transaction._id,
+              attendedAt: new Date(),
+            },
+          },
+        }
+      );
+    }
+
+    // Create a confirmed Registration document
+    await Registration.create({
+      eventId: transaction.event._id,
+      userId: transaction.user?._id || null,
+      name: transaction.user?.name || transaction.guestName || 'Member',
+      email: transaction.user?.email || transaction.guestEmail || '',
+      tier: transaction.tier,
+      status: 'confirmed',
+      transactionId: transaction._id,
+      customResponses: {},
+    });
+
+    console.log(`[DevConfirm] Confirmed orderId=${razorpayOrderId} for user=${transaction.user?._id}`);
+
+    res.status(200).json({ success: true, message: 'Dev confirmation successful.' });
+  } catch (err) {
+    console.error(`[DevConfirm] Error: ${err.message}`);
+    return next(new AppError('Dev confirm failed. See server logs.', 500));
+  }
+});

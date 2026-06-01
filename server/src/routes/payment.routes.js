@@ -48,4 +48,16 @@ router.post('/membership-order', orderLimiter, createMembershipOrder);
  */
 router.post('/order', protect, requirePasswordChange, orderLimiter, createOrder);
 
+/**
+ * POST /api/payments/dev-confirm
+ *
+ * DEV ONLY — simulates the Razorpay webhook's order.paid handler.
+ * Marks a Transaction as paid, writes to User vault, and creates a Registration.
+ * NEVER exposed in production.
+ */
+if (process.env.NODE_ENV !== 'production') {
+  const { devConfirm } = await import('../controllers/payment.controller.js');
+  router.post('/dev-confirm', protect, devConfirm);
+}
+
 export default router;

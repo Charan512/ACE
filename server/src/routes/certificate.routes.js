@@ -54,7 +54,7 @@ router.get(
   '/preview/:eventId',
   protect,
   requirePasswordChange,
-  restrictTo('admin', 'body_member'),
+  restrictTo('admin', 'ebm', 'sbm'),
   certLimiter,
   previewCertificate
 );

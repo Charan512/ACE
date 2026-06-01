@@ -12,7 +12,7 @@ export const getMyVault = catchAsync(async (req, res, next) => {
   // We need to fetch the user again to deeply populate the attendedEvents references
   const user = await User.findById(req.user._id).populate({
     path: 'history.attendedEvents.event',
-    select: 'title description eventDate location',
+    select: 'title description eventDate venue',
   });
 
   if (!user) {
@@ -24,7 +24,7 @@ export const getMyVault = catchAsync(async (req, res, next) => {
     _id: entry.event._id,
     title: entry.event.title,
     eventDate: entry.event.eventDate,
-    location: entry.event.location,
+    venue: entry.event.venue,
     certificateUrl: `/api/certificates/${entry.event._id}?userId=${user._id}`,
     attendedAt: entry.attendedAt,
     transactionId: entry.transaction,

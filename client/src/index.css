@@ -58,10 +58,6 @@
     @apply w-full bg-surface border border-border-light px-4 py-2.5 rounded-xl text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-text-muted;
   }
 
-  .input-modern {
-    @apply w-full bg-surface border border-border-light px-4 py-2.5 rounded-xl text-text-primary focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-text-muted;
-  }
-
   .font-data {
     @apply font-mono tracking-wider;
   }
@@ -72,9 +68,53 @@
   100% { transform: translateX(-50%); }
 }
 
+/* ── Member Portal Animations ─────────────────────────────── */
+@keyframes drift-slow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(30px, -20px) scale(1.05); }
+  66%       { transform: translate(-20px, 15px) scale(0.98); }
+}
+@keyframes drift-med {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(-40px, 30px) scale(1.08); }
+}
+@keyframes shimmer-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+@keyframes scan-line {
+  0%   { top: -2px; }
+  100% { top: 100%; }
+}
+@keyframes float-y {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes glitch-1 {
+  0%, 100% { clip-path: inset(40% 0 61% 0); transform: translate(-2px, -2px); }
+  20%       { clip-path: inset(92% 0 1% 0);  transform: translate(2px, 2px); }
+  40%       { clip-path: inset(43% 0 1% 0);  transform: translate(1px, -1px); }
+  60%       { clip-path: inset(25% 0 58% 0); transform: translate(-1px, 2px); }
+  80%       { clip-path: inset(54% 0 7% 0);  transform: translate(2px, -2px); }
+}
+@keyframes glitch-2 {
+  0%, 100% { clip-path: inset(50% 0 30% 0); transform: translate(2px, 2px); }
+  20%       { clip-path: inset(15% 0 65% 0); transform: translate(-2px, -1px); }
+  40%       { clip-path: inset(80% 0 5% 0);  transform: translate(1px, 2px); }
+  60%       { clip-path: inset(10% 0 80% 0); transform: translate(-1px, -2px); }
+  80%       { clip-path: inset(35% 0 45% 0); transform: translate(2px, 1px); }
+}
+
 @layer utilities {
-  .animate-marquee {
-    animation: marquee 25s linear infinite;
-  }
+  .animate-marquee    { animation: marquee 25s linear infinite; }
+  .animate-drift-slow { animation: drift-slow 18s ease-in-out infinite; }
+  .animate-drift-med  { animation: drift-med 12s ease-in-out infinite; }
+  .animate-shimmer    { animation: shimmer-slide 2.5s ease-in-out infinite; }
+  .animate-float      { animation: float-y 4s ease-in-out infinite; }
+  .animate-scan       { animation: scan-line 3s linear infinite; }
 }
 

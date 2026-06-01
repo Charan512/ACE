@@ -35,8 +35,10 @@ const ProtectedRoute = ({ allowedRoles = [], allowPasswordChangePending = false 
 
   // If roles are specified, check if user has permission
   if (allowedRoles.length > 0 && user && !allowedRoles.includes(user.role)) {
-    // Redirect to member dashboard (or home if member portal is also restricted)
-    return <Navigate to="/member/dashboard" replace />;
+    // Admins go to their portal; everyone else goes to the public home
+    const adminRoles = ['admin', 'ebm', 'sbm'];
+    const fallback = adminRoles.includes(user.role) ? '/admin' : '/';
+    return <Navigate to={fallback} replace />;
   }
 
   return <Outlet />;
