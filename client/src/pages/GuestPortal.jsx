@@ -51,26 +51,26 @@ const GuestPortal = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-7xl mx-auto px-6 w-full relative z-10 pt-40 pb-20">
 
           {/* Left Column (col-span-7) */}
-          <div className="col-span-7">
-            <p className="text-sm font-bold tracking-widest text-blue-600 uppercase mb-5">SRKR Engineering College · Dept. of CSE</p>
-            <h1 className="text-7xl lg:text-8xl font-heading font-extrabold tracking-tighter leading-[0.9] text-slate-900 mb-6">
-              Empower Your <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500">Engineering.</span>
+          <div className="lg:col-span-7 text-center lg:text-left flex flex-col items-center lg:items-start">
+            <p className="text-xs sm:text-sm font-bold tracking-widest text-blue-600 uppercase mb-5">SRKR Engineering College · Dept. of CSE</p>
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-heading font-extrabold tracking-tighter leading-[1] lg:leading-[0.9] text-slate-900 mb-6">
+              Empower Your <br className="hidden sm:block lg:hidden" /><span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500">Engineering.</span>
             </h1>
-            <p className="text-xl text-slate-500 font-medium max-w-lg leading-relaxed mb-10">
+            <p className="text-lg sm:text-xl text-slate-500 font-medium max-w-lg leading-relaxed mb-10">
               The official technical club of SRKR Engineering College. Build real systems, compete in hackathons, and grow your network.
             </p>
-            <div className="flex flex-wrap gap-4 mb-12">
-              <Link to="/register" className="bg-blue-600 text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/25 hover:-translate-y-1">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-12 w-full sm:w-auto px-4 sm:px-0">
+              <Link to="/register" className="w-full sm:w-auto bg-blue-600 text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/25 hover:-translate-y-1 text-center">
                 Join the Club
               </Link>
-              <Link to="/events" className="bg-white text-slate-700 border border-slate-200 px-8 py-4 rounded-full font-bold text-lg hover:border-slate-400 hover:text-slate-900 transition-all shadow-sm">
+              <Link to="/events" className="w-full sm:w-auto bg-white text-slate-700 border border-slate-200 px-8 py-4 rounded-full font-bold text-lg hover:border-slate-400 hover:text-slate-900 transition-all shadow-sm text-center">
                 Explore Events →
               </Link>
             </div>
           </div>
 
           {/* Right Column (col-span-5 hidden lg:block) */}
-          <div className="col-span-5 hidden lg:block">
+          <div className="lg:col-span-5 hidden lg:block">
             <div className="grid grid-cols-2 gap-4 h-[450px] w-full">
               <div className="col-span-1 row-span-2 bg-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all hover:scale-[1.02]">
                 <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=800&auto=format&fit=crop" alt="Hackathon Event" className="w-full h-full object-cover" />
@@ -103,8 +103,8 @@ const GuestPortal = () => {
             <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-2">Next Major Operation</h2>
             <p className="text-lg text-slate-500">Secure your pass to our upcoming flagship event.</p>
           </div>
-          <div className="bg-slate-900 rounded-3xl p-10 flex flex-col md:flex-row items-center justify-between shadow-xl mb-16">
-            <div className="text-white text-center md:text-left mb-6 md:mb-0">
+          <div className="bg-slate-900 rounded-3xl p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between shadow-xl mb-16 gap-6 md:gap-0">
+            <div className="text-white text-center md:text-left">
               <h3 className="text-3xl font-bold mb-2">{upcomingEvent.title}</h3>
               <p className="text-slate-400 font-medium">Date: {new Date(upcomingEvent.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
             </div>
@@ -123,17 +123,17 @@ const GuestPortal = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6">
 
           {/* Card 1 (The Main Feature) */}
-          <div className="md:col-span-2 md:row-span-2 bg-slate-900 text-white p-10 rounded-3xl relative overflow-hidden group hover:-translate-y-1 transition-transform">
-            <Cpu className="absolute -bottom-8 -right-8 w-64 h-64 text-slate-800 opacity-50 group-hover:rotate-12 transition-transform duration-700" />
-            <h3 className="text-4xl font-heading font-black mb-4 relative z-10 tracking-tight">Hands-on Workshops</h3>
-            <p className="text-slate-400 text-lg leading-relaxed relative z-10 max-w-sm">
+          <div className="md:col-span-2 md:row-span-2 bg-slate-900 text-white p-6 md:p-10 rounded-3xl relative overflow-hidden group hover:-translate-y-1 transition-transform">
+            <Cpu className="absolute -bottom-8 -right-8 w-48 h-48 md:w-64 md:h-64 text-slate-800 opacity-50 group-hover:rotate-12 transition-transform duration-700" />
+            <h3 className="text-3xl md:text-4xl font-heading font-black mb-4 relative z-10 tracking-tight">Hands-on Workshops</h3>
+            <p className="text-slate-400 text-base md:text-lg leading-relaxed relative z-10 max-w-sm">
               We bypass tutorials and dive straight into production-grade systems. Build deep-tech projects, neural networks, and scalable infrastructure with our core engineering team.
             </p>
           </div>
 
           {/* Card 2 (Top Right) */}
-          <div className="md:col-span-2 md:row-span-1 bg-white border border-slate-200 p-8 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
+          <div className="md:col-span-2 md:row-span-1 bg-white border border-slate-200 p-6 md:p-8 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-0">
               <div>
                 <h4 className="text-2xl font-bold text-slate-950 mb-2 tracking-tight">Competitive Hackathons</h4>
                 <p className="text-slate-500 font-medium">Test your skills in flagship 24-hour development sprints like Prajwalan. Compete, build, and win massive prizes.</p>
@@ -145,8 +145,8 @@ const GuestPortal = () => {
           </div>
 
           {/* Card 3 (Bottom Right) */}
-          <div className="md:col-span-2 md:row-span-1 bg-blue-50 border border-blue-100 p-8 rounded-3xl hover:bg-blue-100 transition-colors">
-            <div className="flex items-start justify-between">
+          <div className="md:col-span-2 md:row-span-1 bg-blue-50 border border-blue-100 p-6 md:p-8 rounded-3xl hover:bg-blue-100 transition-colors">
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-0">
               <div>
                 <h4 className="text-2xl font-bold text-slate-950 mb-2 tracking-tight">Peer Networking</h4>
                 <p className="text-slate-600 font-medium">Connect with top-tier developers, alumni, and industry professionals. The network is your ultimate utility.</p>
@@ -231,7 +231,7 @@ const GuestPortal = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[250px]">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[150px] sm:auto-rows-[200px] md:auto-rows-[250px]">
             {/* Large Image (Spans 2 cols, 2 rows) */}
             <div className="col-span-2 row-span-2 rounded-[2rem] overflow-hidden group relative">
               <div className="absolute inset-0 bg-slate-900/40 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
