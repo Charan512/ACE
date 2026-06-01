@@ -48,7 +48,7 @@ const GuestPortal = () => {
         {/* Ambient Background Orbs */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-100/60 rounded-full blur-3xl pointer-events-none -translate-y-1/4 translate-x-1/4" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-cyan-100/40 rounded-full blur-3xl pointer-events-none translate-y-1/4 -translate-x-1/4" />
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-7xl mx-auto px-6 w-full relative z-10 py-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-7xl mx-auto px-6 w-full relative z-10 pt-40 pb-20">
 
           {/* Left Column (col-span-7) */}
           <div className="col-span-7">
@@ -209,9 +209,9 @@ const GuestPortal = () => {
             {/* Coordinator Profile 2 */}
             <div className="flex flex-col items-center text-center group">
               <div className="w-48 aspect-square rounded-full mb-6 overflow-hidden border-4 border-slate-100 shadow-lg group-hover:border-primary transition-colors duration-500">
-                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop" alt="Faculty Coordinator" className="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 transition-all duration-500" />
+                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop" alt="Hemalatha" className="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 transition-all duration-500" />
               </div>
-              <h4 className="text-2xl font-black text-slate-950 tracking-tight mb-1">Faculty Coordinator</h4>
+              <h4 className="text-2xl font-black text-slate-950 tracking-tight mb-1">Hemalatha</h4>
               <p className="text-slate-500 font-bold tracking-wide text-sm uppercase">Faculty Coordinator</p>
             </div>
           </div>
