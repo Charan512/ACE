@@ -28,33 +28,34 @@ The following diagrams illustrate the core structure, payment flows, and backgro
 ```mermaid
 graph TD
     subgraph Client Layer
-        Vite[React SPA / Vite]
+        Vite["React SPA / Vite"]
     end
 
     subgraph Application Server
-        Express[Express.js Server / Node.js 18+]
-        Canvas[@napi-rs/canvas Engine]
+        Express["Express.js Server / Node.js 18+"]
+        Canvas["@napi-rs/canvas Engine"]
     end
 
     subgraph Database & Caching
-        Mongo[(MongoDB / Mongoose)]
-        Redis[(Redis Key-Value DB)]
+        Mongo[("MongoDB / Mongoose")]
+        Redis[("Redis Key-Value DB")]
     end
 
     subgraph Third Party Services
-        PhonePe[PhonePe PG v1 Gateway]
-        R2[Cloudflare R2 Storage]
-        SMTP[SMTP Mail Server]
+        PhonePe["PhonePe PG v1 Gateway"]
+        R2["Cloudflare R2 Storage"]
+        SMTP["SMTP Mail Server"]
     end
 
-    Vite <--> |HTTPS / JSON API| Express
-    Express <--> |Mongoose ODM| Mongo
-    Express <--> |BullMQ Queues| Redis
-    Express --> |Fetch Base Templates| R2
-    Express --> |Stream Buffer| Vite
-    Express <--> |PG Redirect & Status API| PhonePe
-    Express --> |Transports Emails| SMTP
+    Vite <--> |"HTTPS / JSON API"| Express
+    Express <--> |"Mongoose ODM"| Mongo
+    Express <--> |"BullMQ Queues"| Redis
+    Express --> |"Fetch Base Templates"| R2
+    Express --> |"Stream Buffer"| Vite
+    Express <--> |"PG Redirect & Status API"| PhonePe
+    Express --> |"Transports Emails"| SMTP
 ```
+
 
 ### 2.2 Payment Initialization & Webhook Verification Flow
 ```mermaid
