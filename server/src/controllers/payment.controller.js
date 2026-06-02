@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import mongoose from 'mongoose';
-import fetch from 'node-fetch'; // Node 18+ has native fetch; use node-fetch for Node 16
+// Note: fetch is available globally in Node 18+ (no import needed)
 import {
   PHONEPE_MERCHANT_ID,
   PHONEPE_BASE_URL,

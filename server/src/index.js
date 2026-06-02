@@ -21,6 +21,16 @@ import adminRoutes from './routes/admin.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
 import opsRoutes from './routes/ops.routes.js';
 
+// ── Production Safety Guards ─────────────────────────────────
+// Prevents accidental deployment with a weak development JWT secret.
+if (process.env.NODE_ENV === 'production') {
+  const secret = process.env.JWT_SECRET || '';
+  if (!secret || secret.length < 32 || secret.toLowerCase().includes('dev') || secret.toLowerCase().includes('secret')) {
+    console.error('[Server] FATAL: Weak or missing JWT_SECRET detected in production. Shutting down.');
+    process.exit(1);
+  }
+}
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 

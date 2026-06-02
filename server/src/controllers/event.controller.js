@@ -121,8 +121,8 @@ export const getEventById = catchAsync(async (req, res, next) => {
  * Optional fields:  description, venue, registrationDeadline, maxCapacity,
  *                   bannerImage, certificateTemplate, tags
  *
- * Fees are expected in PAISE (₹1 = 100 paise) to match Razorpay's native unit.
- * The slug is auto-generated from the title by the Event model's pre-save hook.
+ * Fees are expected and stored in INR (whole rupees). Conversion to
+ * paise (×100) happens in payment.controller.js at order-creation time.
  */
 export const createEvent = catchAsync(async (req, res, next) => {
   const {
@@ -298,3 +298,53 @@ export const toggleRegistration = catchAsync(async (req, res, next) => {
     data: updatedEvent.toObject({ virtuals: true }),
   });
 });
+
+/**
+ * DELETE /api/admin/events/:id
+ *
+ * Permanently deletes an event and cascades the deletion to all associated
+ * Registrations and Transactions.
+ *
+ * This is a destructive, irreversible operation. RBAC: admin only.
+ *
+ * Cascade order:
+ *  1. Delete all Registration documents referencing this event
+ *  2. Delete all Transaction documents referencing this event
+ *  3. Delete the Event document itself
+ */
+export const deleteEvent = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const event = await Event.findById(id);
+    if (!event) {
+      return next(new AppError('Event not found.', 404));
+    }
+
+    // Cascade: remove all linked registrations
+    const Registration = (await import('../models/Registration.js')).default;
+    const Transaction  = (await import('../models/Transaction.js')).default;
+
+    const regResult = await Registration.deleteMany({ eventId: id });
+    const txnResult = await Transaction.deleteMany({ eventId: id });
+
+    // Delete the event itself
+    await Event.findByIdAndDelete(id);
+
+    console.log(
+      `[EventController] Admin ${req.user.aceId} deleted event "${event.title}". ` +
+      `Cascade: ${regResult.deletedCount} registrations, ${txnResult.deletedCount} transactions removed.`
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Event "${event.title}" and all its data have been permanently deleted.`,
+      data: {
+        deletedRegistrations: regResult.deletedCount,
+        deletedTransactions: txnResult.deletedCount,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};

@@ -21,7 +21,9 @@ export const protect = catchAsync(async (req, _res, next) => {
   }
 
   if (!token) {
-    console.log('[AUTH DEBUG] No token provided in headers.');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[AUTH DEBUG] No token provided in headers.');
+    }
     return next(new AppError('You are not logged in. Please authenticate.', 401));
   }
 
@@ -30,7 +32,9 @@ export const protect = catchAsync(async (req, _res, next) => {
   try {
     decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch (err) {
-    console.log('[AUTH DEBUG] JWT Verify Error:', err.name, err.message);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[AUTH DEBUG] JWT Verify Error:', err.name, err.message);
+    }
     if (err.name === 'TokenExpiredError') {
       return next(new AppError('Your session has expired. Please log in again.', 401));
     }
@@ -40,7 +44,9 @@ export const protect = catchAsync(async (req, _res, next) => {
   // 3. Confirm user still exists (account may have been deleted after token was issued)
   const currentUser = await User.findById(decoded.id).select('+requiresPasswordChange');
   if (!currentUser) {
-    console.log('[AUTH DEBUG] User not found for id:', decoded.id);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[AUTH DEBUG] User not found for id:', decoded.id);
+    }
     return next(new AppError('The account belonging to this token no longer exists.', 401));
   }
 

@@ -180,8 +180,8 @@ const eventSchema = new mongoose.Schema(
 
     // ── Dual-Tier Pricing ──────────────────────────────────
     /**
-     * Amounts stored in INR (rupees). Razorpay requires paise, so
-     * payment.controller.js multiplies by 100 at order-creation time.
+     * Amounts stored in INR (whole rupees). The payment controller
+     * converts to paise (×100) at order-creation time for PhonePe.
      * memberFee:    price for users with role 'member', 'sbm', or 'ebm'
      * standardFee: price for guests or non-members
      */

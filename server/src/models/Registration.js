@@ -99,8 +99,8 @@ const registrationSchema = new mongoose.Schema(
 
     // ── Status ──────────────────────────────────────────────
     /**
-     * confirmed  → payment verified via Razorpay webhook; attendance is locked in
-     * pending    → order created but payment not yet confirmed (webhook not received)
+     * confirmed  → payment verified via PhonePe X-VERIFY callback; attendance is locked in
+     * pending    → order created but payment not yet confirmed (callback not received)
      * cancelled  → registration was cancelled or payment failed
      */
     status: {

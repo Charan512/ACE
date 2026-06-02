@@ -3,12 +3,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import api from '../lib/api';
 import useAuthStore from '../store/useAuthStore';
-import BlurText from '../components/react-bits/BlurText';
 
 const PaymentCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { isAuthenticated, fetchUser } = useAuthStore();
+  const { isAuthenticated, fetchProfile } = useAuthStore();
 
   const [status, setStatus] = useState('processing'); // processing, success, failed
   const [errorMsg, setErrorMsg] = useState('');
@@ -33,41 +32,39 @@ const PaymentCallback = () => {
       }
 
       try {
-        // 2. Call backend Status API
+        // In DEV mode: call dev-confirm FIRST so the transaction is confirmed
+        // in the DB, then the verify call below will correctly read SUCCESS.
+        if (import.meta.env.DEV && searchParams.get('mode') === 'dev') {
+          await api.post('/payments/dev-confirm', {
+            merchantTransactionId: txnId,
+            purpose: searchParams.get('purpose'),
+            guestEmail: searchParams.get('guestEmail'),
+            guestName: searchParams.get('guestName'),
+          });
+        }
+
+        // Call backend Status API
         const res = await api.get(`/payments/verify/${txnId}`);
         const result = res.data.data.status; // 'SUCCESS' | 'FAILED' | 'PENDING'
 
         if (result === 'SUCCESS') {
-          // If in DEV mode, the devConfirm route might not have been hit yet
-          // because it's a redirect mock. Let's trigger it now.
-          if (import.meta.env.DEV && searchParams.get('mode') === 'dev') {
-            await api.post('/payments/dev-confirm', {
-              merchantTransactionId: txnId,
-              purpose: searchParams.get('purpose'),
-              guestEmail: searchParams.get('guestEmail'),
-              guestName: searchParams.get('guestName')
-            });
-          }
-
-          // Clear session storage
           sessionStorage.removeItem('ace_pending_txn');
           setStatus('success');
-          
           // Refresh user data (if logged in, vault might have updated)
           if (isAuthenticated) {
-            await fetchUser();
+            await fetchProfile();
           }
-
         } else if (result === 'FAILED') {
           setStatus('failed');
           setErrorMsg('Payment failed or was cancelled.');
           sessionStorage.removeItem('ace_pending_txn');
         } else {
-          // PENDING — PhonePe is taking time.
+          // PENDING — PhonePe is still processing.
           setStatus('failed');
           setErrorMsg('Payment status is pending. Please check your email for confirmation later.');
           sessionStorage.removeItem('ace_pending_txn');
         }
+
 
       } catch (err) {
         console.error('[PaymentCallback] Verification failed:', err);
@@ -79,7 +76,7 @@ const PaymentCallback = () => {
     // Add a slight delay for UI polish so it doesn't instantly snap
     const timer = setTimeout(verifyPayment, 1500);
     return () => clearTimeout(timer);
-  }, [searchParams, isAuthenticated, fetchUser]);
+  }, [searchParams, isAuthenticated, fetchProfile]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 px-4">
@@ -104,11 +101,7 @@ const PaymentCallback = () => {
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
               <CheckCircle2 className="w-10 h-10 text-green-600" />
             </div>
-            <BlurText 
-              text="Payment Successful!" 
-              className="text-3xl font-black text-slate-900 mb-2" 
-              delay={50} 
-            />
+            <h2 className="text-3xl font-black text-slate-900 mb-2">Payment Successful!</h2>
             <p className="text-slate-600 mb-8 mt-2">
               Your transaction was completed successfully. Your account has been updated.
             </p>

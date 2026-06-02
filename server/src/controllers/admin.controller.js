@@ -77,30 +77,7 @@ export const getAdminEvents = catchAsync(async (req, res, _next) => {
   });
 });
 
-/**
- * @desc    Toggle event live/inactive status
- * @route   PATCH /api/admin/events/:id/toggle
- * @access  Private (Admin / EBM / SBM)
- */
-export const toggleEventStatus = catchAsync(async (req, res, next) => {
-  const event = await Event.findById(req.params.id);
-  if (!event) return next(new AppError('Event not found.', 404));
 
-  const updated = await Event.findByIdAndUpdate(
-    req.params.id,
-    { $set: { isActive: !event.isActive } },
-    { new: true, runValidators: true }
-  ).populate('createdBy', 'name aceId role');
-
-  const state = updated.isActive ? 'LIVE' : 'INACTIVE';
-  console.log(`[AdminController] Event "${updated.title}" set to ${state} by ${req.user.aceId}`);
-
-  res.status(200).json({
-    success: true,
-    message: `Event is now ${state}.`,
-    data: updated.toObject({ virtuals: true }),
-  });
-});
 
 // ─────────────────────────────────────────────────────────────
 // REGISTRATION MANAGEMENT
@@ -113,18 +90,29 @@ export const toggleEventStatus = catchAsync(async (req, res, next) => {
  */
 export const getEventRegistrations = catchAsync(async (req, res, next) => {
   const { eventId } = req.params;
+  const page  = Math.max(1, parseInt(req.query.page,  10) || 1);
+  const limit = Math.min(200, parseInt(req.query.limit, 10) || 50);
+  const skip  = (page - 1) * limit;
 
   const event = await Event.findById(eventId).select('title');
   if (!event) return next(new AppError('Event not found.', 404));
 
-  const registrations = await Registration.find({ eventId })
-    .populate('userId', 'name email aceId branch section year phone')
-    .sort({ createdAt: -1 });
+  const [registrations, total] = await Promise.all([
+    Registration.find({ eventId })
+      .populate('userId', 'name email aceId branch section year phone')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Registration.countDocuments({ eventId }),
+  ]);
 
   res.status(200).json({
     success: true,
     event: { _id: event._id, title: event.title },
     count: registrations.length,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
     data: registrations,
   });
 });
@@ -147,13 +135,25 @@ export const getAdminUsers = catchAsync(async (req, res, _next) => {
     filter.role = req.query.role;
   }
 
-  const users = await User.find(filter)
-    .select('-password -otp -history')
-    .sort({ createdAt: -1 });
+  const page  = Math.max(1, parseInt(req.query.page,  10) || 1);
+  const limit = Math.min(200, parseInt(req.query.limit, 10) || 50);
+  const skip  = (page - 1) * limit;
+
+  const [users, total] = await Promise.all([
+    User.find(filter)
+      .select('-password -otp -history')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    User.countDocuments(filter),
+  ]);
 
   res.status(200).json({
     success: true,
     count: users.length,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
     data: { users },
   });
 });

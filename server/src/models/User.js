@@ -198,12 +198,6 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
-    // ── Payment ──────────────────────────────────────────────
-    razorpayCustomerId: {
-      type: String,
-      default: null,
-    },
-
     // ── Member Vault ─────────────────────────────────────────
     history: {
       attendedEvents: {
