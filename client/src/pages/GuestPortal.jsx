@@ -169,7 +169,7 @@ const GuestPortal = () => {
             bridging the massive gap between academic curriculum and cutting-edge industry practices.
           </p>
           <a
-            href="https://srkrec.edu.in"
+            href="https://www.srkrcse.com"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 border-2 border-white/20 text-white px-8 py-3 rounded-full font-bold hover:bg-white hover:text-slate-900 transition-all shadow-sm"
