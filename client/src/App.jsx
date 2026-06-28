@@ -13,6 +13,7 @@ import EventsPage from './pages/EventsPage';
 import TeamDirectory from './pages/TeamDirectory';
 import Registration from './pages/Registration';
 import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
 import GuestCheckout from './pages/GuestCheckout';
 import EventDetailPage from './pages/EventDetailPage';
 import ForcePasswordChange from './pages/ForcePasswordChange';
@@ -29,6 +30,7 @@ import AdminEvents from './pages/AdminEvents';
 import AdminRegistrations from './pages/AdminRegistrations';
 import AdminCertificates from './pages/AdminCertificates';
 import AdminUsers from './pages/AdminUsers';
+import AdminNotifications from './pages/AdminNotifications';
 
 // ── Ops Pages ────────────────────────────────────────────────
 import OpsLayout          from './components/OpsLayout';
@@ -76,6 +78,7 @@ function App() {
           <Route path="/team" element={<TeamDirectory />} />
           <Route path="/register" element={<Registration />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/events/checkout/:eventId" element={<GuestCheckout />} />
           <Route path="/payment/callback" element={<PaymentCallback />} />
 
@@ -109,11 +112,12 @@ function App() {
           }
         >
           <Route element={<AdminLayout />}>
-            <Route path="/admin"                  element={<AdminDashboard />} />
-            <Route path="/admin/events"           element={<AdminEvents />} />
-            <Route path="/admin/registrations"    element={<AdminRegistrations />} />
-            <Route path="/admin/certificates"     element={<AdminCertificates />} />
-            <Route path="/admin/users"            element={<AdminUsers />} />
+            <Route path="/admin"                    element={<AdminDashboard />} />
+            <Route path="/admin/events"             element={<AdminEvents />} />
+            <Route path="/admin/registrations"      element={<AdminRegistrations />} />
+            <Route path="/admin/certificates"       element={<AdminCertificates />} />
+            <Route path="/admin/users"              element={<AdminUsers />} />
+            <Route path="/admin/notifications"      element={<AdminNotifications />} />
           </Route>
         </Route>
         {/* ── Protected Ops Routes (EBM/SBM/Admin) ───────────────── */}

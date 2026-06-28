@@ -246,16 +246,21 @@ const AdminCertificates = () => {
     }
   };
 
-  // ── Dispatch (releases certificates to member portal) ──────
+  // ── Dispatch (releases certificates to member portal + emails guests) ──
   const handleDispatch = async () => {
     if (!selectedEventId) return showToast('No event selected.', 'error');
     setDispatching(true);
     try {
-      // Set the certificatesReleased flag to true so members can see them
-      await api.patch(`/admin/events/${selectedEventId}`, { certificatesReleased: true });
-      showToast('Certificates dispatched successfully! Members can now download them.', 'success');
+      // IMPORTANT: Use the dedicated /release-certificates endpoint — NOT PATCH /admin/events/:id.
+      // The general PATCH strips 'certificatesReleased' via sanitizeEventUpdate.
+      // This endpoint flips the flag AND enqueues the BullMQ guest certificate email batch.
+      await api.patch(`/admin/events/${selectedEventId}/release-certificates`);
+      setEvents((prev) =>
+        prev.map((ev) => ev._id === selectedEventId ? { ...ev, certificatesReleased: true } : ev)
+      );
+      showToast('Certificates released! Members can download. Guests will receive email shortly.', 'success');
     } catch (err) {
-      showToast('Dispatch failed.', 'error');
+      showToast(err.response?.data?.message || 'Dispatch failed.', 'error');
     } finally {
       setDispatching(false);
     }

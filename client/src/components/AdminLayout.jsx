@@ -2,18 +2,20 @@ import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, CalendarDays, Users, ClipboardList, Award,
-  LogOut, Shield, Menu, X
+  LogOut, Shield, Menu, X, Bell,
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import PortalBackground from './ui/PortalBackground';
 
 // ── Nav Items ─────────────────────────────────────────────────
+// allowedRoles: undefined = all roles; or array of roles
 const NAV_ITEMS = [
-  { label: 'Dashboard',     to: '/admin',               icon: LayoutDashboard, end: true  },
-  { label: 'Events',        to: '/admin/events',        icon: CalendarDays,    end: false },
-  { label: 'Registrations', to: '/admin/registrations', icon: ClipboardList,   end: false },
-  { label: 'Certificates',  to: '/admin/certificates',  icon: Award,           end: false },
-  { label: 'Users',         to: '/admin/users',         icon: Users,           end: false },
+  { label: 'Dashboard',     to: '/admin',                icon: LayoutDashboard, end: true  },
+  { label: 'Events',        to: '/admin/events',         icon: CalendarDays,    end: false },
+  { label: 'Registrations', to: '/admin/registrations',  icon: ClipboardList,   end: false },
+  { label: 'Certificates',  to: '/admin/certificates',   icon: Award,           end: false },
+  { label: 'Users',         to: '/admin/users',          icon: Users,           end: false, allowedRoles: ['admin'] },
+  { label: 'Notifications', to: '/admin/notifications',  icon: Bell,            end: false, allowedRoles: ['admin'] },
 ];
 
 // ── Role label mapping ────────────────────────────────────────
@@ -46,6 +48,11 @@ const AdminLayout = () => {
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '—';
   const firstName = user?.name?.split(' ')[0] || 'Admin';
+
+  // Filter nav items by role
+  const visibleNavItems = NAV_ITEMS.filter(
+    ({ allowedRoles }) => !allowedRoles || allowedRoles.includes(user?.role)
+  );
 
   return (
     <div className="min-h-screen text-slate-700 flex flex-col bg-slate-50 selection:bg-blue-100">
@@ -84,7 +91,7 @@ const AdminLayout = () => {
 
           {/* Desktop Segmented Nav Links */}
           <nav className="hidden lg:flex items-center gap-1 bg-slate-100/50 p-1 rounded-2xl border border-slate-200/60 shadow-inner shrink-0">
-            {NAV_ITEMS.map(({ label, to, icon: Icon, end }) => (
+            {visibleNavItems.map(({ label, to, icon: Icon, end }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -198,7 +205,7 @@ const AdminLayout = () => {
 
             {/* Nav Links */}
             <nav className="flex flex-col gap-2">
-              {NAV_ITEMS.map(({ label, to, icon: Icon, end }) => (
+              {visibleNavItems.map(({ label, to, icon: Icon, end }) => (
                 <NavLink
                   key={to}
                   to={to}

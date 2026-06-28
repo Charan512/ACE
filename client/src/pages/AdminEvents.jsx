@@ -1,25 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  CalendarDays,
-  Plus,
-  ToggleLeft,
-  ToggleRight,
-  Loader2,
-  AlertTriangle,
-  CheckCircle2,
-  Edit3,
-  Tag,
-  Clock,
-  MapPin,
-  RefreshCw,
-  UploadCloud,
-  X,
-  Users,
-  Link2,
-  FormInput,
-  ChevronDown,
-  Trash2,
-  GripVertical,
+  CalendarDays, Plus, ToggleLeft, ToggleRight, Loader2,
+  AlertTriangle, CheckCircle2, Edit3, Tag, Clock, MapPin,
+  RefreshCw, UploadCloud, X, Users, Link2, FormInput,
+  ChevronDown, Trash2, GripVertical, Zap, Globe, FileText,
 } from 'lucide-react';
 import api from '../lib/api';
 import axios from 'axios';
@@ -41,7 +25,7 @@ const Toast = ({ toast }) => {
   );
 };
 
-// ── Status Badge ──────────────────────────────────────────────
+// ── Status Badge (isActive) ──────────────────────────────────
 const StatusBadge = ({ isActive }) => (
   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border
     ${isActive
@@ -53,6 +37,22 @@ const StatusBadge = ({ isActive }) => (
     {isActive ? 'LIVE' : 'INACTIVE'}
   </span>
 );
+
+// ── Publish Badge (event.status) ─────────────────────────────
+const PublishBadge = ({ status }) => {
+  if (status === 'published') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100">
+        <Globe className="w-2.5 h-2.5" /> Published
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100">
+      <FileText className="w-2.5 h-2.5" /> Draft
+    </span>
+  );
+};
 
 // ── Format date ───────────────────────────────────────────────
 const formatDate = (dateStr) => {
@@ -348,7 +348,7 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
     try {
       let res;
       if (isEditing) {
-        res = await api.put(`/admin/events/${form._id}`, payload);
+        res = await api.patch(`/admin/events/${form._id}`, payload);
       } else {
         res = await api.post('/admin/events', payload);
       }
@@ -568,11 +568,14 @@ const AdminEvents = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(null);
-  
+  const [publishing, setPublishing] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null); // event object
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState(null); // null = Create Mode
-  
+  const [editingEvent, setEditingEvent] = useState(null);
+
   const [toast, setToast] = useState(null);
 
   const showToast = (message, type = 'success') => {
@@ -608,6 +611,36 @@ const AdminEvents = () => {
     }
   };
 
+  const handlePublish = async (eventId) => {
+    setPublishing(eventId);
+    try {
+      const res = await api.patch(`/admin/events/${eventId}/publish`);
+      setEvents((prev) => prev.map((ev) => ev._id === eventId ? res.data.data : ev));
+      showToast(res.data.message, 'success');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Publish failed.', 'error');
+    } finally {
+      setPublishing(null);
+    }
+  };
+
+  const handleDelete = (ev) => setConfirmDelete(ev);
+
+  const confirmDeleteHandler = async () => {
+    if (!confirmDelete) return;
+    setDeletingId(confirmDelete._id);
+    try {
+      await api.delete(`/admin/events/${confirmDelete._id}`);
+      setEvents((prev) => prev.filter((ev) => ev._id !== confirmDelete._id));
+      showToast(`"${confirmDelete.title}" deleted.`, 'success');
+      setConfirmDelete(null);
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Delete failed.', 'error');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const openCreateModal = () => {
     setEditingEvent(null);
     setIsModalOpen(true);
@@ -640,13 +673,40 @@ const AdminEvents = () => {
   return (
     <div className="px-6 py-8 max-w-6xl mx-auto">
       <Toast toast={toast} />
-      
+
       {isModalOpen && (
         <EventModal
           initialData={editingEvent}
           onClose={() => setIsModalOpen(false)}
           onSaved={handleEventSaved}
         />
+      )}
+
+      {/* Delete Confirm Modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm p-6">
+            <div className="w-12 h-12 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-5 h-5 text-red-500" />
+            </div>
+            <h2 className="text-base font-black text-slate-900 text-center mb-1">Delete Event?</h2>
+            <p className="text-sm text-slate-500 text-center mb-1">This will permanently delete</p>
+            <p className="text-sm font-bold text-slate-800 text-center mb-1">&ldquo;{confirmDelete.title}&rdquo;</p>
+            <p className="text-xs text-red-500 font-semibold text-center mb-6">All registrations and transactions will be cascade-deleted.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmDelete(null)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 cursor-pointer">
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteHandler}
+                disabled={!!deletingId}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer">
+                {deletingId ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Trash2 className="w-4 h-4" /> Delete</>}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Header ──────────────────────────────────── */}
@@ -694,17 +754,19 @@ const AdminEvents = () => {
                   <th className="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
                   <th className="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Venue</th>
                   <th className="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Fees</th>
-                  <th className="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Form</th>
-                  <th className="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Publish</th>
+                  <th className="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Reg.</th>
                   <th className="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {events.map((ev) => (
-                  <tr key={ev._id} className="hover:bg-slate-50/60 transition-colors">
+                  <tr key={ev._id} className={`hover:bg-slate-50/60 transition-colors ${ev.status === 'draft' ? 'bg-amber-50/20' : ''}`}>
                     <td className="px-5 py-4">
                       <div className="font-bold text-slate-900 text-sm truncate max-w-[200px]">{ev.title}</div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5 truncate max-w-[200px]">{ev.slug}</div>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <PublishBadge status={ev.status} />
+                      </div>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1.5 text-sm text-slate-600 font-medium">
@@ -727,13 +789,21 @@ const AdminEvents = () => {
                       <div className="text-[10px] text-slate-400 mt-0.5">Member / Standard</div>
                     </td>
                     <td className="px-5 py-4">
-                      {ev.customFormFields?.length > 0 ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100 px-2 py-1 rounded-full">
-                          <FormInput className="w-3 h-3" />
-                          {ev.customFormFields.length} field{ev.customFormFields.length > 1 ? 's' : ''}
-                        </span>
+                      {/* Publish or Already-published column */}
+                      {ev.status === 'published' ? (
+                        <span className="text-xs text-slate-400 font-medium">—</span>
                       ) : (
-                        <span className="text-xs text-slate-300 font-medium">—</span>
+                        <button
+                          onClick={() => handlePublish(ev._id)}
+                          disabled={publishing === ev._id}
+                          className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all disabled:opacity-50 cursor-pointer"
+                        >
+                          {publishing === ev._id
+                            ? <Loader2 className="w-3 h-3 animate-spin" />
+                            : <Zap className="w-3 h-3" />
+                          }
+                          Publish
+                        </button>
                       )}
                     </td>
                     <td className="px-5 py-4">
@@ -741,7 +811,7 @@ const AdminEvents = () => {
                     </td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {/* Copy Link Button */}
+                        {/* Copy Link */}
                         <button
                           onClick={() => handleCopyLink(ev._id)}
                           className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors cursor-pointer"
@@ -750,7 +820,7 @@ const AdminEvents = () => {
                           <Link2 className="w-4 h-4" />
                         </button>
 
-                        {/* Edit Button */}
+                        {/* Edit */}
                         <button
                           onClick={() => openEditModal(ev)}
                           className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-colors cursor-pointer"
@@ -759,15 +829,16 @@ const AdminEvents = () => {
                           <Edit3 className="w-4 h-4" />
                         </button>
 
-                        {/* Toggle Status Button */}
+                        {/* Toggle isActive */}
                         <button
                           onClick={() => handleToggle(ev._id)}
-                          disabled={toggling === ev._id}
-                          className="flex items-center justify-center w-24 gap-1 text-xs font-bold px-2 py-1.5 rounded-xl border transition-all cursor-pointer disabled:opacity-50 hover:shadow-sm"
+                          disabled={toggling === ev._id || ev.status !== 'published'}
+                          className="flex items-center justify-center w-24 gap-1 text-xs font-bold px-2 py-1.5 rounded-xl border transition-all cursor-pointer disabled:opacity-30 hover:shadow-sm"
                           style={ev.isActive
                             ? { background: '#fff7ed', color: '#c2410c', borderColor: '#fed7aa' }
                             : { background: '#f0fdf4', color: '#15803d', borderColor: '#bbf7d0' }
                           }
+                          title={ev.status !== 'published' ? 'Publish event first' : ''}
                         >
                           {toggling === ev._id
                             ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -776,6 +847,15 @@ const AdminEvents = () => {
                               : <ToggleLeft className="w-3.5 h-3.5" />
                           }
                           {ev.isActive ? 'Deactivate' : 'Activate'}
+                        </button>
+
+                        {/* Delete */}
+                        <button
+                          onClick={() => handleDelete(ev)}
+                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+                          title="Delete Event"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

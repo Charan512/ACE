@@ -163,12 +163,14 @@ const GuestCheckout = () => {
     setIsProcessing(true);
 
     try {
-      const orderRes = await api.post('/payments/membership-order', {
+      // POST /payments/guest-order — creates a PhonePe event ticket order for a guest.
+      // On webhook success: creates a confirmed Registration + emails QR entry pass to guest.
+      const orderRes = await api.post('/payments/guest-order', {
+        eventId,
         name:            coreData.name,
         email:           coreData.email,
         phone:           coreData.phone || undefined,
         customResponses: customResponses,
-        eventId,
       });
 
       const { merchantTransactionId, redirectUrl } = orderRes.data.data;
@@ -176,11 +178,11 @@ const GuestCheckout = () => {
       // Store txn ID to verify when user returns
       sessionStorage.setItem('ace_pending_txn', merchantTransactionId);
 
-      // Redirect to PhonePe or Dev mock callback
+      // Redirect to PhonePe
       window.location.href = redirectUrl;
     } catch (err) {
       console.error('[GuestCheckout]', err);
-      alert(err.response?.data?.message || 'Checkout failed.');
+      alert(err.response?.data?.message || 'Checkout failed. Please try again.');
       setIsProcessing(false);
     }
   };

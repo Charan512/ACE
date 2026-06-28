@@ -60,6 +60,8 @@ const AdminRegistrations = () => {
   const [regsLoading, setRegsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
+  const [paymentStats, setPaymentStats] = useState(null);
+  const [csvDownloading, setCsvDownloading] = useState(false);
 
   // ── Fetch all events for dropdown ───────────────────────
   const fetchEvents = useCallback(async () => {
@@ -100,8 +102,11 @@ const AdminRegistrations = () => {
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
 
   useEffect(() => {
-    if (selectedEventId) fetchRegistrations(selectedEventId);
-  }, [selectedEventId, fetchRegistrations]);
+    if (selectedEventId) {
+      fetchRegistrations(selectedEventId);
+      fetchPaymentStats(selectedEventId);
+    }
+  }, [selectedEventId, fetchRegistrations, fetchPaymentStats]);
 
   const handleEventChange = (e) => {
     const id = e.target.value;
@@ -109,6 +114,39 @@ const AdminRegistrations = () => {
     setSelectedEventId(id);
     setSelectedEventTitle(ev?.title || '');
     setSearch('');
+    setPaymentStats(null);
+  };
+
+  // ── Fetch payment stats (admin only) ────────────────────────
+  const fetchPaymentStats = useCallback(async (eventId) => {
+    try {
+      const res = await api.get(`/admin/events/${eventId}/payment-stats`);
+      setPaymentStats(res.data.data);
+    } catch (err) {
+      // If 403 (SBM/EBM), silently skip — stats panel won't show
+      if (err.response?.status !== 403) console.error('[AdminRegistrations] Payment stats failed:', err.message);
+    }
+  }, []);
+
+  // ── Download server-side attendance CSV ─────────────────────
+  const downloadAttendanceCsv = async () => {
+    if (!selectedEventId) return;
+    setCsvDownloading(true);
+    try {
+      const res = await api.get(`/admin/events/${selectedEventId}/attendance-csv`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${selectedEventTitle.replace(/\s+/g, '_')}_Attendance.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('[AdminRegistrations] CSV download failed:', err.message);
+    } finally {
+      setCsvDownloading(false);
+    }
   };
 
   // ── Filter by search ──────────────────────────────────────
@@ -197,14 +235,32 @@ const AdminRegistrations = () => {
           )}
         </div>
         
-        {selectedEventId && !regsLoading && filtered.length > 0 && (
-          <button
-            onClick={handleExportCSV}
-            className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-sm transition-colors cursor-pointer h-[46px] shrink-0"
-          >
-            <Download className="w-4 h-4" />
-            Export to CSV
-          </button>
+        {selectedEventId && !regsLoading && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Client-side CSV (registration data only) */}
+            {filtered.length > 0 && (
+              <button
+                onClick={handleExportCSV}
+                className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold px-4 py-2.5 rounded-xl transition-colors cursor-pointer shrink-0"
+              >
+                <Download className="w-4 h-4" />
+                Export CSV
+              </button>
+            )}
+            {/* Server-side Attendance CSV (includes paymentMethod, checkedIn) */}
+            <button
+              onClick={downloadAttendanceCsv}
+              disabled={csvDownloading}
+              className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+              title="Includes paymentMethod and check-in data"
+            >
+              {csvDownloading
+                ? <Loader2 className="w-4 h-4 animate-spin" />
+                : <Download className="w-4 h-4" />
+              }
+              Attendance CSV
+            </button>
+          </div>
         )}
       </div>
 
