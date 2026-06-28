@@ -15,7 +15,6 @@ const NAV_ITEMS = [
   { label: 'Registrations', to: '/admin/registrations',  icon: ClipboardList,   end: false },
   { label: 'Certificates',  to: '/admin/certificates',   icon: Award,           end: false },
   { label: 'Users',         to: '/admin/users',          icon: Users,           end: false, allowedRoles: ['admin'] },
-  { label: 'Notifications', to: '/admin/notifications',  icon: Bell,            end: false, allowedRoles: ['admin'] },
 ];
 
 // ── Role label mapping ────────────────────────────────────────
@@ -44,10 +43,11 @@ const AdminLayout = () => {
   const handleLogout = () => { logout(); navigate('/'); };
 
   const roleLabel = ROLE_LABELS[user?.role] || 'Admin';
-  const initials  = user?.name
+  const isAdmin = user?.role === 'admin';
+  const initials  = isAdmin ? 'AC' : (user?.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    : '—';
-  const firstName = user?.name?.split(' ')[0] || 'Admin';
+    : '—');
+  const fullName = isAdmin ? 'ACE Admin' : (user?.name || 'Admin');
 
   // Filter nav items by role
   const visibleNavItems = NAV_ITEMS.filter(
@@ -118,27 +118,24 @@ const AdminLayout = () => {
         {/* Right side */}
         <div className="flex items-center gap-4 shrink-0">
           
-          {/* Desktop: Highly Emphasized User Profile + Logout */}
+          {/* Desktop: Notifications + Logout */}
           <div className="hidden lg:flex items-center gap-2">
             
-            {/* Unified Profile Button */}
-            <div
-              className="group flex items-center gap-3 px-3 py-1.5 rounded-[18px] transition-all duration-300 border border-transparent hover:bg-slate-100/60 hover:border-slate-200/50 hover:shadow-sm"
-              title="Admin Profile"
-            >
-              <div className="flex flex-col items-end">
-                <span className="text-sm font-bold text-slate-900 tracking-tight group-hover:text-blue-700 transition-colors">{firstName}</span>
-                <span className="text-[10px] font-mono font-bold tracking-widest text-blue-500 uppercase">{roleLabel}</span>
-              </div>
-              
-              <div
-                className="relative flex items-center justify-center w-10 h-10 rounded-xl font-mono font-black text-white shrink-0 shadow-inner group-hover:scale-[1.05] transition-transform duration-300"
-                style={{ background: 'linear-gradient(135deg, #2563eb, #4f46e5)' }}
+            {isAdmin && (
+              <NavLink
+                to="/admin/notifications"
+                title="Notifications"
+                className={({ isActive }) =>
+                  `flex items-center justify-center w-10 h-10 rounded-[14px] transition-all duration-300 border ${
+                    isActive
+                      ? 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm'
+                      : 'bg-slate-100/60 border-transparent text-slate-500 hover:text-blue-600 hover:bg-slate-200/50 hover:shadow-sm'
+                  }`
+                }
               >
-                {initials}
-                <div className="absolute inset-0 rounded-xl ring-2 ring-blue-400 ring-offset-2 ring-offset-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </div>
-            </div>
+                <Bell className="w-5 h-5" />
+              </NavLink>
+            )}
 
             <div className="w-px h-8 bg-slate-200/80 mx-1" />
 
@@ -197,7 +194,7 @@ const AdminLayout = () => {
               >
                 {initials}
               </div>
-              <h2 className="text-lg font-bold text-slate-900 mb-1">{user?.name || 'Admin'}</h2>
+              <h2 className="text-lg font-bold text-slate-900 mb-1">{fullName}</h2>
               <span className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider">
                 {roleLabel}
               </span>

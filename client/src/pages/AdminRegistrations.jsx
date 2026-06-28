@@ -99,6 +99,17 @@ const AdminRegistrations = () => {
     }
   }, []);
 
+  // ── Fetch payment stats (admin only) ────────────────────────
+  const fetchPaymentStats = useCallback(async (eventId) => {
+    try {
+      const res = await api.get(`/admin/events/${eventId}/payment-stats`);
+      setPaymentStats(res.data.data);
+    } catch (err) {
+      // If 403 (SBM/EBM), silently skip — stats panel won't show
+      if (err.response?.status !== 403) console.error('[AdminRegistrations] Payment stats failed:', err.message);
+    }
+  }, []);
+
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
 
   useEffect(() => {
@@ -116,17 +127,6 @@ const AdminRegistrations = () => {
     setSearch('');
     setPaymentStats(null);
   };
-
-  // ── Fetch payment stats (admin only) ────────────────────────
-  const fetchPaymentStats = useCallback(async (eventId) => {
-    try {
-      const res = await api.get(`/admin/events/${eventId}/payment-stats`);
-      setPaymentStats(res.data.data);
-    } catch (err) {
-      // If 403 (SBM/EBM), silently skip — stats panel won't show
-      if (err.response?.status !== 403) console.error('[AdminRegistrations] Payment stats failed:', err.message);
-    }
-  }, []);
 
   // ── Download server-side attendance CSV ─────────────────────
   const downloadAttendanceCsv = async () => {

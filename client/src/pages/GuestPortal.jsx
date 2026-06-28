@@ -161,10 +161,18 @@ const GuestPortal = () => {
       </section>
 
       {/* 3. Department & Faculty (The Structural Split) */}
-      <section id="department" className="w-full bg-slate-900 text-white py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
+      <section id="department" className="relative w-full text-white py-24 px-6 overflow-hidden">
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(https://www.srkrcse.com/assets/images/cse.jpg)' }}
+        />
+        {/* Dark overlay with blur effect */}
+        <div className="absolute inset-0 z-0 bg-slate-950/40 backdrop-blur-sm" />
+
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
           <h2 className="text-4xl sm:text-5xl font-heading font-black tracking-tighter mb-6">Powered by the Dept. of CSE</h2>
-          <p className="text-slate-400 text-lg leading-relaxed mb-10 max-w-2xl mx-auto font-medium">
+          <p className="text-slate-1100 text-lg leading-relaxed mb-10 max-w-2xl mx-auto font-bold">
             SRKR ACE operates in direct synergy with the Computer Science & Engineering department,
             bridging the massive gap between academic curriculum and cutting-edge industry practices.
           </p>

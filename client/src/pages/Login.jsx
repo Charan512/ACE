@@ -4,10 +4,10 @@ import { Mail, Lock, Fingerprint, Network, Cpu, Database, AlertCircle } from 'lu
 import useAuthStore from '../store/useAuthStore';
 
 const Login = () => {
-  const [email, setEmail]       = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError]       = useState(null);
+  const [error, setError] = useState(null);
 
   const navigate = useNavigate();
   const { login } = useAuthStore();
@@ -88,7 +88,7 @@ const Login = () => {
                 required
                 autoComplete="email"
                 className="input-modern pl-12 w-full"
-                placeholder="charan@srkr.edu.in"
+                placeholder="charan@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
