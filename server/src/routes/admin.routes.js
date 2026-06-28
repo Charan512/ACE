@@ -5,60 +5,115 @@ import {
   getEventRegistrations,
   getAdminUsers,
   updateAdminUserRole,
+  releaseCertificates,
+  getAttendanceCsv,
+  getPaymentStats,
+  getAdminNotifications,
 } from '../controllers/admin.controller.js';
 import {
   createEvent,
   updateEvent,
   toggleRegistration,
   deleteEvent,
+  publishEvent,
 } from '../controllers/event.controller.js';
 import { protect, restrictTo } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-// ── All admin routes require authentication ───────────────────
+// ── All admin routes require authentication ────────────────────
 router.use(protect);
 
-// ── Most admin actions are accessible to admin, ebm, and sbm ─
+// ── Routes below are accessible to admin + sbm + ebm ──────────
 router.use(restrictTo('admin', 'ebm', 'sbm'));
 
-// ── Dashboard ─────────────────────────────────────────────────
-// GET /api/admin/stats
-router.get('/stats', getDashboardStats);
+// ── Dashboard — Admin Only ────────────────────────────────────
+// SBMs and EBMs do not need system-level stats.
+router.get('/stats', restrictTo('admin'), getDashboardStats);
 
-// ── Event Management ──────────────────────────────────────────
-// GET  /api/admin/events         → list all events (including inactive)
-// POST /api/admin/events         → create a new event (admin, ebm, sbm)
-router
-  .route('/events')
-  .get(getAdminEvents)
-  .post(createEvent);
+// ── Event Read (Admin + SBM + EBM) ────────────────────────────
+// SBM/EBM can see all events (incl. drafts) for the ops panel.
+// This is the only admin-prefix read endpoint they can access.
+router.get('/events', getAdminEvents);
 
-// PATCH /api/admin/events/:id          → partial update event details
-// PATCH /api/admin/events/:id/toggle   → flip isActive status
-router.patch('/events/:id', updateEvent);
-router.patch('/events/:id/toggle', toggleRegistration);
+// ── Event Mutation (Admin Only) ────────────────────────────────
+// SBMs and EBMs must NOT create, edit, publish, or delete events.
+router.post(
+  '/events',
+  restrictTo('admin'),          // Extra guard — SBM/EBM cannot create
+  createEvent
+);
 
-// DELETE /api/admin/events/:id — Admin Only — cascades to registrations + transactions
+router.patch(
+  '/events/:id',
+  restrictTo('admin'),          // Extra guard — SBM/EBM cannot edit
+  updateEvent
+);
+
+// Toggle isActive (registration open/closed) — Admin Only
+router.patch(
+  '/events/:id/toggle',
+  restrictTo('admin'),
+  toggleRegistration
+);
+
+// Publish: transition draft → published — Admin Only
+router.patch(
+  '/events/:id/publish',
+  restrictTo('admin'),
+  publishEvent
+);
+
+// Delete event (cascades to registrations + transactions) — Admin Only
 router.delete(
   '/events/:id',
-  restrictTo('admin'), // Extra guard — only full admins can permanently delete
+  restrictTo('admin'),
   deleteEvent
 );
 
 // ── Registration Management ───────────────────────────────────
-// GET /api/admin/registrations/:eventId → list all registrations for an event
+// Roster read is kept for SBM/EBM — they need it for the Ops Portal.
 router.get('/registrations/:eventId', getEventRegistrations);
 
-// ── User Management ───────────────────────────────────────────
-// GET /api/admin/users               → list all users (filterable by ?role=)
-router.get('/users', getAdminUsers);
+// Attendance CSV export — Admin Only
+// Only the admin should be able to download raw attendance data.
+router.get(
+  '/events/:eventId/attendance-csv',
+  restrictTo('admin'),
+  getAttendanceCsv
+);
 
-// PATCH /api/admin/users/:id/role    → promote/change user role (Admin Only)
+// Payment stats — Admin Only
+router.get(
+  '/events/:eventId/payment-stats',
+  restrictTo('admin'),
+  getPaymentStats
+);
+
+// ── User Management — Admin Only ──────────────────────────────
+// SBMs and EBMs do not need to browse the user list.
+router.get('/users', restrictTo('admin'), getAdminUsers);
+
+// Role promotion/demotion — Admin Only
 router.patch(
   '/users/:id/role',
-  restrictTo('admin'), // Extra guard — only admins can promote/demote
+  restrictTo('admin'),
   updateAdminUserRole
 );
 
+// ── Certificate Management ────────────────────────────────────
+router.patch(
+  '/events/:id/release-certificates',
+  restrictTo('admin'),
+  releaseCertificates
+);
+
+// ── Admin Notifications (cash reg log) ────────────────────────
+router.get(
+  '/notifications',
+  restrictTo('admin'),
+  getAdminNotifications
+);
+
 export default router;
+

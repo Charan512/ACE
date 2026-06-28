@@ -228,7 +228,24 @@ const eventSchema = new mongoose.Schema(
       default: [],
     },
 
-    // ── Metadata ───────────────────────────────────────────
+    // ── Publication Status ────────────────────────────────
+    /**
+     * 'draft'     → event is in preparation; only visible to admin/sbm/ebm in their panels.
+     * 'published' → event is live and visible to members and guests in the public feed.
+     *
+     * Events MUST be explicitly published by an admin after creation.
+     * This prevents accidentally exposing draft events before they are ready.
+     */
+    status: {
+      type: String,
+      enum: {
+        values: ['draft', 'published'],
+        message: '{VALUE} is not a valid event status.',
+      },
+      default: 'draft',
+    },
+
+    // ── Metadata ────────────────────────────────
     tags: {
       type: [String],
       default: [],
@@ -244,9 +261,10 @@ const eventSchema = new mongoose.Schema(
   }
 );
 
-// ── Indexes ───────────────────────────────────────────────────
+// ── Indexes ───────────────────────────────────────────
 eventSchema.index({ eventDate: 1 });
 eventSchema.index({ isActive: 1 });
+eventSchema.index({ status: 1 });   // Critical for draft/published filtering
 eventSchema.index({ tags: 1 });
 // Note: slug unique index is defined on the field itself (unique: true, sparse: true)
 
@@ -263,12 +281,17 @@ eventSchema.pre('save', function (next) {
   next();
 });
 
-// ── Virtual: Is registration open? ───────────────────────────
+// ── Virtual: Is registration open? ───────────────────────────────
 eventSchema.virtual('isRegistrationOpen').get(function () {
-  const now = new Date();
+  const now            = new Date();
   const deadlinePassed = this.registrationDeadline && now > this.registrationDeadline;
-  const capacityFull = this.maxCapacity !== null && this.registeredCount >= this.maxCapacity;
-  return this.isActive && !deadlinePassed && !capacityFull;
+  const capacityFull   = this.maxCapacity !== null && this.registeredCount >= this.maxCapacity;
+  // Registration is only possible when:
+  //   1. Event is published (not draft)
+  //   2. Manual toggle is open (isActive: true)
+  //   3. Deadline has not passed
+  //   4. Capacity is not full
+  return this.status === 'published' && this.isActive && !deadlinePassed && !capacityFull;
 });
 
 const Event = mongoose.model('Event', eventSchema);

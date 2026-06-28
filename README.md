@@ -140,11 +140,13 @@ Project-A/
 | **Backend Engine** | Node.js (>=18.0.0) | Enforced runtime version for native fetch capabilities. |
 | **Web Framework** | Express.js | Standard HTTP request pipeline and routing layer. |
 | **Database Layer** | MongoDB & Mongoose | Document database for flexible schemas with strong models. |
-| **Distributed Cache** | Redis | Message broker for storing background jobs and state. |
-| **Queue Manager** | BullMQ | Redis-backed robust asynchronous task runner. |
+| **Distributed Cache** | Upstash Redis | Serverless Redis with TLS — used as BullMQ message broker. |
+| **Queue Manager** | BullMQ | Redis-backed robust asynchronous task runner (co-located in Express process). |
 | **Payment Gateway** | PhonePe PG v1 | Secure redirect payment handling with verified callbacks. |
+| **Email Delivery** | Resend (SMTP relay) | HTTP-based mail relay — bypasses Render SMTP port restrictions. |
 | **Certificate Engine** | `@napi-rs/canvas` | Node canvas engine fetching assets to RAM (zero local storage). |
 | **Image Storage** | Cloudflare R2 | S3-compatible template storage for blank certificates. |
+| **Hosting (Backend)** | Render | Free-tier web service with auto-deploy from GitHub. |
 
 ---
 
@@ -218,11 +220,13 @@ The following configuration values are required in `server/.env` to achieve comp
 * `R2_BUCKET_NAME`: Bucket hosting the base canvas certificate files.
 * `R2_PUBLIC_URL`: Client-accessible endpoint to download or display base templates.
 
-### SMTP Settings
-* `SMTP_HOST`: Host address of your email gateway (e.g. `smtp.gmail.com`).
-* `SMTP_PORT`: Port configuration (`587` or `465`).
-* `SMTP_USER`: Standard email account name.
-* `SMTP_PASS`: Application password corresponding to the email login.
+### Email Delivery (Resend)
+Render's free tier **blocks SMTP ports 25, 465, and 587**. The backend uses Resend's SMTP relay, which tunnels over HTTPS (port 443) — never blocked by Render.
+* `RESEND_API_KEY`: Your Resend API key (starts with `re_`). Get one free at [resend.com](https://resend.com).
+* `EMAIL_FROM`: The sender address shown to recipients (must be on your verified Resend domain).
+
+### Redis (Upstash)
+* `REDIS_URL`: Use an Upstash `rediss://` URL (TLS) for production. Get a free instance at [upstash.com](https://upstash.com). Local dev uses `redis://127.0.0.1:6379`.
 
 ---
 
@@ -232,3 +236,44 @@ The following configuration values are required in `server/.env` to achieve comp
 * **Checksum Verification:** All callback integrations require standard SHA256 checksum checks utilizing base64 payloads to confirm identity before state changes occur in the database.
 * **Production Password Protocol:** Deployed production systems automatically generate random passwords upon initial purchase and flag user credentials as `requiresPasswordChange: true`.
 * **Fail-Fast Secret Check:** A startup validator verifies `JWT_SECRET` complexity when running under `production` mode, refusing to boot under weak keys.
+
+---
+
+## 8. Deploying to Render
+
+The repository includes a [`render.yaml`](file:///Users/sriramcharannalla/Project-A/render.yaml) at the project root for one-click deployment.
+
+### Prerequisites
+* A [Render](https://render.com) account connected to your GitHub repository.
+* A [MongoDB Atlas](https://cloud.mongodb.com) cluster (free M0 tier works).
+* An [Upstash Redis](https://upstash.com) database (free tier — get `rediss://` connection URL).
+* A [Resend](https://resend.com) account with a verified sending domain and API key.
+
+### Steps
+
+1. **Push `render.yaml`** to your `main` branch.
+2. In the Render dashboard, click **New → Blueprint** and connect your repository.
+3. Render will detect `render.yaml` and pre-fill the service configuration.
+4. Fill in the `sync: false` environment variables in the Render dashboard:
+
+   | Variable | Where to get it |
+   |---|---|
+   | `MONGO_URI` | MongoDB Atlas → Connect → Drivers |
+   | `REDIS_URL` | Upstash dashboard → `rediss://` URL |
+   | `RESEND_API_KEY` | Resend dashboard → API Keys |
+   | `EMAIL_FROM` | e.g. `ACE ERP <noreply@yourdomain.com>` |
+   | `PHONEPE_MERCHANT_ID` | PhonePe merchant dashboard |
+   | `PHONEPE_SALT_KEY` | PhonePe merchant dashboard |
+   | `CLIENT_URL` | Your deployed frontend URL (e.g. Vercel) |
+   | `TREASURER_EMAIL` | Treasurer's email address |
+   | `R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / R2_PUBLIC_URL` | Cloudflare R2 dashboard |
+
+5. `JWT_SECRET` is **auto-generated** by Render (`generateValue: true`) — no action needed.
+6. Click **Apply** — Render builds and deploys the service.
+7. Verify the deployment by hitting the health endpoint:
+   ```
+   GET https://<your-render-url>/api/health
+   → { "success": true, "message": "ACE ERP Server is operational." }
+   ```
+
+> **Note on BullMQ workers:** Workers (email, treasurer digest, late converter) are co-located inside the Express process on the same Render web service. Render's `SIGTERM` is handled gracefully — workers complete in-flight jobs before shutdown.

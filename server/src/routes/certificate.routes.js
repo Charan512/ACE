@@ -47,14 +47,15 @@ router.get(
 /**
  * GET /api/certificates/preview/:eventId
  *
- * Admin/Body Member only — for Canvas Studio template verification.
+ * Admin only — for Canvas Studio template verification.
  * Uses placeholder data, not a real user's info.
+ * SBMs and EBMs do not need access to certificate template configuration.
  */
 router.get(
   '/preview/:eventId',
   protect,
   requirePasswordChange,
-  restrictTo('admin', 'ebm', 'sbm'),
+  restrictTo('admin'),          // Admin only — removed SBM/EBM access
   certLimiter,
   previewCertificate
 );

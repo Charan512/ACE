@@ -7,14 +7,21 @@ import { Redis } from 'ioredis';
  * option, so we export a factory `createRedisConnection` in addition to
  * a shared `redis` singleton for direct key-value operations (treasurer metadata, etc.).
  *
- * Local:    redis://127.0.0.1:6379
- * Upstash:  rediss://:<password>@hostname:port   (TLS, note the double 's')
+ * URL formats:
+ *   Local dev:  redis://127.0.0.1:6379
+ *   Upstash:    rediss://:password@hostname:port  (double 's' = TLS)
+ *
+ * TLS is auto-detected from the URL scheme — `rediss://` enables TLS,
+ * `redis://` uses a plain connection. No manual switching needed between envs.
  */
+
+const isTLS = (process.env.REDIS_URL || '').startsWith('rediss://');
 
 const REDIS_OPTIONS = {
   maxRetriesPerRequest: null, // Required by BullMQ — lets it manage retries itself
   enableReadyCheck: false,    // Required by BullMQ
   lazyConnect: true,          // Connect on first command, not on import
+  ...(isTLS ? { tls: {} } : {}), // Enable TLS for Upstash (rediss://) connections
 };
 
 /**

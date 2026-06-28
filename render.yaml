@@ -1,0 +1,86 @@
+# render.yaml — ACE ERP Render Deployment Configuration
+# ---------------------------------------------------------
+# This file defines how Render builds and runs your backend.
+# Commit this to your repository. Render reads it automatically
+# when you connect your GitHub repo via the Render dashboard.
+#
+# Docs: https://render.com/docs/blueprint-spec
+# ---------------------------------------------------------
+
+services:
+  - type: web
+    name: ace-erp-backend
+    runtime: node
+    region: singapore          # Change to: oregon | frankfurt | ohio — pick closest to your users
+    plan: free                 # Change to: starter | standard when ready to scale
+    rootDir: server            # Render runs commands from this subdirectory
+    buildCommand: npm install
+    startCommand: node --experimental-vm-modules src/index.js
+    healthCheckPath: /api/health
+
+    # ── Environment Variables ───────────────────────────────────
+    # Values marked `sync: false` must be set manually in the Render dashboard.
+    # NEVER put real secret values in this file — it is committed to git.
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      - key: PORT
+        value: 10000            # Render auto-assigns the external port but expects 10000 internally
+
+      - key: MONGO_URI
+        sync: false             # Set in Render dashboard → MongoDB Atlas connection string
+
+      - key: JWT_SECRET
+        generateValue: true     # Render auto-generates a secure random value on first deploy
+
+      - key: JWT_EXPIRES_IN
+        value: 7d
+
+      - key: PHONEPE_MERCHANT_ID
+        sync: false
+
+      - key: PHONEPE_SALT_KEY
+        sync: false
+
+      - key: PHONEPE_SALT_INDEX
+        value: "1"
+
+      - key: PHONEPE_BASE_URL
+        value: https://api.phonepe.com/apis/hermes  # Production PhonePe URL
+
+      - key: REDIS_URL
+        sync: false             # Set in Render dashboard → Upstash Redis rediss:// URL
+
+      - key: RESEND_API_KEY
+        sync: false             # Set in Render dashboard → Resend API key (re_xxxx)
+
+      - key: EMAIL_FROM
+        sync: false             # e.g. "ACE ERP <noreply@yourdomain.com>"
+
+      - key: R2_ACCOUNT_ID
+        sync: false
+
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+
+      - key: R2_BUCKET_NAME
+        value: ace-cert-templates
+
+      - key: R2_PUBLIC_URL
+        sync: false
+
+      - key: CLIENT_URL
+        sync: false             # Set in Render dashboard → your deployed frontend URL (Vercel etc.)
+
+      - key: OTP_EXPIRY_MINUTES
+        value: "10"
+
+      - key: OTP_DEBOUNCE_SECONDS
+        value: "60"
+
+      - key: TREASURER_EMAIL
+        sync: false             # Set in Render dashboard → treasurer's email address

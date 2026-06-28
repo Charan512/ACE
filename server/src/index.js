@@ -11,6 +11,16 @@ import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
 import rateLimit from 'express-rate-limit';
 
+// ── Worker imports (co-located for single-process Render deployment) ──────────
+// BullMQ workers are imported here so they run inside the same Node process as
+// Express. On Render's free tier there is only one web service — a separate
+// worker process is not available without paying for a Background Worker.
+// All workers are async/event-driven and never block the HTTP event loop.
+import emailWorker         from './workers/emailWorker.js';
+import treasurerWorker     from './workers/treasurerWorker.js';
+import lateConverterWorker from './workers/lateConverterWorker.js';
+import certificateWorker   from './workers/certificateWorker.js';
+
 // Route imports (activated progressively per phase)
 import paymentRoutes from './routes/payment.routes.js';
 import certRoutes from './routes/certificate.routes.js';
@@ -130,11 +140,46 @@ const startServer = async () => {
 
     app.listen(PORT, () => {
       console.log(`\n[Server] ACE ERP running on port ${PORT} [${process.env.NODE_ENV}]`);
+
+      // Start BullMQ workers AFTER the server is listening.
+      // They connect to Redis independently — a Redis failure here logs a warning
+      // but does NOT crash the HTTP server (non-critical degraded mode).
+      try {
+        // Workers are already imported above; importing them registers their
+        // BullMQ Worker instances. Log confirmation here.
+        const workerNames = [
+          emailWorker.name         || 'ace-email',
+          treasurerWorker.name     || 'ace-treasurer',
+          lateConverterWorker.name || 'ace-late-converter',
+          certificateWorker.name   || 'ace-certificates',
+        ];
+        console.log(`[Workers] Active queues: ${workerNames.join(', ')}`);
+      } catch (workerErr) {
+        console.error('[Workers] Failed to start — emails & digest will not process:', workerErr.message);
+      }
     });
   } catch (error) {
     console.error('[Server] Failed to start:', error.message);
     process.exit(1);
   }
 };
+
+// ── Graceful Shutdown ─────────────────────────────────────────
+// Render sends SIGTERM before terminating a service instance.
+// Close workers cleanly to avoid leaving jobs in an active/stalled state.
+const shutdown = async (signal) => {
+  console.log(`\n[Server] ${signal} received — graceful shutdown initiated.`);
+  await Promise.allSettled([
+    emailWorker.close(),
+    treasurerWorker.close(),
+    lateConverterWorker.close(),
+    certificateWorker.close(),
+  ]);
+  console.log('[Workers] All workers closed.');
+  process.exit(0);
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 startServer();

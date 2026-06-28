@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createOrder,
   createMembershipOrder,
+  createGuestEventOrder,
   handleWebhook,
   verifyAndConfirm,
 } from '../controllers/payment.controller.js';
@@ -33,9 +34,17 @@ router.post('/webhook', handleWebhook);
 
 /**
  * POST /api/payments/membership-order
- * Guest-accessible: Creates a Razorpay order for purchasing an ACE Membership.
+ * Guest-accessible: Creates a PhonePe order for purchasing an ACE Membership.
  */
 router.post('/membership-order', orderLimiter, createMembershipOrder);
+
+/**
+ * POST /api/payments/guest-order  (BUG 3 FIX)
+ * Guest-accessible: Creates a PhonePe order for a guest buying an EVENT TICKET.
+ * No JWT required — guests have no ACE account. Requires eventId, email, name.
+ * standardFee pricing is always applied (non-member tier).
+ */
+router.post('/guest-order', orderLimiter, createGuestEventOrder);
 
 // ─────────────────────────────────────────────────────────────
 // PROTECTED ROUTES (JWT required)

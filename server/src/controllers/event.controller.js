@@ -30,7 +30,10 @@ const sanitizeEventUpdate = (body) => {
     'customFormFields',
     'tags',
     'isActive',
-    'certificatesReleased',
+    // NOTE: 'status' is intentionally EXCLUDED.
+    // Use PATCH /api/admin/events/:id/publish to transition draft → published.
+    // NOTE: 'certificatesReleased' is intentionally EXCLUDED.
+    // Use PATCH /api/admin/events/:id/release-certificates.
   ];
 
   return Object.fromEntries(
@@ -60,19 +63,18 @@ export const getAllEvents = catchAsync(async (req, res, _next) => {
   const isAdmin = req.user && ['admin', 'ebm', 'sbm'].includes(req.user.role);
 
   // ── Build query filter ────────────────────────────────────
-  // Non-admins only see active events. The `isRegistrationOpen` virtual further
-  // filters at the application layer (it depends on deadline + capacity, which
-  // can't be filtered with a simple MongoDB query without duplication).
-  const filter = isAdmin ? {} : { isActive: true };
+  // Non-admins only see published events. Draft events are internal working
+  // documents and must never leak to the public or member-facing feed.
+  const filter = isAdmin ? {} : { status: 'published' };
 
   const rawEvents = await Event.find(filter)
     .populate('createdBy', 'name aceId role')
     .sort({ eventDate: 1 });
 
-  // ── Serialize with virtuals ───────────────────────────────
+  // ── Serialize with virtuals ────────────────────────────────
   const events = rawEvents.map((ev) => ev.toObject({ virtuals: true }));
 
-  // ── Non-admins: drop events where registration is closed ─
+  // ── Non-admins: also drop events where registration is closed ──
   const visibleEvents = isAdmin
     ? events
     : events.filter((ev) => ev.isRegistrationOpen);
@@ -99,10 +101,16 @@ export const getEventById = catchAsync(async (req, res, next) => {
     return next(new AppError('Event not found.', 404));
   }
 
-  // Non-admins cannot view explicitly deactivated events
   const isAdmin = req.user && ['admin', 'ebm', 'sbm'].includes(req.user.role);
-  if (!isAdmin && !event.isActive) {
+
+  // Non-admins cannot view draft events — they shouldn't exist in the public feed
+  if (!isAdmin && event.status !== 'published') {
     return next(new AppError('Event not found.', 404)); // intentionally vague
+  }
+
+  // Non-admins cannot view explicitly deactivated events
+  if (!isAdmin && !event.isActive) {
+    return next(new AppError('Event not found.', 404));
   }
 
   res.status(200).json({
@@ -289,7 +297,7 @@ export const toggleRegistration = catchAsync(async (req, res, next) => {
   const newState = updatedEvent.isActive ? 'OPEN' : 'CLOSED';
   console.log(
     `[EventController] Registration ${newState} for "${updatedEvent.title}" (id: ${id}) ` +
-    `by Admin ${req.user.aceId}`
+    `by ${req.user.email}`  // Admin accounts have no aceId; use email for audit log
   );
 
   res.status(200).json({
@@ -332,7 +340,7 @@ export const deleteEvent = async (req, res, next) => {
     await Event.findByIdAndDelete(id);
 
     console.log(
-      `[EventController] Admin ${req.user.aceId} deleted event "${event.title}". ` +
+      `[EventController] ${req.user.email} deleted event "${event.title}". ` +
       `Cascade: ${regResult.deletedCount} registrations, ${txnResult.deletedCount} transactions removed.`
     );
 
@@ -341,10 +349,51 @@ export const deleteEvent = async (req, res, next) => {
       message: `Event "${event.title}" and all its data have been permanently deleted.`,
       data: {
         deletedRegistrations: regResult.deletedCount,
-        deletedTransactions: txnResult.deletedCount,
+        deletedTransactions:  txnResult.deletedCount,
       },
     });
   } catch (err) {
     next(err);
   }
 };
+
+/**
+ * PATCH /api/admin/events/:id/publish
+ *
+ * Transitions an event from 'draft' → 'published'.
+ * Once published, the event appears in the public feed and members/guests can register.
+ *
+ * RBAC: Admin only. Publishing is an explicit admin decision, not delegatable.
+ * Idempotent: publishing an already-published event returns 200 with no change.
+ */
+export const publishEvent = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const event = await Event.findById(id);
+  if (!event) return next(new AppError('Event not found.', 404));
+
+  if (event.status === 'published') {
+    return res.status(200).json({
+      success: true,
+      message: `Event "${event.title}" is already published.`,
+      data: event.toObject({ virtuals: true }),
+    });
+  }
+
+  const updatedEvent = await Event.findByIdAndUpdate(
+    id,
+    { $set: { status: 'published' } },
+    { new: true, runValidators: true }
+  ).populate('createdBy', 'name aceId role');
+
+  console.log(
+    `[EventController] Event "${updatedEvent.title}" published by ${req.user.email}`
+  );
+
+  res.status(200).json({
+    success: true,
+    message: `Event "${updatedEvent.title}" is now live and visible to members and guests.`,
+    data: updatedEvent.toObject({ virtuals: true }),
+  });
+});
+

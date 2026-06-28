@@ -5,6 +5,7 @@ import connectDB from '../config/db.js';
 import './emailWorker.js';
 import './treasurerWorker.js';
 import './lateConverterWorker.js';
+import './certificateWorker.js';
 
 /**
  * ACE ERP — Background Worker Entry Point
@@ -19,7 +20,7 @@ const startWorkers = async () => {
     // Workers often need DB access (e.g. fetching User/Transaction, updating MongoDB)
     await connectDB();
     console.log('\n[Workers] Background workers started successfully.');
-    console.log('Listening to: ace-email, ace-treasurer, ace-late-converter');
+    console.log('Listening to: ace-email, ace-treasurer, ace-late-converter, ace-certificates');
   } catch (error) {
     console.error('[Workers] Failed to start:', error.message);
     process.exit(1);

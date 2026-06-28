@@ -18,6 +18,22 @@ const lateConverterWorker = new Worker(
     const { userId, email } = job.data;
     console.log(`[LateConverterWorker] Starting migration for ${email} (User: ${userId})`);
 
+    // Guard: only members have a history vault. If the user was immediately promoted
+    // to SBM or EBM before this job ran, skip the migration \u2014 pushing history would
+    // be silently stripped by the pre('validate') firewall, leaving data in limbo.
+    const user = await User.findById(userId).select('role').lean();
+    if (!user) {
+      console.warn(`[LateConverterWorker] User ${userId} not found. Skipping migration.`);
+      return;
+    }
+    if (user.role !== 'member') {
+      console.log(
+        `[LateConverterWorker] User ${userId} has role '${user.role}' \u2014 ` +
+        `history vault does not apply. Skipping migration.`
+      );
+      return;
+    }
+
     // 1. Find all paid transactions linked to this email where the user is currently null
     const guestTransactions = await Transaction.find({
       guestEmail: email,

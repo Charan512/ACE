@@ -5,6 +5,10 @@ import {
   checkIn,
   verifyMember,
 } from '../controllers/ops.controller.js';
+import {
+  cashRegisterMember,
+  cashRegisterGuest,
+} from '../controllers/cashRegistration.controller.js';
 import { protect, restrictTo } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
@@ -14,18 +18,24 @@ router.use(protect);
 router.use(restrictTo('admin', 'ebm', 'sbm'));
 
 // ── Events ───────────────────────────────────────────────────
-// GET /api/ops/events          → active events for dashboard
 router.get('/events', getOpsEvents);
 
 // ── Event Control Room ───────────────────────────────────────
-// GET /api/ops/events/:eventId/roster → full roster + stats
 router.get('/events/:eventId/roster', getRoster);
-
-// PUT /api/ops/events/:eventId/checkin → check in a registrant
 router.put('/events/:eventId/checkin', checkIn);
 
+// ── Cash Registration (in-person walk-in / cash payment) ─────
+// POST /api/ops/events/:eventId/cash-register/member
+//   → Search by aceId or phone, create confirmed Registration, paymentMethod: cash
+router.post('/events/:eventId/cash-register/member', cashRegisterMember);
+
+// POST /api/ops/events/:eventId/cash-register/guest
+//   → Fill event's custom form on behalf of guest, create confirmed Registration,
+//     paymentMethod: cash, and email QR to guest
+router.post('/events/:eventId/cash-register/guest', cashRegisterGuest);
+
 // ── Member Verification (read-only) ──────────────────────────
-// GET /api/ops/verify/:scannedId → verify ACE ID or userId
 router.get('/verify/:scannedId', verifyMember);
 
 export default router;
+

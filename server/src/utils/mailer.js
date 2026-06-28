@@ -1,24 +1,38 @@
 import nodemailer from 'nodemailer';
 
 /**
- * Nodemailer transporter singleton.
- * Reads all SMTP credentials from environment variables — nothing hardcoded.
+ * Nodemailer transporter — uses Resend's SMTP relay.
  *
- * For Gmail: use an App Password (Settings → Security → 2FA → App Passwords).
- * For Mailtrap (dev): set SMTP_HOST=sandbox.smtp.mailtrap.io, SMTP_PORT=587.
+ * Why Resend instead of raw Gmail SMTP?
+ *   Render.com (free tier) blocks outbound SMTP ports 25, 465, and 587.
+ *   Resend's SMTP relay tunnels mail delivery over HTTPS (port 443 internally),
+ *   which is never blocked. The Nodemailer interface is 100% unchanged —
+ *   all workers continue to call `sendEmail({ to, subject, html })` as before.
+ *
+ * Setup:
+ *   1. Sign up at https://resend.com (free: 3,000 emails/month, 100/day)
+ *   2. Verify your sending domain (or use their shared sandbox for testing)
+ *   3. Generate an API key → set RESEND_API_KEY in your .env / Render dashboard
+ *   4. Set EMAIL_FROM to an address on your verified domain, e.g.:
+ *      EMAIL_FROM="ACE ERP <noreply@yourdomain.com>"
+ *
+ * Local dev without Resend:
+ *   Set RESEND_API_KEY=re_test_xxxx (any value) and use Mailtrap/Ethereal for
+ *   SMTP_HOST overrides, or just let emails fail silently in dev by not setting
+ *   the key — the worker error handler will catch and log it.
  */
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || '587', 10),
-  secure: process.env.SMTP_SECURE === 'true', // true for port 465, false for 587
+  host: 'smtp.resend.com',
+  port: 465,
+  secure: true, // TLS — mandatory for Resend SMTP relay
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: 'resend',                      // Always the literal string 'resend'
+    pass: process.env.RESEND_API_KEY,   // Your Resend API key (re_xxxxxxxxxxxx)
   },
 });
 
 /**
- * Sends an email via the SMTP transporter.
+ * Sends an email via the Resend SMTP relay.
  *
  * @param {Object} options
  * @param {string}   options.to      - Recipient email address
@@ -36,7 +50,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
     text: text || html.replace(/<[^>]*>/g, ''), // Strip HTML tags for plain-text fallback
   });
 
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV !== 'production') {
     console.log(`[Mailer] Email sent to ${to} — MessageID: ${info.messageId}`);
   }
 

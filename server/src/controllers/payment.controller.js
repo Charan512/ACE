@@ -120,7 +120,49 @@ const handlePaymentSuccess = async (merchantTransactionId, phonePeTransactionId,
           { session }
         );
       }
+    } else if (!transaction.user && notes.purpose === 'event_registration') {
+      // BUG 4 FIX: Guest event ticket purchase — transaction.user is null.
+      // Without this branch, guests who paid for an event were never recorded
+      // in the roster and could not be checked in or receive a certificate.
+      const existingGuestReg = await Registration.findOne({
+        eventId:    transaction.event._id,
+        guestEmail: transaction.guestEmail,
+      }).session(session);
+
+      if (!existingGuestReg) {
+        const [newGuestReg] = await Registration.create(
+          [{
+            eventId:         transaction.event._id,
+            userId:          null,
+            guestName:       transaction.guestName  || 'Guest',
+            guestEmail:      transaction.guestEmail || '',
+            name:            transaction.guestName  || 'Guest',
+            email:           transaction.guestEmail || '',
+            tier:            transaction.tier,
+            status:          'confirmed',
+            paymentMethod:   'online',
+            amount:          transaction.amount / 100, // convert paise → INR
+            transactionId:   transaction._id,
+            customResponses: notes.customResponses || {},
+          }],
+          { session }
+        );
+        console.log(`[PhonePe] Guest Registration created for ${transaction.guestEmail} at event ${transaction.event._id}`);
+
+        // Enqueue QR confirmation email — fires after the DB transaction commits
+        // The emailWorker generates a QR PNG encoding the registrationId and emails it.
+        await emailQueue.add('guestQrEmail', {
+          registrationId: newGuestReg._id.toString(),
+          guestEmail:     transaction.guestEmail,
+          guestName:      transaction.guestName || 'Guest',
+          eventTitle:     transaction.event.title || 'ACE Event',
+          eventDate:      transaction.event.eventDate || null,
+          venue:          transaction.event.venue   || '',
+          paymentMethod:  'online',
+        });
+      }
     }
+
 
     // ── New Member account creation ──────────────────────────
     const isMembershipPurchase = notes.purpose === 'membership';
@@ -156,7 +198,12 @@ const handlePaymentSuccess = async (merchantTransactionId, phonePeTransactionId,
     await session.commitTransaction();
     console.log(`[PhonePe] Payment success processed: ${merchantTransactionId}`);
 
-    await scheduleTreasurerFlush({ transactionId: transaction._id });
+    // BUG 8 FIX: Only trigger the Treasurer Digest for event registrations.
+    // Membership purchases are a separate revenue category and must not pollute
+    // the event-window debounce cycle or the event-specific digest email.
+    if (!isMembershipPurchase) {
+      await scheduleTreasurerFlush({ transactionId: transaction._id });
+    }
   } catch (error) {
     await session.abortTransaction();
     console.error(`[PhonePe] Transaction aborted for ${merchantTransactionId}:`, error.message);
@@ -307,7 +354,7 @@ export const createMembershipOrder = catchAsync(async (req, res, next) => {
   }
 
   const existingUser = await User.findOne({ email: email.toLowerCase() });
-  if (existingUser && existingUser.role !== 'guest') {
+  if (existingUser) {
     return next(new AppError('An ACE membership already exists for this email.', 409));
   }
 
@@ -560,3 +607,134 @@ export const devConfirm = catchAsync(async (req, res, next) => {
     return next(new AppError('Dev confirm failed. See server logs.', 500));
   }
 });
+
+/**
+ * POST /api/payments/guest-order  (BUG 3 FIX)
+ *
+ * Public endpoint — no JWT required.
+ * Creates a PhonePe payment order for a GUEST buying an event ticket.
+ *
+ * This is the missing checkout path for guests who want to attend an event
+ * without purchasing an ACE Membership. Previously, only `POST /api/payments/order`
+ * existed (JWT-protected, members only) and `POST /api/payments/membership-order`
+ * (also public, but only for buying a membership, not an event ticket).
+ *
+ * Flow:
+ *  1. Validate event is open for registration and guest is not already registered
+ *  2. Apply non-member (standardFee) pricing
+ *  3. Create a pending Transaction with guestEmail + guestName
+ *  4. Return a PhonePe redirectUrl
+ *  5. On payment success → handlePaymentSuccess (with purpose='event_registration')
+ *     → BUG 4 fix creates the guest Registration record with customResponses
+ *
+ * Body:
+ *   {
+ *     eventId:         string,         // required
+ *     email:           string,         // required — guest's email
+ *     name:            string,         // required — guest's full name
+ *     phone?:          string,
+ *     customResponses?: Record<string, string>  // answers to event.customFormFields
+ *   }
+ */
+export const createGuestEventOrder = catchAsync(async (req, res, next) => {
+  const { eventId, email, name, phone, customResponses } = req.body;
+
+  // ── 1. Required field validation ─────────────────────────────
+  if (!eventId)          return next(new AppError('eventId is required.', 400));
+  if (!email || !name)   return next(new AppError('email and name are required.', 400));
+
+  // ── 2. Load and validate event ────────────────────────────────
+  const event = await Event.findById(eventId);
+  if (!event)                    return next(new AppError('Event not found.', 404));
+  if (!event.isRegistrationOpen) return next(new AppError('Registration is closed for this event.', 400));
+
+  // ── 3. Duplicate registration guard ──────────────────────────
+  // Prevent the same guest email from registering twice for the same event.
+  const existingReg = await Registration.findOne({
+    eventId,
+    guestEmail: email.toLowerCase(),
+    status: { $in: ['confirmed', 'pending'] },
+  });
+  if (existingReg) {
+    return next(new AppError('This email address is already registered for this event.', 409));
+  }
+
+  // ── 4. Guest always pays the non-member (standardFee) rate ───
+  const amount    = event.standardFee * 100; // paise
+  const tier      = 'non_member';
+
+  const merchantTransactionId = generateMerchantTxnId();
+  const redirectUrl           = `${process.env.CLIENT_URL}/payment/callback`;
+  const callbackUrl           = `${process.env.SERVER_URL || 'http://localhost:5000'}/api/payments/webhook`;
+
+  // ── 5. DEV: Mock redirect ──────────────────────────────────────
+  if (process.env.NODE_ENV !== 'production') {
+    await Transaction.create({
+      merchantTransactionId,
+      user:       null,
+      guestEmail: email.toLowerCase(),
+      guestName:  name,
+      event:      eventId,
+      amount,
+      tier,
+      status:     'created',
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        merchantTransactionId,
+        redirectUrl: `${process.env.CLIENT_URL}/payment/callback?txnId=${merchantTransactionId}&mode=dev&purpose=event_registration&guestEmail=${encodeURIComponent(email)}&guestName=${encodeURIComponent(name)}`,
+      },
+    });
+  }
+
+  // ── 6. PRODUCTION: Call PhonePe /pg/v1/pay ────────────────────
+  const payPayload = {
+    merchantId:            PHONEPE_MERCHANT_ID,
+    merchantTransactionId,
+    merchantUserId:        `GUEST_${Date.now()}`,
+    amount,
+    redirectUrl,
+    redirectMode:          'REDIRECT',
+    callbackUrl,
+    paymentInstrument:     { type: 'PAY_PAGE' },
+  };
+
+  const base64Payload = Buffer.from(JSON.stringify(payPayload)).toString('base64');
+  const xVerify       = generateChecksum(base64Payload, '/pg/v1/pay');
+
+  const phonePeRes = await fetch(`${PHONEPE_BASE_URL}/pg/v1/pay`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', 'X-VERIFY': xVerify },
+    body:    JSON.stringify({ request: base64Payload }),
+  });
+
+  const phonePeData = await phonePeRes.json();
+
+  if (!phonePeData.success) {
+    console.error('[PhonePe] Guest event order creation failed:', phonePeData);
+    return next(new AppError(phonePeData.message || 'PhonePe order creation failed.', 502));
+  }
+
+  // Persist Transaction with guest identity fields
+  await Transaction.create({
+    merchantTransactionId,
+    user:       null,
+    guestEmail: email.toLowerCase(),
+    guestName:  name,
+    event:      eventId,
+    amount,
+    tier,
+    status:     'created',
+  });
+
+  res.status(201).json({
+    success: true,
+    data: {
+      merchantTransactionId,
+      redirectUrl: phonePeData.data.instrumentResponse.redirectInfo.url,
+    },
+  });
+});
+

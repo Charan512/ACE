@@ -146,9 +146,47 @@ const registrationSchema = new mongoose.Schema(
       ref: 'User',
       default: null,
     },
+    // ── Payment Method ───────────────────────────────────────────
+    /**
+     * 'online' → paid via PhonePe (webhook confirmed)
+     * 'cash'   → registered in person by an SBM/EBM; no Transaction record created
+     *
+     * This field is included in the attendance CSV export and visible in the
+     * admin registered-users list for financial reconciliation.
+     */
+    paymentMethod: {
+      type: String,
+      enum: {
+        values: ['online', 'cash'],
+        message: '{VALUE} is not a valid payment method.',
+      },
+      default: 'online',
+    },
+
+    // ── Cash Registration Metadata ─────────────────────────────────
+    /**
+     * The SBM or EBM who registered this person in person.
+     * Null for online (self-service) registrations.
+     */
+    cashRegisteredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    /**
+     * Fee amount in INR at the time of registration.
+     * For online registrations this mirrors the Transaction.amount / 100.
+     * For cash registrations it is set directly from event.memberFee / event.standardFee.
+     * Stored here for CSV export and financial reconciliation without a Transaction lookup.
+     */
+    amount: {
+      type: Number,
+      default: 0,
+      min: [0, 'Amount cannot be negative.'],
+    },
   },
   {
-    timestamps: true, // createdAt = registration time, updatedAt = last status change
+    timestamps: true,
     versionKey: false,
   }
 );
@@ -158,6 +196,7 @@ registrationSchema.index({ eventId: 1 });
 registrationSchema.index({ userId: 1 });
 registrationSchema.index({ status: 1 });
 registrationSchema.index({ guestEmail: 1 });
+registrationSchema.index({ paymentMethod: 1 }); // For CSV exports and payment stats
 // Prevent double-registration: one user can only register once per event
 registrationSchema.index(
   { eventId: 1, userId: 1 },
@@ -165,6 +204,7 @@ registrationSchema.index(
 );
 // Fast roster queries for Ops Portal
 registrationSchema.index({ eventId: 1, checkedIn: 1 });
+
 
 const Registration = mongoose.model('Registration', registrationSchema);
 

@@ -102,15 +102,17 @@ const userSchema = new mongoose.Schema(
         /**
          * Role hierarchy (highest → lowest):
          *   admin   → Full system access
+         *   sbm     → Senior Body Member (SBM)
          *   ebm     → Executive Body Member (EBM)
-         *   sbm     → Student Body Member (SBM)
          *   member  → Verified ACE Member
-         *   guest   → Public / pre-membership user
+         *
+         * Note: 'guest' is no longer a role. Guests do not have login credentials or User accounts.
+         * Their checkout data is stored cleanly inside the Transaction/Registration models directly.
          */
-        values: ['admin', 'ebm', 'sbm', 'member', 'guest'],
-        message: '{VALUE} is not a valid role. Must be one of: admin, ebm, sbm, member, guest.',
+        values: ['admin', 'sbm', 'ebm', 'member'],
+        message: '{VALUE} is not a valid role. Must be one of: admin, sbm, ebm, member.',
       },
-      default: 'guest',
+      default: 'member',
     },
 
     // ── Auth State ──────────────────────────────────────────
@@ -129,11 +131,6 @@ const userSchema = new mongoose.Schema(
     otp: otpSchema,
 
     // ── Profile ─────────────────────────────────────────────
-    collegeId: {
-      type: String,
-      default: '',
-      trim: true,
-    },
     phone: {
       type: String,
       trim: true,
@@ -220,6 +217,35 @@ const userSchema = new mongoose.Schema(
 // email and aceId are already indexed via unique: true / sparse: true
 userSchema.index({ role: 1 });
 userSchema.index({ 'history.attendedEvents.event': 1 });
+
+// ── Middleware: Role & Field Firewall ─────────────────────────
+userSchema.pre('validate', function (next) {
+  // 1. Admin Enforcement
+  // Admins are system operators — they have no personal profile, no ACE ID, no vault.
+  if (this.role === 'admin') {
+    this.name         = 'ACE';          // Fixed system name
+    this.aceId        = undefined;      // No member ID
+    this.history      = undefined;      // No attendance vault
+    this.domain       = undefined;      // No club domain
+    this.designation  = undefined;      // No designation
+    this.profilePhoto = undefined;      // No profile photo
+  }
+
+  // 2. SBM & EBM Enforcement
+  // Body members have no ACE ID and no attendance vault.
+  if (this.role === 'sbm' || this.role === 'ebm') {
+    this.aceId   = undefined;
+    this.history = undefined;
+  }
+
+  // 3. EBM Designation — stripped entirely per spec.
+  // EBMs are identified solely by their domain and role, not a designation title.
+  if (this.role === 'ebm') {
+    this.designation = undefined;
+  }
+
+  next();
+});
 
 // ── Middleware: Hash password before save ─────────────────────
 userSchema.pre('save', async function (next) {

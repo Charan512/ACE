@@ -8,6 +8,17 @@ import AppError from '../utils/appError.js';
  * @access  Private
  */
 export const getMyVault = catchAsync(async (req, res, next) => {
+  // SBMs and EBMs do not have a Member Vault — history is stripped from their schema.
+  // Return an empty vault immediately instead of crashing on undefined history.
+  const rolesWithVault = ['member'];
+  if (!rolesWithVault.includes(req.user.role)) {
+    return res.status(200).json({
+      success: true,
+      data: [],
+      message: 'Member Vault is only available for ACE Members.',
+    });
+  }
+
   // `req.user` is attached by the `protect` middleware
   // We need to fetch the user again to deeply populate the attendedEvents references
   const user = await User.findById(req.user._id).populate({
@@ -22,7 +33,7 @@ export const getMyVault = catchAsync(async (req, res, next) => {
   }
 
   // Map the populated history to a flat array of vault entries for the frontend
-  const vault = user.history.attendedEvents.map((entry) => {
+  const vault = (user.history?.attendedEvents || []).map((entry) => {
     // Derive hasCertificate: true only when the admin has configured a
     // certificate template with a valid base image URL AND the admin has dispatched them.
     const hasCertificate = !!(entry.event.certificateTemplate?.baseImageUrl && entry.event.certificatesReleased);
@@ -48,29 +59,13 @@ export const getMyVault = catchAsync(async (req, res, next) => {
 });
 
 /**
- * @desc    Get all users with basic filtering (Admin Only)
- * @route   GET /api/users
- * @access  Private (Admin Only)
- */
-export const getAllUsers = catchAsync(async (req, res, next) => {
-  const filter = {};
-
-  if (req.query.role) {
-    filter.role = req.query.role;
-  }
-
-  const users = await User.find(filter).select('-password');
-
-  res.status(200).json({
-    success: true,
-    data: { users },
-  });
-});
-
-/**
  * @desc    Update a user's role (Admin Only)
  * @route   PATCH /api/users/:id/role
  * @access  Private (Admin Only)
+ *
+ * @deprecated Use PATCH /api/admin/users/:id/role instead — it handles
+ * domain, designation, and properly enforces the role firewall.
+ * This endpoint is kept for backward compatibility only.
  */
 export const updateUserRole = catchAsync(async (req, res, next) => {
   const { id } = req.params;
@@ -80,8 +75,8 @@ export const updateUserRole = catchAsync(async (req, res, next) => {
     return next(new AppError('Role is required.', 400));
   }
 
-  // Validate against the canonical role enum
-  const validRoles = ['admin', 'ebm', 'sbm', 'member', 'guest'];
+  // Validate against the current canonical role enum (guest removed)
+  const validRoles = ['admin', 'sbm', 'ebm', 'member'];
   if (!validRoles.includes(role)) {
     return next(new AppError(`Invalid role. Must be one of: ${validRoles.join(', ')}.`, 400));
   }
@@ -108,10 +103,9 @@ export const updateUserRole = catchAsync(async (req, res, next) => {
  * @access  Private
  */
 export const updateMe = catchAsync(async (req, res, next) => {
-  const { collegeId, phone, branch, year, section, registrationNumber, domain, designation } = req.body;
+  const { phone, branch, year, section, registrationNumber, domain, designation } = req.body;
 
   const updates = {};
-  if (collegeId !== undefined) updates.collegeId = collegeId;
   if (phone !== undefined) updates.phone = phone;
   if (branch !== undefined) updates.branch = branch;
   if (year !== undefined) updates.year = year;
