@@ -191,7 +191,7 @@ const GuestPortal = () => {
             {/* HOD Profile */}
             <div className="flex flex-col items-center text-center group">
               <div className="w-48 aspect-square rounded-full mb-6 overflow-hidden border-4 border-slate-100 shadow-lg group-hover:border-primary transition-colors duration-500">
-                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop" alt="Dr. Bh. V. S. R. K. Raju" className="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 transition-all duration-500" />
+                <img src="https://www.srkrcse.com/assets/images/hod.jpeg" alt="Dr. Bh. V. S. R. K. Raju" className="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 transition-all duration-500" />
               </div>
               <h4 className="text-2xl font-black text-slate-950 tracking-tight mb-1">Dr. Bh. V. S. R. K. Raju</h4>
               <p className="text-primary font-bold tracking-wide text-sm uppercase">Head of Department</p>
