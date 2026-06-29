@@ -9,7 +9,9 @@ import {
   cashRegisterMember,
   cashRegisterGuest,
 } from '../controllers/cashRegistration.controller.js';
+import { cashRegisterMembership } from '../controllers/cashMembership.controller.js';
 import { protect, restrictTo } from '../middleware/auth.middleware.js';
+
 
 const router = express.Router();
 
@@ -36,6 +38,13 @@ router.post('/events/:eventId/cash-register/guest', cashRegisterGuest);
 
 // ── Member Verification (read-only) ──────────────────────────
 router.get('/verify/:scannedId', verifyMember);
+
+// ── Cash Membership Registration ─────────────────────────────
+// POST /api/ops/cash-membership
+//   → EBM/SBM registers a walk-in applicant as a new ACE member (cash payment).
+//     Reads membership fee from AppSettings. Sends credentials + confirmation email.
+//     Creates AdminNotification of type 'cash_membership'.
+router.post('/cash-membership', cashRegisterMembership);
 
 export default router;
 

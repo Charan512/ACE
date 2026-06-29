@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ScanLine, CalendarDays, MapPin, Users, ChevronRight,
-  Loader2, Zap, AlertTriangle, DollarSign, X, User, Mail, Phone, CheckCircle2,
+  Loader2, Zap, AlertTriangle, DollarSign, X, User, Mail, Phone, CheckCircle2, UserPlus,
 } from 'lucide-react';
 import api from '../lib/api';
 
@@ -13,7 +13,7 @@ const fmtDate = (d) => new Date(d).toLocaleDateString('en-IN', {
 
 // ── Cash Registration Modal ───────────────────────────────────
 const CashRegModal = ({ event, onClose }) => {
-  const [form, setForm] = useState({ name: '', email: '', phone: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', year: '' });
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState(null);
@@ -25,10 +25,11 @@ const CashRegModal = ({ event, onClose }) => {
     if (loading) return;
     setLoading(true); setError(null);
     try {
-      await api.post(`/ops/events/${event._id}/cash-register`, {
+      await api.post(`/ops/events/${event._id}/cash-register/guest`, {
         name:          form.name.trim(),
         email:         form.email.trim().toLowerCase(),
         phone:         form.phone.trim() || undefined,
+        year:          form.year,
         paymentMethod: 'cash',
       });
       setDone(true);
@@ -102,6 +103,17 @@ const CashRegModal = ({ event, onClose }) => {
                   placeholder="+91 98765 43210" className="clay-input w-full pl-9 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400" />
               </div>
             </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5">Year <span className="text-red-500">*</span></label>
+              <select required value={form.year} onChange={setField('year')}
+                className="clay-input w-full px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none">
+                <option value="" disabled>Select Year</option>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+              </select>
+            </div>
             <div className="flex items-center gap-2 p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl mt-1">
               <DollarSign className="w-4 h-4 text-emerald-600" />
               <span className="text-xs font-bold text-emerald-700">Payment Method: Cash</span>
@@ -124,15 +136,151 @@ const CashRegModal = ({ event, onClose }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────
-// OPS DASHBOARD
-// ─────────────────────────────────────────────────────────────
+// ── Cash Membership Modal ─────────────────────────────────────
+const CashMembershipModal = ({ onClose }) => {
+  const [form, setForm] = useState({ name: '', email: '', phone: '', branch: '', year: '', gender: '', collegeId: '' });
+  const [membershipFee, setMembershipFee] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(null); // { aceId, name, email }
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Fetch current membership fee
+    fetch(`${import.meta.env.VITE_API_URL || ''}/api/settings/membership-fee`)
+      .then(r => r.json())
+      .then(d => setMembershipFee(d.data?.membershipFee ?? 500))
+      .catch(() => setMembershipFee(500));
+  }, []);
+
+  const setField = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
+
+  const handleSubmit = async (ev) => {
+    ev.preventDefault();
+    if (loading) return;
+    setLoading(true); setError(null);
+    try {
+      const res = await api.post('/ops/cash-membership', {
+        name:      form.name.trim(),
+        email:     form.email.trim().toLowerCase(),
+        phone:     form.phone.trim() || undefined,
+        branch:    form.branch.trim() || undefined,
+        year:      form.year ? Number(form.year) : undefined,
+        gender:    form.gender || undefined,
+        collegeId: form.collegeId.trim() || undefined,
+      });
+      setDone(res.data.data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inCls = 'w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md my-auto">
+        <div className="flex items-center justify-between p-5 border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+              <UserPlus className="w-4 h-4 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-sm font-black text-slate-900">New ACE Member</h2>
+              <p className="text-[11px] text-slate-400 font-mono">
+                Cash payment — Fee: {membershipFee !== null ? `₹${membershipFee}` : '...'}
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100">✕</button>
+        </div>
+
+        <div className="p-5">
+          {done ? (
+            <div className="text-center py-4 space-y-3">
+              <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-7 h-7 text-emerald-500" />
+              </div>
+              <p className="text-base font-black text-slate-900">{done.name} registered!</p>
+              <p className="text-2xl font-mono font-black text-blue-600">{done.aceId}</p>
+              <p className="text-xs text-slate-400">Credentials and confirmation email sent to {done.email}</p>
+              <button onClick={onClose} className="w-full mt-2 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors">Done</button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-3">
+              {error && <div className="bg-red-50 border border-red-100 text-red-600 text-xs font-semibold px-3 py-2 rounded-xl">{error}</div>}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Full Name *</label>
+                  <input required type="text" placeholder="Priya Sharma" value={form.name} onChange={setField('name')} className={inCls} />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Email *</label>
+                  <input required type="email" placeholder="priya@example.com" value={form.email} onChange={setField('email')} className={inCls} />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Phone *</label>
+                  <input required type="tel" placeholder="9876543210" value={form.phone} onChange={setField('phone')} className={inCls} />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Year *</label>
+                  <select required value={form.year} onChange={setField('year')} className={inCls}>
+                    <option value="" disabled>Select</option>
+                    {[1,2,3,4].map(y => <option key={y} value={y}>Year {y}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Branch *</label>
+                  <select required value={form.branch} onChange={setField('branch')} className={inCls}>
+                    <option value="" disabled>Select Branch</option>
+                    <option value="CSE">CSE</option>
+                    <option value="AIML">AIML</option>
+                    <option value="AIDS">AIDS</option>
+                    <option value="CSBS">CSBS</option>
+                    <option value="CSD">CSD</option>
+                    <option value="CIC">CIC</option>
+                    <option value="IT">IT</option>
+                    <option value="CSIT">CSIT</option>
+                    <option value="ECE">ECE</option>
+                    <option value="EEE">EEE</option>
+                    <option value="Mechanical">Mechanical</option>
+                    <option value="Civil">Civil</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Gender *</label>
+                  <select required value={form.gender} onChange={setField('gender')} className={inCls}>
+                    <option value="" disabled>Select</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">College ID / Roll No.</label>
+                  <input type="text" placeholder="22B91A0501" value={form.collegeId} onChange={setField('collegeId')} className={inCls} />
+                </div>
+              </div>
+              <button type="submit" disabled={loading}
+                className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+                {loading ? 'Registering...' : `Register as Member — ₹${membershipFee ?? '...'} Cash`}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const OpsDashboard = () => {
   const navigate = useNavigate();
   const [events, setEvents]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
   const [cashRegEvent, setCashRegEvent] = useState(null); // event to cash-register for
+  const [showMemberModal, setShowMemberModal] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -156,6 +304,11 @@ const OpsDashboard = () => {
         <CashRegModal event={cashRegEvent} onClose={() => setCashRegEvent(null)} />
       )}
 
+      {/* Cash Membership Modal */}
+      {showMemberModal && (
+        <CashMembershipModal onClose={() => setShowMemberModal(false)} />
+      )}
+
       {/* ── Hero / Verify CTA ─────────────────────────────── */}
       <section>
         <p className="text-xs font-mono font-bold uppercase tracking-widest text-orange-500 mb-2">
@@ -168,7 +321,7 @@ const OpsDashboard = () => {
         {/* Primary action — Verify Member */}
         <button
           onClick={() => navigate('/ops/scan', { state: { mode: 'verify' } })}
-          className="group w-full flex items-center justify-between p-6 rounded-2xl transition-all duration-300 hover:scale-[1.01] hover:shadow-lg active:scale-[0.99]"
+          className="group w-full flex items-center justify-between p-6 rounded-2xl transition-all duration-300 hover:scale-[1.01] hover:shadow-lg active:scale-[0.99] mb-3"
           style={{
             background: 'linear-gradient(135deg, #ea580c, #f97316)',
             boxShadow: '0 8px 32px -4px rgba(234,88,12,0.35)',
@@ -184,6 +337,23 @@ const OpsDashboard = () => {
             </div>
           </div>
           <ChevronRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
+        </button>
+
+        {/* Secondary action — Register New Member (cash) */}
+        <button
+          onClick={() => setShowMemberModal(true)}
+          className="group w-full flex items-center justify-between p-5 rounded-2xl border border-blue-200 bg-blue-50 hover:bg-blue-100 transition-all duration-200 hover:shadow-md active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <UserPlus className="w-6 h-6 text-blue-600" />
+            </div>
+            <div className="text-left">
+              <p className="text-base font-black text-blue-900">Register New Member</p>
+              <p className="text-xs text-blue-500 mt-0.5 font-mono">Walk-in · Cash payment</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-blue-400 group-hover:translate-x-0.5 transition-transform" />
         </button>
       </section>
 

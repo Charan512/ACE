@@ -34,20 +34,24 @@ const transporter = nodemailer.createTransport({
 /**
  * Sends an email via the Resend SMTP relay.
  *
- * @param {Object} options
- * @param {string}   options.to      - Recipient email address
- * @param {string}   options.subject - Email subject line
- * @param {string}   options.html    - HTML body content
- * @param {string}  [options.text]   - Plain text fallback (auto-stripped from HTML if omitted)
+ * @param {Object}   options
+ * @param {string}   options.to          - Recipient email address
+ * @param {string}   options.subject     - Email subject line
+ * @param {string}   options.html        - HTML body content
+ * @param {string}  [options.text]       - Plain text fallback (auto-stripped from HTML if omitted)
+ * @param {Array}   [options.attachments] - Nodemailer attachment objects:
+ *                                          [{ filename, content: Buffer, contentType }]
+ *                                          Buffers are never written to disk (zero-storage mandate).
  * @returns {Promise<Object>} Nodemailer send result
  */
-const sendEmail = async ({ to, subject, html, text }) => {
+const sendEmail = async ({ to, subject, html, text, attachments }) => {
   const info = await transporter.sendMail({
     from: process.env.EMAIL_FROM,
     to,
     subject,
     html,
-    text: text || html.replace(/<[^>]*>/g, ''), // Strip HTML tags for plain-text fallback
+    text:        text || html.replace(/<[^>]*>/g, ''), // Strip HTML tags for plain-text fallback
+    attachments: attachments || [],
   });
 
   if (process.env.NODE_ENV !== 'production') {
@@ -58,3 +62,4 @@ const sendEmail = async ({ to, subject, html, text }) => {
 };
 
 export default sendEmail;
+

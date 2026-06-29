@@ -139,7 +139,17 @@ const userSchema = new mongoose.Schema(
     branch: {
       type: String,
       trim: true,
-      maxlength: [100, 'Branch name cannot exceed 100 characters.'],
+      enum: {
+        values: ['CSE', 'AIML', 'AIDS', 'CSBS', 'CSD', 'CIC', 'IT', 'CSIT', 'ECE', 'EEE', 'Mechanical', 'Civil'],
+        message: '{VALUE} is not a valid branch.',
+      },
+    },
+    gender: {
+      type: String,
+      enum: {
+        values: ['Male', 'Female'],
+        message: 'Gender must be Male or Female.',
+      },
     },
     /**
      * Section within the branch (e.g., 'A', 'B', 'C').
@@ -206,7 +216,30 @@ const userSchema = new mongoose.Schema(
         default: [],
       },
     },
+
+    // ── Membership Payment Audit ──────────────────────────────
+    /**
+     * Tracks how the membership was paid for.
+     * 'online'  → Paid via PhonePe payment gateway (self-registered)
+     * 'cash'    → Paid in person, registered by an EBM/SBM
+     * Default null for legacy accounts created before this field was added.
+     */
+    membershipPaymentMethod: {
+      type:    String,
+      enum:    { values: ['online', 'cash'], message: '{VALUE} is not valid. Must be online or cash.' },
+      default: null,
+    },
+    /**
+     * Ref to the EBM/SBM who performed the in-person cash registration.
+     * Only populated when membershipPaymentMethod === 'cash'.
+     */
+    membershipRegisteredBy: {
+      type:    mongoose.Schema.Types.ObjectId,
+      ref:     'User',
+      default: null,
+    },
   },
+
   {
     timestamps: true, // createdAt, updatedAt
     versionKey: false,

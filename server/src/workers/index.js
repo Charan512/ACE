@@ -3,7 +3,6 @@ import connectDB from '../config/db.js';
 
 // Import workers to instantiate them and start processing jobs
 import './emailWorker.js';
-import './treasurerWorker.js';
 import './lateConverterWorker.js';
 import './certificateWorker.js';
 
@@ -13,14 +12,16 @@ import './certificateWorker.js';
  * This file is meant to be run as a separate Node process (e.g. `node src/workers/index.js`)
  * in production. BullMQ workers should not share the Express event loop to prevent
  * CPU-heavy or long-running jobs from blocking HTTP requests.
+ *
+ * NOTE: treasurerWorker has been removed as part of the Membership Mail System Overhaul.
+ * The ace-treasurer BullMQ queue and associated Redis metadata are no longer in use.
  */
 
 const startWorkers = async () => {
   try {
-    // Workers often need DB access (e.g. fetching User/Transaction, updating MongoDB)
     await connectDB();
     console.log('\n[Workers] Background workers started successfully.');
-    console.log('Listening to: ace-email, ace-treasurer, ace-late-converter, ace-certificates');
+    console.log('Listening to: ace-email, ace-late-converter, ace-certificates');
   } catch (error) {
     console.error('[Workers] Failed to start:', error.message);
     process.exit(1);

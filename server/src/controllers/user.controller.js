@@ -103,14 +103,16 @@ export const updateUserRole = catchAsync(async (req, res, next) => {
  * @access  Private
  */
 export const updateMe = catchAsync(async (req, res, next) => {
-  const { phone, branch, year, section, registrationNumber, domain, designation, avatarUrl } = req.body;
+  const { name, phone, branch, year, section, registrationNumber, gender, domain, designation, avatarUrl } = req.body;
 
   const updates = {};
+  if (name !== undefined) updates.name = name;
   if (phone !== undefined) updates.phone = phone;
   if (branch !== undefined) updates.branch = branch;
   if (year !== undefined) updates.year = year;
   if (section !== undefined) updates.section = section;
   if (registrationNumber !== undefined) updates.registrationNumber = registrationNumber;
+  if (gender !== undefined) updates.gender = gender;
   if (domain !== undefined) updates.domain = domain;
   if (designation !== undefined) updates.designation = designation;
   // Avatar URL set after a successful direct-to-R2 upload from the client

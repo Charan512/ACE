@@ -3,7 +3,7 @@ import {
   CalendarDays, Plus, ToggleLeft, ToggleRight, Loader2,
   AlertTriangle, CheckCircle2, Edit3, Tag, Clock, MapPin,
   RefreshCw, UploadCloud, X, Users, Link2, FormInput,
-  ChevronDown, Trash2, GripVertical, Zap, Globe, FileText,
+  ChevronDown, Trash2, GripVertical, Zap, Globe, FileText, Mail, Eye, EyeOff, Save,
 } from 'lucide-react';
 import api from '../lib/api';
 import axios from 'axios';
@@ -226,6 +226,7 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
           maxCapacity: initialData.maxCapacity ?? '',
           posterImage: initialData.posterImage || '',
           coordinators: initialData.coordinators?.length ? initialData.coordinators : [{ name: '', phone: '' }],
+          allowedYears: initialData.allowedYears?.length ? initialData.allowedYears : [1, 2, 3, 4],
           customFormFields: initialData.customFormFields?.length
             ? initialData.customFormFields.map(f => ({ ...f, _tmpOption: '' }))
             : [],
@@ -241,10 +242,22 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
           maxCapacity: '',
           posterImage: '',
           coordinators: [{ name: '', phone: '' }],
+          allowedYears: [1, 2, 3, 4],
           customFormFields: [],
         }
   );
-  
+
+  // Per-event mail templates (separate from main form save)
+  const [regConfirmTpl, setRegConfirmTpl] = useState(
+    initialData?.registrationConfirmationEmail || { subject: '', body: '', isHtml: true }
+  );
+  const [certMailTpl, setCertMailTpl] = useState(
+    initialData?.postEventCertificateEmail || { subject: '', body: '', isHtml: true }
+  );
+  const [savingMail, setSavingMail] = useState(null); // 'reg' | 'cert'
+  const [mailSaveErr, setMailSaveErr] = useState('');
+  const [mailPreview, setMailPreview] = useState(null); // 'reg' | 'cert'
+
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState('');
@@ -467,6 +480,34 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
               </div>
             </div>
 
+            {/* Year Exclusivity */}
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Target Audience (Years)</label>
+              <div className="flex items-center gap-4">
+                {[1, 2, 3, 4].map(year => (
+                  <label key={year} className="flex items-center gap-2 cursor-pointer group">
+                    <input 
+                      type="checkbox"
+                      className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                      checked={form.allowedYears.includes(year)}
+                      onChange={(e) => {
+                        const newYears = e.target.checked 
+                          ? [...form.allowedYears, year].sort()
+                          : form.allowedYears.filter(y => y !== year);
+                        setForm(prev => ({ ...prev, allowedYears: newYears.length ? newYears : [1,2,3,4] }));
+                      }}
+                    />
+                    <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors">
+                      {year}{year === 1 ? 'st' : year === 2 ? 'nd' : year === 3 ? 'rd' : 'th'}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-slate-500 mt-2 font-medium">
+                If no years are selected, it defaults to all 4 years.
+              </p>
+            </div>
+
             {/* Coordinators */}
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
@@ -541,6 +582,122 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
                 </p>
               )}
             </div>
+
+            {/* ── Per-Event Email Templates (edit mode only) ─ */}
+            {isEditing && (
+              <div className="space-y-5">
+                <div className="border-t border-dashed border-slate-200 pt-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Mail className="w-4 h-4 text-violet-500" />
+                    <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Per-Event Email Templates</p>
+                  </div>
+
+                  {mailSaveErr && (
+                    <div className="bg-red-50 border border-red-100 text-red-600 text-xs font-semibold px-3 py-2 rounded-xl mb-3">{mailSaveErr}</div>
+                  )}
+
+                  {/* Registration Confirmation Email */}
+                  <div className="bg-violet-50 border border-violet-100 rounded-xl p-4 space-y-3">
+                    <p className="text-xs font-bold text-violet-700">Registration Confirmation Email</p>
+                    <p className="text-[10px] text-violet-500">Sent to every registrant (member + guest) on successful registration. QR code (for guests) auto-attached.</p>
+                    <div className="flex flex-wrap gap-2 mb-1">
+                      {[{v:'name',d:"Registrant's name"},{v:'event_name',d:'Event title'},{v:'event_date',d:'Date'}].map(vr => (
+                        <span key={vr.v} className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-violet-100 rounded-lg text-[10px]">
+                          <code className="font-mono font-bold text-violet-600">{`{{${vr.v}}}`}</code>
+                          <span className="text-slate-400">→ {vr.d}</span>
+                        </span>
+                      ))}
+                    </div>
+                    <input type="text" placeholder="Subject (e.g. Confirmed: {{event_name}})"
+                      value={regConfirmTpl.subject}
+                      onChange={e => setRegConfirmTpl(p => ({...p, subject: e.target.value}))}
+                      className="w-full bg-white border border-violet-100 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-violet-400" />
+                    <div className="flex gap-1 mb-1">
+                      <button type="button" onClick={() => setRegConfirmTpl(p => ({...p, isHtml: true}))}
+                        className={`px-2 py-1 rounded text-[10px] font-bold border ${regConfirmTpl.isHtml !== false ? 'bg-violet-100 border-violet-300 text-violet-700' : 'bg-white border-slate-200 text-slate-400'}`}>HTML</button>
+                      <button type="button" onClick={() => setRegConfirmTpl(p => ({...p, isHtml: false}))}
+                        className={`px-2 py-1 rounded text-[10px] font-bold border ${regConfirmTpl.isHtml === false ? 'bg-violet-100 border-violet-300 text-violet-700' : 'bg-white border-slate-200 text-slate-400'}`}>Text</button>
+                      <div className="flex-1" />
+                      <button type="button" onClick={() => setMailPreview(mailPreview === 'reg' ? null : 'reg')}
+                        className="flex items-center gap-1 text-[10px] text-violet-600 font-bold">
+                        {mailPreview === 'reg' ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                        {mailPreview === 'reg' ? 'Edit' : 'Preview'}
+                      </button>
+                    </div>
+                    {mailPreview === 'reg' ? (
+                      <div className="min-h-[100px] bg-white border border-violet-100 rounded-lg p-3 text-xs overflow-auto"
+                        dangerouslySetInnerHTML={{ __html: (regConfirmTpl.body || '').replace(/\{\{(\w+)\}\}/g, (_, k) => ({name:'Priya Sharma',event_name:form.title||'Event',event_date:'15 Jul 2026'})[k] || `{{${k}}}`) }} />
+                    ) : (
+                      <textarea rows={4} placeholder="<p>Dear {{name}}, you're registered for <strong>{{event_name}}</strong>!</p>"
+                        value={regConfirmTpl.body}
+                        onChange={e => setRegConfirmTpl(p => ({...p, body: e.target.value}))}
+                        className="w-full bg-white border border-violet-100 rounded-lg px-3 py-2 text-xs font-mono resize-y focus:outline-none focus:ring-2 focus:ring-violet-400" />
+                    )}
+                    <button type="button" disabled={savingMail === 'reg'} onClick={async () => {
+                      if (!form._id) return;
+                      setSavingMail('reg'); setMailSaveErr('');
+                      try {
+                        await api.patch(`/admin/events/${form._id}`, { registrationConfirmationEmail: regConfirmTpl });
+                      } catch (e) { setMailSaveErr(e.response?.data?.message || 'Save failed.'); }
+                      finally { setSavingMail(null); }
+                    }} className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 text-white rounded-lg text-xs font-bold hover:bg-violet-700 disabled:opacity-50 transition-all">
+                      {savingMail === 'reg' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                      Save Registration Template
+                    </button>
+                  </div>
+
+                  {/* Post-Event Certificate Email */}
+                  <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 space-y-3 mt-4">
+                    <p className="text-xs font-bold text-emerald-700">Post-Event Certificate Email</p>
+                    <p className="text-[10px] text-emerald-600">Sent to all registrants when admin releases certificates. Certificate PNG auto-attached.</p>
+                    <div className="flex flex-wrap gap-2 mb-1">
+                      {[{v:'name',d:"Registrant's name"},{v:'event_name',d:'Event title'},{v:'event_date',d:'Date'}].map(vr => (
+                        <span key={vr.v} className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-emerald-100 rounded-lg text-[10px]">
+                          <code className="font-mono font-bold text-emerald-600">{`{{${vr.v}}}`}</code>
+                          <span className="text-slate-400">→ {vr.d}</span>
+                        </span>
+                      ))}
+                    </div>
+                    <input type="text" placeholder="Subject (e.g. Your Certificate — {{event_name}})"
+                      value={certMailTpl.subject}
+                      onChange={e => setCertMailTpl(p => ({...p, subject: e.target.value}))}
+                      className="w-full bg-white border border-emerald-100 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                    <div className="flex gap-1 mb-1">
+                      <button type="button" onClick={() => setCertMailTpl(p => ({...p, isHtml: true}))}
+                        className={`px-2 py-1 rounded text-[10px] font-bold border ${certMailTpl.isHtml !== false ? 'bg-emerald-100 border-emerald-300 text-emerald-700' : 'bg-white border-slate-200 text-slate-400'}`}>HTML</button>
+                      <button type="button" onClick={() => setCertMailTpl(p => ({...p, isHtml: false}))}
+                        className={`px-2 py-1 rounded text-[10px] font-bold border ${certMailTpl.isHtml === false ? 'bg-emerald-100 border-emerald-300 text-emerald-700' : 'bg-white border-slate-200 text-slate-400'}`}>Text</button>
+                      <div className="flex-1" />
+                      <button type="button" onClick={() => setMailPreview(mailPreview === 'cert' ? null : 'cert')}
+                        className="flex items-center gap-1 text-[10px] text-emerald-600 font-bold">
+                        {mailPreview === 'cert' ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                        {mailPreview === 'cert' ? 'Edit' : 'Preview'}
+                      </button>
+                    </div>
+                    {mailPreview === 'cert' ? (
+                      <div className="min-h-[100px] bg-white border border-emerald-100 rounded-lg p-3 text-xs overflow-auto"
+                        dangerouslySetInnerHTML={{ __html: (certMailTpl.body || '').replace(/\{\{(\w+)\}\}/g, (_, k) => ({name:'Priya Sharma',event_name:form.title||'Event',event_date:'15 Jul 2026'})[k] || `{{${k}}}`) }} />
+                    ) : (
+                      <textarea rows={4} placeholder="<p>Hi {{name}}, your certificate for <strong>{{event_name}}</strong> is attached!</p>"
+                        value={certMailTpl.body}
+                        onChange={e => setCertMailTpl(p => ({...p, body: e.target.value}))}
+                        className="w-full bg-white border border-emerald-100 rounded-lg px-3 py-2 text-xs font-mono resize-y focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                    )}
+                    <button type="button" disabled={savingMail === 'cert'} onClick={async () => {
+                      if (!form._id) return;
+                      setSavingMail('cert'); setMailSaveErr('');
+                      try {
+                        await api.patch(`/admin/events/${form._id}`, { postEventCertificateEmail: certMailTpl });
+                      } catch (e) { setMailSaveErr(e.response?.data?.message || 'Save failed.'); }
+                      finally { setSavingMail(null); }
+                    }} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 disabled:opacity-50 transition-all">
+                      {savingMail === 'cert' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                      Save Certificate Template
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
           </div>
           

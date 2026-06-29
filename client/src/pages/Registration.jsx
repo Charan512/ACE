@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Phone, GraduationCap, BookOpen, ShieldCheck, Zap, Code } from 'lucide-react';
 import api from '../lib/api';
@@ -16,6 +16,15 @@ const Registration = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [membershipFee, setMembershipFee] = useState(null); // null = loading
+
+  // Fetch current membership fee from DB (never hardcoded)
+  useEffect(() => {
+    fetch('/api/settings/membership-fee')
+      .then(r => r.json())
+      .then(d => setMembershipFee(d.data?.membershipFee ?? 500))
+      .catch(() => setMembershipFee(500));
+  }, []);
 
   const navigate = useNavigate();
 
@@ -256,7 +265,7 @@ const Registration = () => {
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 <>
-                  <ShieldCheck className="w-5 h-5" /> Proceed to Secure Payment (₹400)
+                  <ShieldCheck className="w-5 h-5" /> Proceed to Secure Payment {membershipFee !== null ? `(₹${membershipFee})` : '...'}
                 </>
               )}
             </button>

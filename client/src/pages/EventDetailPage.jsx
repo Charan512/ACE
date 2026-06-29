@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { MapPin, Calendar, X, Shield, Phone } from 'lucide-react';
+import { MapPin, Calendar, X, Shield, Phone, AlertTriangle } from 'lucide-react';
 import api from '../lib/api';
 import useAuthStore from '../store/useAuthStore';
+
+// ── Helpers ──────────────────────────────────────────────────
+const getYearExclusivityLabel = (allowedYears) => {
+  if (!allowedYears || allowedYears.length === 0 || allowedYears.length === 4) return null;
+  const ordinalMap = { 1: '1st', 2: '2nd', 3: '3rd', 4: '4th' };
+  const years = allowedYears.sort().map(y => ordinalMap[y]).join(', ');
+  return `Exclusive to ${years} Year`;
+};
 
 const EventDetailPage = () => {
   const { eventId } = useParams();
@@ -12,7 +20,8 @@ const EventDetailPage = () => {
   
   // Registration Modal State
   const [isInterceptModalOpen, setIsInterceptModalOpen] = useState(false);
-  const { isAuthenticated } = useAuthStore();
+  const [showIncompleteModal, setShowIncompleteModal] = useState(false);
+  const { user, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -28,9 +37,18 @@ const EventDetailPage = () => {
     fetchEvent();
   }, [eventId]);
 
+  const isProfileComplete = () => {
+    const requiredFields = ['name', 'phone', 'gender', 'branch', 'section', 'year', 'registrationNumber'];
+    return requiredFields.every(field => Boolean(user?.[field]));
+  };
+
   const handleRegistrationClick = () => {
     if (isAuthenticated) {
-      navigate('/member/dashboard');
+      if (!isProfileComplete()) {
+        setShowIncompleteModal(true);
+      } else {
+        navigate('/member/dashboard');
+      }
     } else {
       setIsInterceptModalOpen(true);
     }
@@ -61,6 +79,12 @@ const EventDetailPage = () => {
       {/* 2. The Hero Banner */}
       <div className="w-full bg-gradient-to-br from-blue-50 to-slate-100 py-16 border-b border-slate-200 px-6">
         <div className="max-w-7xl mx-auto flex flex-col items-start">
+          {getYearExclusivityLabel(event.allowedYears) && (
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-rose-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4 shadow-sm shadow-rose-200">
+              <Shield className="w-3.5 h-3.5" />
+              {getYearExclusivityLabel(event.allowedYears)}
+            </div>
+          )}
           <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight mb-8">
             {event.title}
           </h1>
@@ -132,12 +156,23 @@ const EventDetailPage = () => {
           </div>
 
           <div className="mt-4">
-            <button 
-              onClick={handleRegistrationClick}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-5 rounded-2xl transition-all shadow-md hover:shadow-lg hover:-translate-y-1"
-            >
-              Register for Event
-            </button>
+            {isAuthenticated && event.allowedYears?.length > 0 && event.allowedYears.length < 4 && user?.year && !event.allowedYears.includes(user.year) ? (
+              <div className="w-full bg-red-50 border border-red-200 rounded-2xl p-5 text-center flex flex-col items-center justify-center gap-2">
+                <Shield className="w-6 h-6 text-red-500" />
+                <p className="text-red-700 font-bold">Not Eligible</p>
+                <p className="text-red-600 text-sm">
+                  {getYearExclusivityLabel(event.allowedYears)}. Your profile indicates you are in {user.year}
+                  {user.year === 1 ? 'st' : user.year === 2 ? 'nd' : user.year === 3 ? 'rd' : 'th'} Year.
+                </p>
+              </div>
+            ) : (
+              <button 
+                onClick={handleRegistrationClick}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-5 rounded-2xl transition-all shadow-md hover:shadow-lg hover:-translate-y-1"
+              >
+                Register for Event
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -185,6 +220,33 @@ const EventDetailPage = () => {
                 <span className="block text-xs font-medium text-slate-400">Proceed with standard non-member pricing</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Incomplete Profile Modal ───────────────────────── */}
+      {showIncompleteModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] shadow-2xl max-w-sm w-full p-8 relative animate-in fade-in zoom-in duration-200 text-center">
+            <button 
+              onClick={() => setShowIncompleteModal(false)}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-900 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <AlertTriangle className="w-8 h-8 text-amber-500" />
+            </div>
+            <h3 className="text-xl font-black text-slate-950 tracking-tight mb-2">Profile Incomplete</h3>
+            <p className="text-sm text-slate-500 mb-6 font-medium">
+              Your profile is missing required information (like your Section or Roll Number). Please complete your profile before registering for events.
+            </p>
+            <Link 
+              to="/member/profile" 
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+            >
+              Update Profile Now
+            </Link>
           </div>
         </div>
       )}

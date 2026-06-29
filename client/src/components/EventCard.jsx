@@ -3,6 +3,14 @@ import { Calendar, MapPin, Tag, Loader2, ArrowRight, Lock, CheckCircle } from 'l
 // ─────────────────────────────────────────────────────────────
 // EVENT CARD — Glassmorphism design with indigo accent
 // ─────────────────────────────────────────────────────────────
+
+const getYearExclusivityLabel = (allowedYears) => {
+  if (!allowedYears || allowedYears.length === 0 || allowedYears.length === 4) return null;
+  const ordinalMap = { 1: '1st', 2: '2nd', 3: '3rd', 4: '4th' };
+  const years = allowedYears.sort().map(y => ordinalMap[y]).join(', ');
+  return `Exclusive to ${years} Year`;
+};
+
 const EventCard = ({ event, onRegister, isRegistering = false, isRegistered = false }) => {
   const {
     _id,
@@ -63,6 +71,13 @@ const EventCard = ({ event, onRegister, isRegistering = false, isRegistered = fa
                 {tag}
               </span>
             ))}
+          </div>
+        )}
+
+        {/* Year Exclusivity Badge */}
+        {getYearExclusivityLabel(event.allowedYears) && (
+          <div className="inline-flex items-center gap-1.5 self-start px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-rose-700 bg-rose-50 border border-rose-200">
+            {getYearExclusivityLabel(event.allowedYears)}
           </div>
         )}
 

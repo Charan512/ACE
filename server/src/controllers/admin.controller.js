@@ -1,9 +1,11 @@
 import User from '../models/User.js';
 import Event from '../models/Event.js';
 import Registration from '../models/Registration.js';
-import { emailQueue, treasurerQueue, certificateQueue } from '../queues/index.js';
+import AppSettings from '../models/AppSettings.js';
+import { emailQueue, certificateQueue } from '../queues/index.js';
 import catchAsync from '../utils/catchAsync.js';
 import AppError from '../utils/appError.js';
+
 
 /**
  * @desc    Get dashboard overview metrics
@@ -32,16 +34,14 @@ export const getDashboardStats = catchAsync(async (req, res, _next) => {
   let activeJobs = 0;
   try {
     const emailCounts = await emailQueue.getJobCounts('waiting', 'active');
-    const treasurerCounts = await treasurerQueue.getJobCounts('waiting', 'active');
     activeJobs =
       (emailCounts.waiting || 0) +
-      (emailCounts.active || 0) +
-      (treasurerCounts.waiting || 0) +
-      (treasurerCounts.active || 0);
+      (emailCounts.active  || 0);
   } catch (error) {
     console.error('[AdminStats] Failed to retrieve BullMQ job counts:', error.message);
     // Graceful fallback — don't fail the whole stats request
   }
+
 
   res.status(200).json({
     success: true,
@@ -583,3 +583,61 @@ export const getTreasurerEventStats = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+// ─────────────────────────────────────────────────────────────
+// APP SETTINGS (ADMIN ONLY)
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * @desc    Get global app settings (membership fee, email templates, cert template)
+ * @route   GET /api/admin/settings
+ * @access  Private (Admin Only)
+ */
+export const getAppSettings = catchAsync(async (req, res) => {
+  const settings = await AppSettings.getSingleton();
+  res.status(200).json({ success: true, data: settings });
+});
+
+/**
+ * @desc    Update global app settings
+ * @route   PATCH /api/admin/settings
+ * @access  Private (Admin Only)
+ *
+ * Accepts partial updates — only the fields provided will be changed.
+ * Supported fields:
+ *   membershipFee                         → Number (INR)
+ *   membershipConfirmationEmailTemplate   → { subject, body, isHtml }
+ *   membershipCertificateTemplate         → { baseImageUrl, textFields: [...] }
+ */
+export const updateAppSettings = catchAsync(async (req, res, next) => {
+  const {
+    membershipFee,
+    membershipConfirmationEmailTemplate,
+    membershipCertificateTemplate,
+  } = req.body;
+
+  const updates = {};
+
+  if (membershipFee !== undefined) {
+    if (typeof membershipFee !== 'number' || membershipFee < 0) {
+      return next(new AppError('membershipFee must be a non-negative number (INR).', 400));
+    }
+    updates.membershipFee = membershipFee;
+  }
+
+  if (membershipConfirmationEmailTemplate !== undefined) {
+    updates.membershipConfirmationEmailTemplate = membershipConfirmationEmailTemplate;
+  }
+
+  if (membershipCertificateTemplate !== undefined) {
+    updates.membershipCertificateTemplate = membershipCertificateTemplate;
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return next(new AppError('No valid fields provided for update.', 400));
+  }
+
+  const settings = await AppSettings.updateSingleton(updates);
+  res.status(200).json({ success: true, data: settings });
+});
+

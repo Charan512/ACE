@@ -89,6 +89,23 @@ const certificateTemplateSchema = new mongoose.Schema(
 );
 
 /**
+ * Admin-configurable email template for event communications.
+ * Template variables are interpolated before sending:
+ *   {{name}}         — registrant's name
+ *   {{event_name}}   — event title
+ *   {{event_date}}   — formatted event date
+ *   For certificate mail: {{certificate_link}} is replaced by "see attachment"
+ */
+const eventEmailTemplateSchema = new mongoose.Schema(
+  {
+    subject: { type: String, default: '', trim: true },
+    body:    { type: String, default: '' },
+    isHtml:  { type: Boolean, default: true },
+  },
+  { _id: false }
+);
+
+/**
  * A single admin-defined field in the event's dynamic registration form.
  * Guests must fill these out; members bypass via Fast-Pass.
  */
@@ -207,6 +224,22 @@ const eventSchema = new mongoose.Schema(
       default: 0,
     },
 
+    // ── Year Exclusivity ───────────────────────────────────
+    /**
+     * Which student years (1-4) are allowed to register for this event.
+     * Default: [1,2,3,4] = open to all years.
+     * Example: [2] = exclusive to 2nd years only.
+     * Validation enforced in payment + cashRegistration controllers before any order is created.
+     */
+    allowedYears: {
+      type: [Number],
+      default: [1, 2, 3, 4],
+      validate: {
+        validator: (arr) => arr.every((y) => [1, 2, 3, 4].includes(y)),
+        message:   'allowedYears must contain values between 1 and 4.',
+      },
+    },
+
     // ── Certificate Template (Zero-Storage Engine) ─────────
     certificateTemplate: {
       type: certificateTemplateSchema,
@@ -226,6 +259,29 @@ const eventSchema = new mongoose.Schema(
     customFormFields: {
       type: [customFormFieldSchema],
       default: [],
+    },
+
+    // ── Per-Event Email Templates ──────────────────────────
+    /**
+     * Admin-configured email sent to EVERY registrant (member + guest)
+     * immediately after successful registration (online or cash).
+     * The QR code (for guests) is attached separately — this controls the body.
+     * Template variables: {{name}}, {{event_name}}, {{event_date}}
+     */
+    registrationConfirmationEmail: {
+      type:    eventEmailTemplateSchema,
+      default: () => ({ subject: '', body: '', isHtml: true }),
+    },
+
+    /**
+     * Admin-configured email sent to ALL registrants (member + guest) when
+     * the admin releases certificates for this event.
+     * The certificate PNG is attached automatically — this controls the body.
+     * Template variables: {{name}}, {{event_name}}, {{event_date}}
+     */
+    postEventCertificateEmail: {
+      type:    eventEmailTemplateSchema,
+      default: () => ({ subject: '', body: '', isHtml: true }),
     },
 
     // ── Publication Status ────────────────────────────────

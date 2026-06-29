@@ -15,13 +15,16 @@ const adminNotificationSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      enum: { values: ['cash_registration'], message: '{VALUE} is not a valid notification type.' },
+      enum: {
+        values: ['cash_registration', 'cash_membership'],
+        message: '{VALUE} is not a valid notification type.',
+      },
       required: true,
     },
     event: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Event',
-      required: true,
+      default: null, // null for membership notifications (no event involved)
     },
     eventTitle: { type: String, trim: true },
     registrant: {

@@ -43,7 +43,6 @@ const transactionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       default: null,
-      sparse: true,
     },
     // Guest details — essential for the Late Converter BullMQ job
     guestEmail: {
@@ -112,6 +111,24 @@ const transactionSchema = new mongoose.Schema(
     processedAt: {
       type: Date,
       default: null,
+    },
+
+    // ── Custom Form Responses ────────────────────────────────
+    /**
+     * Stores the registrant's answers to the event's `customFormFields` at order-creation time.
+     * Shape: { [fieldName: string]: string }
+     *
+     * This is CRITICAL for the payment lifecycle: because PhonePe redirects the user
+     * away from our app to take payment, any form data that was only held in React state
+     * would be wiped out before the webhook fires. By persisting it on the Transaction
+     * when the order is created, handlePaymentSuccess can safely copy it into the
+     * final Registration document even though the user's browser is long gone.
+     *
+     * For member Fast-Pass on events with no custom fields, this will always be {}.
+     */
+    customResponses: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
   },
   {

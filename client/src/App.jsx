@@ -31,6 +31,7 @@ import AdminRegistrations from './pages/AdminRegistrations';
 import AdminCertificates from './pages/AdminCertificates';
 import AdminUsers from './pages/AdminUsers';
 import AdminNotifications from './pages/AdminNotifications';
+import AdminSettings from './pages/AdminSettings';
 import TreasurerDashboard from './pages/TreasurerDashboard';
 
 // ── Ops Pages ────────────────────────────────────────────────
@@ -119,6 +120,7 @@ function App() {
             <Route path="/admin/certificates"       element={<AdminCertificates />} />
             <Route path="/admin/users"              element={<AdminUsers />} />
             <Route path="/admin/notifications"      element={<AdminNotifications />} />
+            <Route path="/admin/settings"           element={<AdminSettings />} />
             {/* Treasurer — only meaningful for sbm+Treasurer; component guards internally */}
             <Route path="/treasurer"                element={<TreasurerDashboard />} />
           </Route>

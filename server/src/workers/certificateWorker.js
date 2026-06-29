@@ -1,9 +1,10 @@
 import { Worker } from 'bullmq';
 import { createRedisConnection } from '../config/redis.js';
-import sendEmail from '../utils/mailer.js';
 import renderCertificate from '../utils/certRenderer.js';
 import Registration from '../models/Registration.js';
 import Event from '../models/Event.js';
+import User from '../models/User.js';
+import { emailQueue } from '../queues/index.js';
 
 /**
  * Certificate Worker — processes jobs from the ace-certificates queue.
@@ -12,16 +13,18 @@ import Event from '../models/Event.js';
  *   data: { eventId: string }
  *
  * Strategy:
- *   1. Fetch the event (needs template + title + eventDate)
- *   2. Find all confirmed registrations for the event that have a guestEmail
- *      (members self-serve from their dashboard — they are NOT emailed)
- *   3. For each guest registration, render a personalized certificate PNG in memory
- *   4. Attach the buffer to a Resend email and send
- *   5. Failures on individual guests are logged but do NOT abort the whole batch —
- *      the job only throws if the event itself cannot be loaded.
+ *   1. Fetch the event (needs template + title + eventDate + postEventCertificateEmail)
+ *   2. Find ALL confirmed registrations (members + guests)
+ *      - Members: access certificate via their dashboard AND receive email
+ *      - Guests: no portal login — email is their only channel
+ *   3. For each registrant, render a personalized certificate PNG in memory
+ *   4. Enqueue a postEventCertificateEmail job in the email queue (passing the cert as base64)
+ *      → The emailWorker handles the admin-configured body template + attachment
+ *   5. Failures on individual registrants are logged but do NOT abort the whole batch.
  *
- * Zero-storage guarantee: PNG buffers exist only in RAM per iteration.
- *   The buffer goes out of scope (and is GC'd) after sendMail() resolves.
+ * ZERO-STORAGE GUARANTEE:
+ *   PNG buffers exist only in RAM per iteration, serialised to base64 for BullMQ transport.
+ *   The buffer goes out of scope (GC'd) after the email job is enqueued.
  */
 const certificateWorker = new Worker(
   'ace-certificates',
@@ -48,86 +51,82 @@ const certificateWorker = new Worker(
 
     const { baseImageUrl, textFields } = event.certificateTemplate;
 
-    // Format date once — shared across all guest certificates for this event
+    // Format date once — shared across all certificates for this event
     const eventDate = new Date(event.eventDate).toLocaleDateString('en-GB', {
       day:   '2-digit',
       month: 'short',
       year:  'numeric',
     });
 
-    // ── 2. Find all guest registrations (guestEmail is not null) ─
-    // Members are excluded: they have userId set but guestEmail null.
-    // We ONLY email guests who cannot log in to download their own certificate.
-    const guestRegistrations = await Registration.find({
+    // ── 2. Find ALL confirmed registrations (members + guests) ─
+    // Members are also emailed their certificate as a convenience
+    // (they can also self-serve download from dashboard after certificatesReleased=true)
+    const registrations = await Registration.find({
       eventId,
-      status:     'confirmed',
-      guestEmail: { $ne: null },
+      status: 'confirmed',
     })
-      .select('guestName guestEmail')
+      .populate('userId', 'name email aceId')
+      .select('guestName guestEmail userId tier')
       .lean();
 
     console.log(
-      `[CertWorker] Event "${event.title}" — ${guestRegistrations.length} guest certificate(s) to send.`
+      `[CertWorker] Event "${event.title}" — ${registrations.length} certificate(s) to send.`
     );
 
-    if (guestRegistrations.length === 0) {
-      console.log(`[CertWorker] No guest registrations found. Job complete.`);
+    if (registrations.length === 0) {
+      console.log(`[CertWorker] No confirmed registrations found. Job complete.`);
       return;
     }
 
-    // ── 3 + 4. Render + email each guest certificate ───────────
-    // We process sequentially (not Promise.all) to avoid OOM from simultaneous canvas renders.
+    // ── 3 + 4. Render + enqueue email for each registrant ──────
+    // Sequential processing — canvas renders are CPU/memory intensive.
     let successCount = 0;
     let failCount    = 0;
 
-    for (const reg of guestRegistrations) {
+    for (const reg of registrations) {
       try {
-        const recipientName = reg.guestName || 'Participant';
+        const isGuest       = !reg.userId;
+        const recipientName = isGuest ? (reg.guestName || 'Participant') : reg.userId.name;
+        const recipientEmail = isGuest ? reg.guestEmail : reg.userId.email;
+        const aceId         = isGuest ? 'GUEST' : (reg.userId.aceId || 'GUEST');
 
-        // Render personalized certificate in RAM — zero disk writes
+        if (!recipientEmail) {
+          console.warn(`[CertWorker] No email for registration ${reg._id}. Skipping.`);
+          continue;
+        }
+
+        // Render personalized certificate PNG in RAM
         const pngBuffer = await renderCertificate({
           baseImageUrl,
           textFields,
           data: {
             recipientName,
-            aceId:      'GUEST',   // Guests do not have aceId
+            aceId,
             eventTitle: event.title,
             eventDate,
           },
         });
 
-        // Build a safe filename for the attachment
-        const safeTitle = event.title.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 50);
-        const safeName  = recipientName.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30);
-        const filename  = `ACE_Certificate_${safeName}_${safeTitle}.png`;
-
-        // Send via Resend SMTP relay — PNG buffer attached inline
-        await sendEmail({
-          to:      reg.guestEmail,
-          subject: `Your Certificate — ${event.title} | ACE`,
-          html:    buildCertificateEmail({ name: recipientName, eventTitle: event.title, eventDate }),
-          attachments: [
-            {
-              filename,
-              content:     pngBuffer,
-              contentType: 'image/png',
-            },
-          ],
+        // Pass cert as base64 string — BullMQ serialises job data as JSON (no Buffer support)
+        await emailQueue.add('postEventCertificateEmail', {
+          recipientName,
+          recipientEmail,
+          eventId,
+          certBuffer: pngBuffer.toString('base64'),
         });
 
-        console.log(`[CertWorker] ✓ Certificate sent to ${reg.guestEmail}`);
+        console.log(`[CertWorker] ✓ Certificate email job enqueued for ${recipientEmail}`);
         successCount++;
       } catch (err) {
         // Log the individual failure but continue with the rest of the batch.
-        // A single broken canvas render / failed email should not block everyone else.
-        console.error(`[CertWorker] ✗ Failed for ${reg.guestEmail}: ${err.message}`);
+        console.error(`[CertWorker] ✗ Failed for registration ${reg._id}: ${err.message}`);
         failCount++;
       }
     }
 
     console.log(
       `[CertWorker] Batch complete for event "${event.title}" — ` +
-      `${successCount} sent, ${failCount} failed.`
+      `${successCount} enqueued, ${failCount} failed.`
     );
   },
   {
@@ -149,52 +148,3 @@ certificateWorker.on('failed', (job, err) => {
 });
 
 export default certificateWorker;
-
-// ─────────────────────────────────────────────────────────────
-// PRIVATE HELPERS
-// ─────────────────────────────────────────────────────────────
-
-/**
- * Builds the HTML email body for a guest certificate delivery.
- * The certificate PNG is attached as a file, not embedded inline.
- *
- * @param {Object} params
- * @param {string} params.name        - Guest's name
- * @param {string} params.eventTitle  - Event title
- * @param {string} params.eventDate   - Formatted event date
- * @returns {string} HTML string
- */
-function buildCertificateEmail({ name, eventTitle, eventDate }) {
-  return `
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background-color:#0B0F19;color:#f1f5f9;margin:0;padding:0;">
-      <div style="max-width:600px;margin:32px auto;background:#111827;border:1px solid #1e293b;border-radius:4px;overflow:hidden;">
-
-        <div style="background:#020617;border-bottom:2px solid #00d4ff;padding:24px 32px;">
-          <p style="color:#00d4ff;font-size:11px;letter-spacing:0.15em;margin:0 0 8px;text-transform:uppercase;">
-            ASSOCIATION OF COMPUTER ENGINEERS
-          </p>
-          <h1 style="color:#f1f5f9;font-size:22px;margin:0;">Your Certificate of Participation</h1>
-        </div>
-
-        <div style="padding:32px;">
-          <p style="color:#94a3b8;margin:0 0 16px;">
-            Hi <strong style="color:#f1f5f9;">${name}</strong>,
-          </p>
-          <p style="color:#94a3b8;margin:0 0 24px;">
-            Thank you for participating in <strong style="color:#f1f5f9;">${eventTitle}</strong>
-            on <strong style="color:#f1f5f9;">${eventDate}</strong>.
-            Your personalized certificate of participation is attached to this email.
-          </p>
-          <p style="color:#475569;font-size:13px;margin:0;">
-            This certificate was generated specifically for you. Please save it for your records.
-          </p>
-        </div>
-
-        <div style="padding:16px 32px;border-top:1px solid #1e293b;font-size:12px;color:#475569;text-align:center;">
-          This is an automated message from ACE ERP. Do not reply to this email.
-        </div>
-
-      </div>
-    </div>
-  `;
-}

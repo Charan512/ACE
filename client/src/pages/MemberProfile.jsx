@@ -2,13 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import {
   User, Phone, BookOpen, Hash, GraduationCap, Building,
   CheckCircle2, AlertTriangle, Loader2, ShieldCheck, UserCog,
-  ChevronDown, Camera,
+  ChevronDown, Camera, X, Edit3, Lock, Users
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import BlurText from '../components/react-bits/BlurText';
 import api from '../lib/api';
-
-// ── Shared styles removed — using clay-card from index.css now
 
 // ── Form Field Wrapper with Floating Labels & Micro-Animations 
 const Field = ({ label, icon: Icon, children, focused, hasValue }) => {
@@ -40,18 +38,19 @@ const Field = ({ label, icon: Icon, children, focused, hasValue }) => {
 };
 
 // ── Shared input style ────────────────────────────────────────
-const inputStyle = (focused) => ({
+const inputStyle = (focused, disabled) => ({
   width: '100%',
-  background: focused ? '#ffffff' : 'rgba(255,255,255,0.6)',
-  border: focused ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(226,232,240,1)',
-  boxShadow: focused ? '0 0 0 3px rgba(99,102,241,0.1)' : 'none',
+  background: disabled ? '#f8fafc' : (focused ? '#ffffff' : 'rgba(255,255,255,0.6)'),
+  border: disabled ? '1px solid rgba(226,232,240,0.5)' : (focused ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(226,232,240,1)'),
+  boxShadow: (!disabled && focused) ? '0 0 0 3px rgba(99,102,241,0.1)' : 'none',
   borderRadius: '12px',
   padding: '11px 16px 11px 40px',
   fontSize: '13px',
   fontFamily: 'JetBrains Mono, monospace',
-  color: '#0f172a',
+  color: disabled ? '#64748b' : '#0f172a',
   outline: 'none',
   transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+  cursor: disabled ? 'not-allowed' : 'text',
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -60,12 +59,16 @@ const inputStyle = (focused) => ({
 const MemberProfile = () => {
   const { user, updateProfile } = useAuthStore();
 
+  const [isEditing, setIsEditing] = useState(false);
+
   const [formData, setFormData] = useState({
+    name:               user?.name               || '',
     phone:              user?.phone              || '',
     branch:             user?.branch             || '',
     section:            user?.section            || '',
     year:               user?.year               || '',
     registrationNumber: user?.registrationNumber || '',
+    gender:             user?.gender             || '',
   });
   
   const [saving, setSaving]         = useState(false);
@@ -76,11 +79,13 @@ const MemberProfile = () => {
   
   // Track focus states for floating labels
   const [focusState, setFocusState] = useState({
+    name: false,
     phone: false,
     branch: false,
     section: false,
     year: false,
     registrationNumber: false,
+    gender: false,
   });
 
   const setField = (field) => (e) =>
@@ -91,18 +96,52 @@ const MemberProfile = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
+  const hasChanges = Object.keys(formData).some(k => formData[k] !== (user[k] || ''));
+
+  // Warn on unsaved changes navigation
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isEditing && hasChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isEditing, hasChanges]);
+
+  const handleCancel = () => {
+    if (hasChanges) {
+      if (!window.confirm('You have unsaved changes. Are you sure you want to discard them?')) return;
+    }
+    setFormData({
+      name:               user?.name               || '',
+      phone:              user?.phone              || '',
+      branch:             user?.branch             || '',
+      section:            user?.section            || '',
+      year:               user?.year               || '',
+      registrationNumber: user?.registrationNumber || '',
+      gender:             user?.gender             || '',
+    });
+    setIsEditing(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!hasChanges) return;
     setSaving(true);
     try {
       await updateProfile({
+        name:               formData.name               || undefined,
         phone:              formData.phone              || undefined,
         branch:             formData.branch             || undefined,
         section:            formData.section            || undefined,
         year:               formData.year ? Number(formData.year) : undefined,
         registrationNumber: formData.registrationNumber || undefined,
+        gender:             formData.gender             || undefined,
       });
       showToast('Profile updated successfully.', 'success');
+      setIsEditing(false);
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to update profile.', 'error');
     } finally {
@@ -119,7 +158,6 @@ const MemberProfile = () => {
     if (!file) return;
     setAvatarUploading(true);
     try {
-      // Single-step: POST multipart directly to our backend → Cloudinary
       const formData = new FormData();
       formData.append('image', file);
 
@@ -128,7 +166,6 @@ const MemberProfile = () => {
       });
       const { url } = res.data.data;
 
-      // Persist avatarUrl to DB and update Zustand store
       const profileRes = await api.patch('/users/me', { avatarUrl: url });
       updateProfile(profileRes.data.data.user);
       setLocalAvatar(url);
@@ -145,7 +182,7 @@ const MemberProfile = () => {
   const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
 
   // Calculate profile completion
-  const fieldsToCheck = ['phone', 'branch', 'section', 'year', 'registrationNumber'];
+  const fieldsToCheck = ['name', 'phone', 'gender', 'branch', 'section', 'year', 'registrationNumber'];
   const filledFields = fieldsToCheck.filter(field => !!formData[field]).length;
   const completionPercentage = Math.round((filledFields / fieldsToCheck.length) * 100);
   
@@ -177,19 +214,30 @@ const MemberProfile = () => {
           </div>
         )}
 
-        {/* ── Page Header ──────────────────────────────────── */}
-        <div className="flex items-center gap-4 mb-8">
-          <div className="clay-icon-box w-10 h-10" style={{ background: '#eef2ff' }}>
-            <UserCog className="w-5 h-5 text-indigo-500" />
+        {/* ── Page Header & Edit Toggle ──────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="clay-icon-box w-10 h-10" style={{ background: '#eef2ff' }}>
+              <UserCog className="w-5 h-5 text-indigo-500" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex">
+                <BlurText text="My Profile" delay={50} animateBy="letters" direction="bottom" />
+              </h1>
+              <p className="text-xs font-mono mt-0.5 text-slate-500">
+                Update your academic and contact information
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex">
-              <BlurText text="My Profile" delay={50} animateBy="letters" direction="bottom" />
-            </h1>
-            <p className="text-xs font-mono mt-0.5 text-slate-500">
-              Update your academic and contact information
-            </p>
-          </div>
+          
+          {!isEditing && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="clay-btn clay-btn-indigo flex items-center justify-center gap-2 font-mono font-bold px-5 py-2.5 text-xs self-start sm:self-auto"
+            >
+              <Edit3 className="w-3.5 h-3.5" /> Edit Profile
+            </button>
+          )}
         </div>
 
         {/* ── Identity Card with Progress Ring ────────────── */}
@@ -225,16 +273,17 @@ const MemberProfile = () => {
               </div>
               <div className="min-w-0">
                 <p className="text-base sm:text-lg font-bold text-slate-800 truncate">{user?.name || '—'}</p>
-                <p className="text-xs font-mono mt-0.5 truncate text-slate-500">
-                  {user?.email || '—'}
+                <p className="text-xs font-mono mt-0.5 truncate text-slate-500 flex items-center gap-1.5">
+                  <Lock className="w-3 h-3 text-slate-400" /> {user?.email || '—'}
                 </p>
                 {/* ACE ID on mobile & desktop */}
                 {user?.aceId && (
-                  <div className="mt-2 flex items-center gap-1.5 px-2.5 py-1 rounded-md w-fit bg-indigo-50 border border-indigo-100/50">
+                  <div className="mt-2 flex items-center gap-1.5 px-2.5 py-1 rounded-md w-fit bg-indigo-50 border border-indigo-100/50" title="System ACE ID cannot be changed">
                     <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
                     <span className="text-[10px] font-mono font-bold tracking-widest text-indigo-600">
                       {user.aceId}
                     </span>
+                    <Lock className="w-2.5 h-2.5 text-indigo-300 ml-1" />
                   </div>
                 )}
               </div>
@@ -277,28 +326,31 @@ const MemberProfile = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
 
           {/* Contact Section */}
-          <div className="clay-card clay-blue overflow-hidden">
+          <div className="clay-card clay-blue overflow-hidden transition-all duration-300" style={{ opacity: isEditing ? 1 : 0.9 }}>
             <div className="border-b border-blue-100/50 px-5 py-3.5 bg-blue-50/40">
               <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-blue-500">
-                Contact Information
+                Identity & Contact
               </p>
             </div>
             <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-3">
-              {/* Full Name (read-only) */}
-              <div className="relative pt-4">
-                <label className="absolute -top-1 left-10 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-white/80 px-1 rounded backdrop-blur-sm z-10">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    value={user?.name || ''}
-                    disabled
-                    style={{ ...inputStyle(false), color: '#64748b', cursor: 'not-allowed', background: '#f8fafc' }}
-                  />
-                </div>
-              </div>
+              {/* Full Name */}
+              <Field 
+                label="Full Name" 
+                icon={User} 
+                focused={focusState.name} 
+                hasValue={!!formData.name}
+              >
+                <input
+                  type="text"
+                  placeholder={focusState.name ? "John Doe" : ""}
+                  value={formData.name}
+                  onChange={setField('name')}
+                  disabled={!isEditing}
+                  style={inputStyle(focusState.name, !isEditing)}
+                  onFocus={() => setFocusState(prev => ({ ...prev, name: true }))}
+                  onBlur={() => setFocusState(prev => ({ ...prev, name: false }))}
+                />
+              </Field>
 
               {/* Phone */}
               <Field 
@@ -312,16 +364,44 @@ const MemberProfile = () => {
                   placeholder={focusState.phone ? "+91 98765 43210" : ""}
                   value={formData.phone}
                   onChange={setField('phone')}
-                  style={inputStyle(focusState.phone)}
+                  disabled={!isEditing}
+                  style={inputStyle(focusState.phone, !isEditing)}
                   onFocus={() => setFocusState(prev => ({ ...prev, phone: true }))}
                   onBlur={() => setFocusState(prev => ({ ...prev, phone: false }))}
                 />
+              </Field>
+
+              {/* Gender (Dropdown) */}
+              <Field 
+                label="Gender" 
+                icon={Users} 
+                focused={focusState.gender} 
+                hasValue={!!formData.gender}
+              >
+                <select
+                  value={formData.gender}
+                  onChange={setField('gender')}
+                  disabled={!isEditing}
+                  style={{
+                    ...inputStyle(focusState.gender, !isEditing),
+                    cursor: !isEditing ? 'not-allowed' : 'pointer',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                  }}
+                  onFocus={() => setFocusState(prev => ({ ...prev, gender: true }))}
+                  onBlur={() => setFocusState(prev => ({ ...prev, gender: false }))}
+                >
+                  <option value="" disabled></option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+                <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-transform duration-300 ${focusState.gender ? 'rotate-180 text-indigo-500' : 'text-slate-400'}`} />
               </Field>
             </div>
           </div>
 
           {/* Academic Section */}
-          <div className="clay-card clay-purple overflow-hidden">
+          <div className="clay-card clay-purple overflow-hidden transition-all duration-300" style={{ opacity: isEditing ? 1 : 0.9 }}>
             <div className="border-b border-purple-100/50 px-5 py-3.5 bg-purple-50/40">
               <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-purple-500">
                 Academic Details
@@ -339,9 +419,10 @@ const MemberProfile = () => {
                 <select
                   value={formData.branch}
                   onChange={setField('branch')}
+                  disabled={!isEditing}
                   style={{
-                    ...inputStyle(focusState.branch),
-                    cursor: 'pointer',
+                    ...inputStyle(focusState.branch, !isEditing),
+                    cursor: !isEditing ? 'not-allowed' : 'pointer',
                     appearance: 'none',
                     WebkitAppearance: 'none',
                   }}
@@ -375,9 +456,10 @@ const MemberProfile = () => {
                 <select
                   value={formData.section}
                   onChange={setField('section')}
+                  disabled={!isEditing}
                   style={{
-                    ...inputStyle(focusState.section),
-                    cursor: 'pointer',
+                    ...inputStyle(focusState.section, !isEditing),
+                    cursor: !isEditing ? 'not-allowed' : 'pointer',
                     appearance: 'none',
                     WebkitAppearance: 'none',
                   }}
@@ -406,9 +488,10 @@ const MemberProfile = () => {
                 <select
                   value={formData.year}
                   onChange={setField('year')}
+                  disabled={!isEditing}
                   style={{
-                    ...inputStyle(focusState.year),
-                    cursor: 'pointer',
+                    ...inputStyle(focusState.year, !isEditing),
+                    cursor: !isEditing ? 'not-allowed' : 'pointer',
                     appearance: 'none',
                     WebkitAppearance: 'none',
                   }}
@@ -436,7 +519,8 @@ const MemberProfile = () => {
                   placeholder={focusState.registrationNumber ? "21CE1A0501" : ""}
                   value={formData.registrationNumber}
                   onChange={setField('registrationNumber')}
-                  style={inputStyle(focusState.registrationNumber)}
+                  disabled={!isEditing}
+                  style={inputStyle(focusState.registrationNumber, !isEditing)}
                   onFocus={() => setFocusState(prev => ({ ...prev, registrationNumber: true }))}
                   onBlur={() => setFocusState(prev => ({ ...prev, registrationNumber: false }))}
                 />
@@ -444,17 +528,28 @@ const MemberProfile = () => {
             </div>
           </div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={saving || (completionPercentage === 100 && Object.keys(formData).every(k => formData[k] === (user[k] || '')))}
-            className="clay-btn clay-btn-indigo w-full sm:w-auto gap-2.5 font-mono font-bold px-8 py-3.5 text-sm min-h-[44px] group"
-          >
-            {saving
-              ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
-              : <><CheckCircle2 className="w-4 h-4 transition-transform group-hover:scale-110" /> Save Changes</>
-            }
-          </button>
+          {/* Action Buttons (Only visible in Edit Mode) */}
+          {isEditing && (
+            <div className="flex gap-4 pt-4 sticky bottom-6 bg-white/80 p-4 -mx-4 sm:mx-0 sm:p-0 rounded-2xl backdrop-blur-md z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] sm:shadow-none sm:bg-transparent">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="clay-btn clay-btn-white flex-1 sm:flex-none px-6 py-3.5 text-sm font-bold font-mono text-slate-600 flex items-center justify-center gap-2 min-h-[44px]"
+              >
+                <X className="w-4 h-4" /> Discard
+              </button>
+              <button
+                type="submit"
+                disabled={saving || !hasChanges}
+                className="clay-btn clay-btn-indigo flex-1 sm:w-auto gap-2.5 font-mono font-bold px-8 py-3.5 text-sm min-h-[44px] group flex items-center justify-center"
+              >
+                {saving
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
+                  : <><CheckCircle2 className="w-4 h-4 transition-transform group-hover:scale-110" /> Save Changes</>
+                }
+              </button>
+            </div>
+          )}
         </form>
 
       </div>

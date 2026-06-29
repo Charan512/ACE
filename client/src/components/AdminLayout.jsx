@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, CalendarDays, Users, ClipboardList, Award,
-  LogOut, Shield, Menu, X, Bell, BarChart2,
+  LogOut, Shield, Menu, X, Bell, BarChart2, Settings,
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import PortalBackground from './ui/PortalBackground';
@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { label: 'Registrations', to: '/admin/registrations',  icon: ClipboardList,   end: false },
   { label: 'Certificates',  to: '/admin/certificates',   icon: Award,           end: false },
   { label: 'Users',         to: '/admin/users',          icon: Users,           end: false, allowedRoles: ['admin'] },
+  { label: 'Settings',      to: '/admin/settings',       icon: Settings,        end: false, allowedRoles: ['admin'] },
 ];
 
 // ── Role label mapping ────────────────────────────────────────

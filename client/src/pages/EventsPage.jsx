@@ -4,6 +4,14 @@ import { MapPin, Calendar, Ticket, X, Shield, Phone } from 'lucide-react';
 import api from '../lib/api';
 import useAuthStore from '../store/useAuthStore';
 
+// ── Helpers ──────────────────────────────────────────────────
+const getYearExclusivityLabel = (allowedYears) => {
+  if (!allowedYears || allowedYears.length === 0 || allowedYears.length === 4) return null;
+  const ordinalMap = { 1: '1st', 2: '2nd', 3: '3rd', 4: '4th' };
+  const years = allowedYears.sort().map(y => ordinalMap[y]).join(', ');
+  return `Exclusive to ${years} Year`;
+};
+
 const EventsPage = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -81,9 +89,15 @@ const EventsPage = () => {
         </div>
 
         {events.map((event, index) => (
-          <div key={event._id} className="w-full mb-32 last:mb-0">
+          <div key={event._id} className="w-full mb-32 last:mb-0 relative">
             {/* Event Header */}
             <div className="mb-12">
+              {getYearExclusivityLabel(event.allowedYears) && (
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-rose-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4 shadow-sm shadow-rose-200">
+                  <Shield className="w-3.5 h-3.5" />
+                  {getYearExclusivityLabel(event.allowedYears)}
+                </div>
+              )}
               <h2 className="text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600">
                 {event.title}
               </h2>

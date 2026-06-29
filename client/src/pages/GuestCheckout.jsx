@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ShieldCheck, Loader2, AlertCircle, User, Mail, Phone } from 'lucide-react';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { Mail, User, Phone, Loader2, AlertCircle, ShieldCheck, Building, BookOpen, Users, Hash } from 'lucide-react';
 import api from '../lib/api';
 
 // ── Reusable input wrapper ────────────────────────────────────
@@ -126,7 +126,10 @@ const GuestCheckout = () => {
   const [error, setError] = useState(null);
 
   // ── Core contact fields (always required) ──────────────────
-  const [coreData, setCoreData] = useState({ name: '', email: '', phone: '' });
+  const [coreData, setCoreData] = useState({ 
+    name: '', email: '', phone: '', year: '',
+    branch: '', section: '', gender: '', registrationNumber: ''
+  });
 
   // ── Dynamic responses — key = fieldName, value = answer ───
   const [customResponses, setCustomResponses] = useState({});
@@ -165,12 +168,22 @@ const GuestCheckout = () => {
     try {
       // POST /payments/guest-order — creates a PhonePe event ticket order for a guest.
       // On webhook success: creates a confirmed Registration + emails QR entry pass to guest.
+      const mergedResponses = {
+        ...customResponses,
+        phone: coreData.phone || undefined,
+        branch: coreData.branch,
+        section: coreData.section,
+        gender: coreData.gender,
+        registrationNumber: coreData.registrationNumber || undefined,
+      };
+
       const orderRes = await api.post('/payments/guest-order', {
         eventId,
         name:            coreData.name,
         email:           coreData.email,
         phone:           coreData.phone || undefined,
-        customResponses: customResponses,
+        year:            coreData.year,
+        customResponses: mergedResponses,
       });
 
       const { merchantTransactionId, redirectUrl } = orderRes.data.data;
@@ -243,11 +256,96 @@ const GuestCheckout = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <InputField label="Full Name" icon={User} type="text" required placeholder="John Doe"
                   value={coreData.name} onChange={setCoreField('name')} />
-                <InputField label="Phone Number" icon={Phone} type="tel" placeholder="+91 98765 43210"
+                <InputField label="Phone Number" icon={Phone} type="tel" required placeholder="+91 98765 43210"
                   value={coreData.phone} onChange={setCoreField('phone')} />
               </div>
-              <InputField label="Email Address" icon={Mail} type="email" required placeholder="john@example.com"
-                value={coreData.email} onChange={setCoreField('email')} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <InputField label="Email Address" icon={Mail} type="email" required placeholder="john@example.com"
+                  value={coreData.email} onChange={setCoreField('email')} />
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1.5">
+                    Year <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={coreData.year}
+                    onChange={setCoreField('year')}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  >
+                    <option value="" disabled>Select Year</option>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1.5">
+                    Branch <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={coreData.branch}
+                    onChange={setCoreField('branch')}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  >
+                    <option value="" disabled>Select Branch</option>
+                    <option value="CSE">CSE</option>
+                    <option value="AIML">AIML</option>
+                    <option value="AIDS">AIDS</option>
+                    <option value="CSBS">CSBS</option>
+                    <option value="CSD">CSD</option>
+                    <option value="CIC">CIC</option>
+                    <option value="IT">IT</option>
+                    <option value="CSIT">CSIT</option>
+                    <option value="ECE">ECE</option>
+                    <option value="EEE">EEE</option>
+                    <option value="Mechanical">Mechanical</option>
+                    <option value="Civil">Civil</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1.5">
+                    Section <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={coreData.section}
+                    onChange={setCoreField('section')}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  >
+                    <option value="" disabled>Select Section</option>
+                    <option value="A">Section A</option>
+                    <option value="B">Section B</option>
+                    <option value="C">Section C</option>
+                    <option value="D">Section D</option>
+                    <option value="E">Section E</option>
+                    <option value="F">Section F</option>
+                    <option value="NA">N/A</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1.5">
+                    Gender <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={coreData.gender}
+                    onChange={setCoreField('gender')}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  >
+                    <option value="" disabled>Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+                <InputField label="Roll Number" icon={Hash} type="text" required placeholder="21CE1A0501"
+                  value={coreData.registrationNumber} onChange={setCoreField('registrationNumber')} />
+              </div>
             </div>
           </div>
 

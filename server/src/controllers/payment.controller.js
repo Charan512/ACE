@@ -16,7 +16,8 @@ import User from '../models/User.js';
 import AppError from '../utils/appError.js';
 import catchAsync from '../utils/catchAsync.js';
 import generateTempPassword from '../utils/generatePassword.js';
-import { emailQueue, scheduleTreasurerFlush, lateConverterQueue } from '../queues/index.js';
+import { emailQueue, lateConverterQueue } from '../queues/index.js';
+import AppSettings from '../models/AppSettings.js';
 
 // ─────────────────────────────────────────────────────────────
 // PRIVATE HELPERS
@@ -115,7 +116,8 @@ const handlePaymentSuccess = async (merchantTransactionId, phonePeTransactionId,
             tier:            transaction.tier,
             status:          'confirmed',
             transactionId:   transaction._id,
-            customResponses: {},
+            // Pull from the Transaction document itself — this survives the PhonePe redirect
+            customResponses: transaction.customResponses || {},
           }],
           { session }
         );
@@ -143,7 +145,7 @@ const handlePaymentSuccess = async (merchantTransactionId, phonePeTransactionId,
             paymentMethod:   'online',
             amount:          transaction.amount / 100, // convert paise → INR
             transactionId:   transaction._id,
-            customResponses: notes.customResponses || {},
+            customResponses: transaction.customResponses || {},
           }],
           { session }
         );
@@ -175,20 +177,28 @@ const handlePaymentSuccess = async (merchantTransactionId, phonePeTransactionId,
         const tempPassword = generateTempPassword();
 
         const newUser = new User({
-          name:                   notes.guestName || 'ACE Member',
-          email:                  notes.guestEmail,
-          password:               tempPassword, // pre-save hook bcrypts this
+          name:                    notes.guestName || 'ACE Member',
+          email:                   notes.guestEmail,
+          password:                tempPassword, // pre-save hook bcrypts this
           aceId,
-          role:                   'member',
-          requiresPasswordChange: true,
-          isEmailVerified:        true,
+          role:                    'member',
+          requiresPasswordChange:  true,
+          isEmailVerified:         true,
+          membershipPaymentMethod: 'online',
         });
         await newUser.save({ session });
+
 
         transaction.user = newUser._id;
         await transaction.save({ session });
 
         await emailQueue.add('welcomeEmail', { userId: newUser._id, aceId, tempPassword });
+        // Send registrant-facing confirmation email with membership certificate attachment
+        await emailQueue.add('membershipConfirmationEmail', {
+          userId:   newUser._id.toString(),
+          aceId,
+          feePaid:  transaction.amount, // Amount in INR (stored as INR in Transaction)
+        });
         await lateConverterQueue.add('migrate', { userId: newUser._id, email: notes.guestEmail });
 
         console.log(`[PhonePe] New member created: ${aceId} | ${notes.guestEmail}`);
@@ -197,13 +207,6 @@ const handlePaymentSuccess = async (merchantTransactionId, phonePeTransactionId,
 
     await session.commitTransaction();
     console.log(`[PhonePe] Payment success processed: ${merchantTransactionId}`);
-
-    // BUG 8 FIX: Only trigger the Treasurer Digest for event registrations.
-    // Membership purchases are a separate revenue category and must not pollute
-    // the event-window debounce cycle or the event-specific digest email.
-    if (!isMembershipPurchase) {
-      await scheduleTreasurerFlush({ transactionId: transaction._id });
-    }
   } catch (error) {
     await session.abortTransaction();
     console.error(`[PhonePe] Transaction aborted for ${merchantTransactionId}:`, error.message);
@@ -255,7 +258,7 @@ const handlePaymentFailure = async (merchantTransactionId, rawPayload) => {
  * Protected: requires JWT auth.
  */
 export const createOrder = catchAsync(async (req, res, next) => {
-  const { eventId } = req.body;
+  const { eventId, customResponses } = req.body;
   const currentUser = req.user;
 
   if (!eventId) return next(new AppError('Event ID is required.', 400));
@@ -263,6 +266,22 @@ export const createOrder = catchAsync(async (req, res, next) => {
   const event = await Event.findById(eventId);
   if (!event)                    return next(new AppError('Event not found.', 404));
   if (!event.isRegistrationOpen) return next(new AppError('Registration is closed for this event.', 400));
+
+  // ── Year Exclusivity Gate ──────────────────────────────────
+  const isOpenToAll = !event.allowedYears?.length ||
+    (event.allowedYears.length === 4 && [1,2,3,4].every(y => event.allowedYears.includes(y)));
+
+  if (!isOpenToAll) {
+    const userYear = currentUser.year;
+    if (!userYear || !event.allowedYears.includes(userYear)) {
+      const ordinalMap = { 1: '1st', 2: '2nd', 3: '3rd', 4: '4th' };
+      const yearStr = event.allowedYears.map(y => `${ordinalMap[y]} Year`).join(', ');
+      return next(new AppError(
+        `This event is exclusive to ${yearStr} students. Your registered year (${userYear || 'unknown'}) is not eligible.`,
+        403
+      ));
+    }
+  }
 
   // Determine pricing tier
   const isMember = currentUser && ['member', 'sbm', 'ebm', 'admin'].includes(currentUser.role);
@@ -277,11 +296,12 @@ export const createOrder = catchAsync(async (req, res, next) => {
   if (process.env.NODE_ENV !== 'production') {
     await Transaction.create({
       merchantTransactionId,
-      user:      currentUser._id,
-      event:     eventId,
+      user:            currentUser._id,
+      event:           eventId,
       amount,
       tier,
-      status:    'created',
+      status:          'created',
+      customResponses: customResponses || {},
     });
 
     return res.status(201).json({
@@ -321,14 +341,15 @@ export const createOrder = catchAsync(async (req, res, next) => {
     return next(new AppError(phonePeData.message || 'PhonePe order creation failed.', 502));
   }
 
-  // Persist Transaction
+  // Persist Transaction (with custom form answers for Smart Fast-Pass)
   await Transaction.create({
     merchantTransactionId,
-    user:   currentUser._id,
-    event:  eventId,
+    user:            currentUser._id,
+    event:           eventId,
     amount,
     tier,
-    status: 'created',
+    status:          'created',
+    customResponses: customResponses || {},
   });
 
   res.status(201).json({
@@ -358,8 +379,10 @@ export const createMembershipOrder = catchAsync(async (req, res, next) => {
     return next(new AppError('An ACE membership already exists for this email.', 409));
   }
 
-  let totalAmount = 50000; // ₹500 default membership fee (in paise)
-  let event       = null;
+  // Read membership fee dynamically from AppSettings (DB) — not hardcoded
+  const settings   = await AppSettings.getSingleton();
+  let totalAmount  = settings.membershipFee * 100; // Convert INR to paise
+  let event        = null;
 
   if (eventId) {
     event = await Event.findById(eventId);
@@ -648,6 +671,22 @@ export const createGuestEventOrder = catchAsync(async (req, res, next) => {
   if (!event)                    return next(new AppError('Event not found.', 404));
   if (!event.isRegistrationOpen) return next(new AppError('Registration is closed for this event.', 400));
 
+  // ── 2a. Year Exclusivity Gate ──────────────────────────────
+  const isOpenToAll = !event.allowedYears?.length ||
+    (event.allowedYears.length === 4 && [1,2,3,4].every(y => event.allowedYears.includes(y)));
+
+  if (!isOpenToAll) {
+    const guestYear = Number(req.body.year);
+    if (!guestYear || !event.allowedYears.includes(guestYear)) {
+      const ordinalMap = { 1: '1st', 2: '2nd', 3: '3rd', 4: '4th' };
+      const yearStr = event.allowedYears.map(y => `${ordinalMap[y]} Year`).join(', ');
+      return next(new AppError(
+        `This event is exclusive to ${yearStr} students. Please ensure you are registering with the correct year.`,
+        403
+      ));
+    }
+  }
+
   // ── 3. Duplicate registration guard ──────────────────────────
   // Prevent the same guest email from registering twice for the same event.
   const existingReg = await Registration.findOne({
@@ -671,13 +710,14 @@ export const createGuestEventOrder = catchAsync(async (req, res, next) => {
   if (process.env.NODE_ENV !== 'production') {
     await Transaction.create({
       merchantTransactionId,
-      user:       null,
-      guestEmail: email.toLowerCase(),
-      guestName:  name,
-      event:      eventId,
+      user:            null,
+      guestEmail:      email.toLowerCase(),
+      guestName:       name,
+      event:           eventId,
       amount,
       tier,
-      status:     'created',
+      status:          'created',
+      customResponses: customResponses || {},
     });
 
     return res.status(201).json({
@@ -717,16 +757,17 @@ export const createGuestEventOrder = catchAsync(async (req, res, next) => {
     return next(new AppError(phonePeData.message || 'PhonePe order creation failed.', 502));
   }
 
-  // Persist Transaction with guest identity fields
+  // Persist Transaction with guest identity fields and custom form answers
   await Transaction.create({
     merchantTransactionId,
-    user:       null,
-    guestEmail: email.toLowerCase(),
-    guestName:  name,
-    event:      eventId,
+    user:            null,
+    guestEmail:      email.toLowerCase(),
+    guestName:       name,
+    event:           eventId,
     amount,
     tier,
-    status:     'created',
+    status:          'created',
+    customResponses: customResponses || {},
   });
 
   res.status(201).json({

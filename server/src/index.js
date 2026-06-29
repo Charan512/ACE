@@ -17,7 +17,6 @@ import rateLimit from 'express-rate-limit';
 // worker process is not available without paying for a Background Worker.
 // All workers are async/event-driven and never block the HTTP event loop.
 import emailWorker         from './workers/emailWorker.js';
-import treasurerWorker     from './workers/treasurerWorker.js';
 import lateConverterWorker from './workers/lateConverterWorker.js';
 import certificateWorker   from './workers/certificateWorker.js';
 
@@ -95,6 +94,19 @@ app.use('/api/admin/upload', uploadRoutes); // admin/ebm/sbm: posters, certifica
 app.use('/api/upload', uploadRoutes);        // any authenticated user: avatar uploads
 app.use('/api/ops', opsRoutes);
 
+// ── Public Settings Endpoint ─────────────────────────────────
+// Returns only public-safe data (membership fee).
+// No auth required — used by the self-registration form to show current fee.
+app.get('/api/settings/membership-fee', async (_req, res) => {
+  try {
+    const AppSettings = (await import('./models/AppSettings.js')).default;
+    const settings = await AppSettings.getSingleton();
+    res.status(200).json({ success: true, data: { membershipFee: settings.membershipFee } });
+  } catch {
+    res.status(200).json({ success: true, data: { membershipFee: 500 } }); // Safe fallback
+  }
+});
+
 // ── 404 Handler ──────────────────────────────────────────────
 app.use((_req, res) => {
   res.status(404).json({ success: false, message: 'Resource not found.' });
@@ -151,7 +163,6 @@ const startServer = async () => {
         // BullMQ Worker instances. Log confirmation here.
         const workerNames = [
           emailWorker.name         || 'ace-email',
-          treasurerWorker.name     || 'ace-treasurer',
           lateConverterWorker.name || 'ace-late-converter',
           certificateWorker.name   || 'ace-certificates',
         ];
@@ -159,6 +170,7 @@ const startServer = async () => {
       } catch (workerErr) {
         console.error('[Workers] Failed to start — emails & digest will not process:', workerErr.message);
       }
+
     });
   } catch (error) {
     console.error('[Server] Failed to start:', error.message);

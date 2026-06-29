@@ -33,7 +33,6 @@ const registrationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       default: null,
-      sparse: true,
     },
     // Guest fallback fields — used by Late Converter BullMQ job
     guestName: {

@@ -10,7 +10,10 @@ import {
   getPaymentStats,
   getAdminNotifications,
   getTreasurerEventStats,
+  getAppSettings,
+  updateAppSettings,
 } from '../controllers/admin.controller.js';
+
 import {
   createEvent,
   updateEvent,
@@ -123,6 +126,12 @@ router.get(
   requiresTreasurer,
   getTreasurerEventStats
 );
+
+// ── App Settings (Admin Only) ─────────────────────────────────
+// GET  /api/admin/settings  — fetch membership fee, email templates, cert template
+// PATCH /api/admin/settings — update any of the above fields
+router.get('/settings', restrictTo('admin'), getAppSettings);
+router.patch('/settings', restrictTo('admin'), updateAppSettings);
 
 export default router;
 

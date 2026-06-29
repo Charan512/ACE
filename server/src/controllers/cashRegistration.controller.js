@@ -56,6 +56,22 @@ export const cashRegisterMember = catchAsync(async (req, res, next) => {
     return next(new AppError(`User ${member.aceId || member.email} is not an ACE Member (role: ${member.role}).`, 400));
   }
 
+  // ── 2a. Year Exclusivity Gate ──────────────────────────────
+  const isOpenToAll = !event.allowedYears?.length ||
+    (event.allowedYears.length === 4 && [1,2,3,4].every(y => event.allowedYears.includes(y)));
+
+  if (!isOpenToAll) {
+    const userYear = member.year;
+    if (!userYear || !event.allowedYears.includes(userYear)) {
+      const ordinalMap = { 1: '1st', 2: '2nd', 3: '3rd', 4: '4th' };
+      const yearStr = event.allowedYears.map(y => `${ordinalMap[y]} Year`).join(', ');
+      return next(new AppError(
+        `This event is exclusive to ${yearStr} students. Member's year (${userYear || 'unknown'}) is not eligible.`,
+        403
+      ));
+    }
+  }
+
   // ── 3. Duplicate registration guard ───────────────────────
   const existingReg = await Registration.findOne({
     eventId,
@@ -162,7 +178,7 @@ export const cashRegisterMember = catchAsync(async (req, res, next) => {
  */
 export const cashRegisterGuest = catchAsync(async (req, res, next) => {
   const { eventId } = req.params;
-  const { name, email, phone, customResponses } = req.body;
+  const { name, email, phone, year, customResponses } = req.body;
 
   if (!name || !email) {
     return next(new AppError('name and email are required for guest registration.', 400));
@@ -173,6 +189,22 @@ export const cashRegisterGuest = catchAsync(async (req, res, next) => {
   if (!event) return next(new AppError('Event not found.', 404));
   if (event.status !== 'published') {
     return next(new AppError('Cannot register for a draft event.', 400));
+  }
+
+  // ── 1a. Year Exclusivity Gate ──────────────────────────────
+  const isOpenToAll = !event.allowedYears?.length ||
+    (event.allowedYears.length === 4 && [1,2,3,4].every(y => event.allowedYears.includes(y)));
+
+  if (!isOpenToAll) {
+    const guestYear = Number(year);
+    if (!guestYear || !event.allowedYears.includes(guestYear)) {
+      const ordinalMap = { 1: '1st', 2: '2nd', 3: '3rd', 4: '4th' };
+      const yearStr = event.allowedYears.map(y => `${ordinalMap[y]} Year`).join(', ');
+      return next(new AppError(
+        `This event is exclusive to ${yearStr} students. Guest's year (${guestYear || 'unknown'}) is not eligible.`,
+        403
+      ));
+    }
   }
 
   // ── 2. Duplicate registration guard ───────────────────────

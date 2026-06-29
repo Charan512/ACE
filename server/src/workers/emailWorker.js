@@ -3,19 +3,30 @@ import { createRedisConnection } from '../config/redis.js';
 import sendEmail from '../utils/mailer.js';
 import User from '../models/User.js';
 import Registration from '../models/Registration.js';
-import { buildWelcomeEmail, buildPaymentFailedEmail } from '../utils/emailTemplates.js';
+import Event from '../models/Event.js';
+import AppSettings from '../models/AppSettings.js';
+import {
+  buildWelcomeEmail,
+  buildPaymentFailedEmail,
+  renderAdminTemplate,
+} from '../utils/emailTemplates.js';
+import renderCertificate from '../utils/certRenderer.js';
 import QRCode from 'qrcode';
 
 /**
  * Email Worker — processes jobs from the ace-email queue.
  *
  * Supported job names:
- *   welcomeEmail       → new member's credentials email
- *   paymentFailedEmail → payment failure notification
- *   otpEmail           → OTP for password reset (implemented with auth routes)
+ *   welcomeEmail                     → new member's credentials email (temp password)
+ *   membershipConfirmationEmail      → admin-configured body + membership cert PNG attachment
+ *   paymentFailedEmail               → payment failure notification
+ *   otpEmail                         → OTP for password reset
+ *   guestQrEmail                     → guest event registration — QR attachment to admin-configured body
+ *   eventRegistrationConfirmationEmail → member event registration — admin-configured body
+ *   postEventCertificateEmail        → certificate PNG attachment to admin-configured body (all registrants)
  *
- * This worker must run in its own process (see workers/index.js).
- * NEVER instantiate workers inside the main Express server process.
+ * ZERO-STORAGE: All PNG buffers (certificates, QR codes) are generated in RAM
+ * and attached directly to the email. Nothing is written to disk or uploaded to R2.
  */
 const emailWorker = new Worker(
   'ace-email',
@@ -24,6 +35,8 @@ const emailWorker = new Worker(
     console.log(`[EmailWorker] Processing job: ${name} (id: ${job.id})`);
 
     switch (name) {
+
+      // ── Credentials email for new members ────────────────────
       case 'welcomeEmail': {
         const { userId, aceId, tempPassword } = data;
 
@@ -43,11 +56,79 @@ const emailWorker = new Worker(
         break;
       }
 
+      // ── Membership confirmation — admin-configured body + certificate PNG ──
+      case 'membershipConfirmationEmail': {
+        const { userId, aceId, feePaid } = data;
+
+        const user = await User.findById(userId).select('name email').lean();
+        if (!user) {
+          throw new Error(`[EmailWorker] membershipConfirmationEmail: User ${userId} not found.`);
+        }
+
+        const settings = await AppSettings.getSingleton();
+        const template = settings.membershipConfirmationEmailTemplate;
+
+        const vars = {
+          name:     user.name,
+          email:    user.email,
+          ace_id:   aceId,
+          fee_paid: feePaid ?? settings.membershipFee,
+        };
+
+        const subject = renderAdminTemplate(template?.subject || 'Welcome to ACE — {{name}}', vars);
+        const body    = renderAdminTemplate(
+          template?.body || '<p>Dear {{name}}, your ACE Membership is confirmed. Your ID is <strong>{{ace_id}}</strong>.</p>',
+          vars
+        );
+
+        const attachments = [];
+
+        // Render membership certificate if template is configured
+        if (settings.membershipCertificateTemplate?.baseImageUrl) {
+          try {
+            const memberSince = new Date().toLocaleDateString('en-IN', {
+              day: '2-digit', month: 'long', year: 'numeric',
+            });
+
+            const certBuffer = await renderCertificate({
+              baseImageUrl: settings.membershipCertificateTemplate.baseImageUrl,
+              textFields:   settings.membershipCertificateTemplate.textFields,
+              data: {
+                recipientName: user.name,
+                aceId,
+                memberSince,
+              },
+            });
+
+            const safeName = user.name.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30);
+            attachments.push({
+              filename:    `ACE_Membership_Certificate_${safeName}.png`,
+              content:     certBuffer,
+              contentType: 'image/png',
+            });
+            console.log(`[EmailWorker] Membership certificate rendered for ${user.email}`);
+          } catch (certErr) {
+            // Non-fatal: send email without cert if rendering fails
+            console.error(`[EmailWorker] membershipConfirmationEmail cert render failed: ${certErr.message}`);
+          }
+        }
+
+        await sendEmail({
+          to:          user.email,
+          subject,
+          html:        template?.isHtml === false ? `<pre>${body}</pre>` : body,
+          attachments,
+        });
+        console.log(`[EmailWorker] Membership confirmation email sent to ${user.email} (${aceId})`);
+        break;
+      }
+
+      // ── Payment failure notification ─────────────────────────
       case 'paymentFailedEmail': {
         const { email, name: recipientName, eventTitle } = data;
 
         const { subject, html } = buildPaymentFailedEmail({
-          name: recipientName || 'Member',
+          name:       recipientName || 'Member',
           eventTitle: eventTitle || 'the event',
         });
 
@@ -56,11 +137,12 @@ const emailWorker = new Worker(
         break;
       }
 
+      // ── OTP for password reset ───────────────────────────────
       case 'otpEmail': {
         const { email, otp } = data;
 
         await sendEmail({
-          to: email,
+          to:      email,
           subject: 'ACE ERP — Your OTP for Password Reset',
           html: `
             <div style="font-family:sans-serif;background:#0B0F19;padding:32px;color:#f1f5f9;">
@@ -81,20 +163,17 @@ const emailWorker = new Worker(
         break;
       }
 
+      // ── Guest event registration — admin body + QR attachment ──
+      // Sent after a guest registers for an event (online or cash).
       case 'guestQrEmail': {
-        // Sent after a guest registers for an event (online or cash).
-        // Generates a QR code encoding the registrationId and attaches it
-        // to a confirmation email. EBMs/SBMs scan this QR at the event gate.
-        const { registrationId, guestEmail, guestName, eventTitle, eventDate, venue, paymentMethod } = data;
+        const { registrationId, guestEmail, guestName, eventTitle, eventDate, venue, paymentMethod, eventId } = data;
 
-        // Verify the registration still exists
         const reg = await Registration.findById(registrationId).select('_id status').lean();
         if (!reg) {
           throw new Error(`[EmailWorker] guestQrEmail: Registration ${registrationId} not found.`);
         }
 
-        // Generate QR code as a PNG Buffer
-        // The QR encodes the registrationId — the Ops checkIn endpoint accepts { registrationId }
+        // Generate QR PNG buffer
         const qrBuffer = await QRCode.toBuffer(registrationId, {
           errorCorrectionLevel: 'H',
           type:   'png',
@@ -103,52 +182,128 @@ const emailWorker = new Worker(
           color: { dark: '#0B0F19', light: '#FFFFFF' },
         });
 
-        const qrBase64 = qrBuffer.toString('base64');
-        const dateStr   = eventDate ? new Date(eventDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-        const payBadge  = paymentMethod === 'cash' ? '💵 Cash' : '💳 Online';
+        const dateStr  = eventDate ? new Date(eventDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+        const payBadge = paymentMethod === 'cash' ? '💵 Cash' : '💳 Online';
+
+        // Check for admin-configured email body
+        let subject, htmlBody;
+        if (eventId) {
+          const event = await Event.findById(eventId).select('registrationConfirmationEmail title').lean();
+          const tpl   = event?.registrationConfirmationEmail;
+          if (tpl?.subject && tpl?.body) {
+            const vars = { name: guestName, event_name: eventTitle, event_date: dateStr };
+            subject  = renderAdminTemplate(tpl.subject, vars);
+            htmlBody = tpl.isHtml === false
+              ? `<pre style="font-family:sans-serif;">${renderAdminTemplate(tpl.body, vars)}</pre>`
+              : renderAdminTemplate(tpl.body, vars);
+          }
+        }
+
+        // Fallback to default body if admin hasn't configured one
+        if (!subject || !htmlBody) {
+          subject  = `Your Entry Pass — ${eventTitle}`;
+          htmlBody = buildDefaultGuestQrEmailHtml({ guestName, eventTitle, dateStr, venue, payBadge, registrationId });
+        }
 
         await sendEmail({
-          to: guestEmail,
-          subject: `Your Entry Pass — ${eventTitle}`,
-          html: `
-            <div style="font-family:sans-serif;background:#0B0F19;padding:32px;color:#f1f5f9;">
-              <div style="max-width:520px;margin:0 auto;background:#111827;border:1px solid #1e293b;
-                          border-radius:6px;padding:32px;">
-                <h2 style="color:#00d4ff;font-family:monospace;margin:0 0 4px;">ACE — Entry Pass</h2>
-                <p style="color:#64748b;font-size:13px;margin:0 0 24px;">Association of Computer Engineers</p>
-
-                <p style="color:#cbd5e1;margin:0 0 8px;">Hello <strong>${guestName}</strong>,</p>
-                <p style="color:#94a3b8;margin:0 0 24px;">
-                  You are registered for <strong style="color:#f1f5f9;">${eventTitle}</strong>.
-                  Show the QR code below at the event gate for entry.
-                </p>
-
-                <table style="width:100%;margin:0 0 24px;">
-                  <tr>
-                    <td style="color:#64748b;font-size:13px;padding:4px 0;">Event</td>
-                    <td style="color:#f1f5f9;font-size:13px;text-align:right;">${eventTitle}</td>
-                  </tr>
-                  ${dateStr ? `<tr><td style="color:#64748b;font-size:13px;padding:4px 0;">Date</td><td style="color:#f1f5f9;font-size:13px;text-align:right;">${dateStr}</td></tr>` : ''}
-                  ${venue ? `<tr><td style="color:#64748b;font-size:13px;padding:4px 0;">Venue</td><td style="color:#f1f5f9;font-size:13px;text-align:right;">${venue}</td></tr>` : ''}
-                  <tr><td style="color:#64748b;font-size:13px;padding:4px 0;">Payment</td><td style="color:#f1f5f9;font-size:13px;text-align:right;">${payBadge}</td></tr>
-                </table>
-
-                <div style="text-align:center;background:#020617;padding:20px;
-                            border:1px solid #1e293b;border-radius:4px;margin:0 0 24px;">
-                  <img src="data:image/png;base64,${qrBase64}"
-                       alt="Entry QR Code"
-                       style="width:220px;height:220px;display:block;margin:0 auto 12px;"/>
-                  <p style="color:#475569;font-size:11px;margin:0;font-family:monospace;">ID: ${registrationId}</p>
-                </div>
-
-                <p style="color:#475569;font-size:12px;margin:0;">
-                  This QR is unique to you. Do not share it. Present it at the venue entrance.
-                </p>
-              </div>
-            </div>
-          `,
+          to:      guestEmail,
+          subject,
+          html:    htmlBody,
+          attachments: [
+            {
+              filename:    `ACE_EntryPass_${registrationId}.png`,
+              content:     qrBuffer,
+              contentType: 'image/png',
+            },
+          ],
         });
         console.log(`[EmailWorker] Guest QR entry pass emailed to ${guestEmail} (reg: ${registrationId})`);
+        break;
+      }
+
+      // ── Member event registration confirmation (no QR needed) ──
+      case 'eventRegistrationConfirmationEmail': {
+        const { userId, eventId, registrationId } = data;
+
+        const [user, event] = await Promise.all([
+          User.findById(userId).select('name email').lean(),
+          Event.findById(eventId).select('title eventDate registrationConfirmationEmail').lean(),
+        ]);
+
+        if (!user || !event) {
+          throw new Error(`[EmailWorker] eventRegistrationConfirmationEmail: User or Event not found.`);
+        }
+
+        const dateStr = new Date(event.eventDate).toLocaleDateString('en-IN', {
+          day: 'numeric', month: 'long', year: 'numeric',
+        });
+
+        const tpl = event.registrationConfirmationEmail;
+        let subject, htmlBody;
+
+        if (tpl?.subject && tpl?.body) {
+          const vars = { name: user.name, event_name: event.title, event_date: dateStr };
+          subject  = renderAdminTemplate(tpl.subject, vars);
+          htmlBody = tpl.isHtml === false
+            ? `<pre style="font-family:sans-serif;">${renderAdminTemplate(tpl.body, vars)}</pre>`
+            : renderAdminTemplate(tpl.body, vars);
+        } else {
+          // Fallback: use QR entry pass style email for members too
+          subject  = `Registration Confirmed — ${event.title}`;
+          htmlBody = buildDefaultMemberConfirmHtml({ name: user.name, eventTitle: event.title, dateStr });
+        }
+
+        await sendEmail({ to: user.email, subject, html: htmlBody });
+        console.log(`[EmailWorker] Event registration confirmation sent to ${user.email} (event: ${event.title})`);
+        break;
+      }
+
+      // ── Post-event certificate email — cert PNG + admin body ──
+      // Sent to a single registrant (called in batch from certificateWorker).
+      case 'postEventCertificateEmail': {
+        const { recipientName, recipientEmail, eventId, certBuffer: certBufferBase64 } = data;
+
+        const event = await Event.findById(eventId).select('title eventDate postEventCertificateEmail').lean();
+        if (!event) {
+          throw new Error(`[EmailWorker] postEventCertificateEmail: Event ${eventId} not found.`);
+        }
+
+        const dateStr = new Date(event.eventDate).toLocaleDateString('en-IN', {
+          day: 'numeric', month: 'long', year: 'numeric',
+        });
+
+        const tpl = event.postEventCertificateEmail;
+        let subject, htmlBody;
+
+        if (tpl?.subject && tpl?.body) {
+          const vars = { name: recipientName, event_name: event.title, event_date: dateStr };
+          subject  = renderAdminTemplate(tpl.subject, vars);
+          htmlBody = tpl.isHtml === false
+            ? `<pre style="font-family:sans-serif;">${renderAdminTemplate(tpl.body, vars)}</pre>`
+            : renderAdminTemplate(tpl.body, vars);
+        } else {
+          subject  = `Your Certificate — ${event.title} | ACE`;
+          htmlBody = buildDefaultCertEmailHtml({ name: recipientName, eventTitle: event.title, eventDate: dateStr });
+        }
+
+        // certBuffer is passed as base64 string (BullMQ serialises via JSON)
+        const certBuffer = Buffer.from(certBufferBase64, 'base64');
+        const safeName   = recipientName.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30);
+        const safeTitle  = event.title.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 50);
+
+        await sendEmail({
+          to:      recipientEmail,
+          subject,
+          html:    htmlBody,
+          attachments: [
+            {
+              filename:    `ACE_Certificate_${safeName}_${safeTitle}.png`,
+              content:     certBuffer,
+              contentType: 'image/png',
+            },
+          ],
+        });
+        console.log(`[EmailWorker] Certificate email sent to ${recipientEmail}`);
         break;
       }
 
@@ -158,7 +313,7 @@ const emailWorker = new Worker(
   },
   {
     connection: createRedisConnection(),
-    concurrency: 5, // Process up to 5 email jobs in parallel
+    concurrency: 5,
   }
 );
 
@@ -171,3 +326,73 @@ emailWorker.on('failed', (job, err) => {
 });
 
 export default emailWorker;
+
+// ─────────────────────────────────────────────────────────────
+// FALLBACK EMAIL HTML BUILDERS (used when admin hasn't configured a template)
+// ─────────────────────────────────────────────────────────────
+
+function buildDefaultGuestQrEmailHtml({ guestName, eventTitle, dateStr, venue, payBadge, registrationId }) {
+  return `
+    <div style="font-family:sans-serif;background:#0B0F19;padding:32px;color:#f1f5f9;">
+      <div style="max-width:520px;margin:0 auto;background:#111827;border:1px solid #1e293b;
+                  border-radius:6px;padding:32px;">
+        <h2 style="color:#00d4ff;font-family:monospace;margin:0 0 4px;">ACE — Entry Pass</h2>
+        <p style="color:#64748b;font-size:13px;margin:0 0 24px;">Association of Computer Engineers</p>
+        <p style="color:#cbd5e1;margin:0 0 8px;">Hello <strong>${guestName}</strong>,</p>
+        <p style="color:#94a3b8;margin:0 0 24px;">
+          You are registered for <strong style="color:#f1f5f9;">${eventTitle}</strong>.
+          Your QR entry pass is attached to this email. Present it at the venue gate.
+        </p>
+        <table style="width:100%;margin:0 0 24px;">
+          <tr><td style="color:#64748b;font-size:13px;padding:4px 0;">Event</td><td style="color:#f1f5f9;font-size:13px;text-align:right;">${eventTitle}</td></tr>
+          ${dateStr ? `<tr><td style="color:#64748b;font-size:13px;padding:4px 0;">Date</td><td style="color:#f1f5f9;font-size:13px;text-align:right;">${dateStr}</td></tr>` : ''}
+          ${venue ? `<tr><td style="color:#64748b;font-size:13px;padding:4px 0;">Venue</td><td style="color:#f1f5f9;font-size:13px;text-align:right;">${venue}</td></tr>` : ''}
+          <tr><td style="color:#64748b;font-size:13px;padding:4px 0;">Payment</td><td style="color:#f1f5f9;font-size:13px;text-align:right;">${payBadge}</td></tr>
+        </table>
+        <p style="color:#475569;font-size:12px;margin:0;">This QR is unique to you. ID: ${registrationId}</p>
+      </div>
+    </div>
+  `;
+}
+
+function buildDefaultMemberConfirmHtml({ name, eventTitle, dateStr }) {
+  return `
+    <div style="font-family:sans-serif;background:#0B0F19;padding:32px;color:#f1f5f9;">
+      <div style="max-width:520px;margin:0 auto;background:#111827;border:1px solid #1e293b;border-radius:6px;padding:32px;">
+        <h2 style="color:#00d4ff;margin:0 0 4px;">Registration Confirmed</h2>
+        <p style="color:#64748b;font-size:13px;margin:0 0 24px;">Association of Computer Engineers</p>
+        <p style="color:#cbd5e1;">Hello <strong>${name}</strong>,</p>
+        <p style="color:#94a3b8;">
+          Your registration for <strong style="color:#f1f5f9;">${eventTitle}</strong> on
+          <strong style="color:#f1f5f9;">${dateStr}</strong> is confirmed.
+        </p>
+        <p style="color:#475569;font-size:12px;">Show your ACE ID card at the venue for entry.</p>
+      </div>
+    </div>
+  `;
+}
+
+function buildDefaultCertEmailHtml({ name, eventTitle, eventDate }) {
+  return `
+    <div style="font-family:sans-serif;background:#0B0F19;padding:32px;color:#f1f5f9;">
+      <div style="max-width:600px;margin:32px auto;background:#111827;border:1px solid #1e293b;border-radius:4px;overflow:hidden;">
+        <div style="background:#020617;border-bottom:2px solid #00d4ff;padding:24px 32px;">
+          <p style="color:#00d4ff;font-size:11px;letter-spacing:0.15em;margin:0 0 8px;text-transform:uppercase;">ASSOCIATION OF COMPUTER ENGINEERS</p>
+          <h1 style="color:#f1f5f9;font-size:22px;margin:0;">Your Certificate of Participation</h1>
+        </div>
+        <div style="padding:32px;">
+          <p style="color:#94a3b8;margin:0 0 16px;">Hi <strong style="color:#f1f5f9;">${name}</strong>,</p>
+          <p style="color:#94a3b8;margin:0 0 24px;">
+            Thank you for participating in <strong style="color:#f1f5f9;">${eventTitle}</strong>
+            on <strong style="color:#f1f5f9;">${eventDate}</strong>.
+            Your personalized certificate is attached to this email.
+          </p>
+          <p style="color:#475569;font-size:13px;margin:0;">Please save it for your records.</p>
+        </div>
+        <div style="padding:16px 32px;border-top:1px solid #1e293b;font-size:12px;color:#475569;text-align:center;">
+          This is an automated message from ACE ERP. Do not reply to this email.
+        </div>
+      </div>
+    </div>
+  `;
+}

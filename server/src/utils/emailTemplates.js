@@ -6,6 +6,30 @@
  * These are inlined-CSS emails for maximum client compatibility.
  */
 
+// ─────────────────────────────────────────────────────────────
+// TEMPLATE VARIABLE RENDERER
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Interpolates {{variable}} placeholders in an admin-configured email template.
+ *
+ * Supported variables depend on the context:
+ *   Membership:  {{name}}, {{email}}, {{ace_id}}, {{fee_paid}}
+ *   Event:       {{name}}, {{event_name}}, {{event_date}}
+ *
+ * Unknown variables are left as-is so admins can debug their templates.
+ *
+ * @param {string} template - Raw template string (HTML or plain text)
+ * @param {Object} vars     - Map of variable names → actual values
+ * @returns {string} Interpolated string
+ */
+export const renderAdminTemplate = (template, vars = {}) => {
+  if (!template) return '';
+  return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+    return Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : match;
+  });
+};
+
 // ── Shared Styles ──────────────────────────────────────────────
 const BASE_STYLES = `
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
