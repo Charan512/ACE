@@ -1,82 +1,100 @@
 import { useState, useEffect } from 'react';
-import { Link as LinkIcon, Camera, Mail, User } from 'lucide-react';
+import { Linkedin, Mail, User, Loader2 } from 'lucide-react';
+import api from '../lib/api';
 
 const TeamDirectory = () => {
   const [activeTab, setActiveTab] = useState('EBM');
+  const [ebms, setEbms] = useState([]);
+  const [sbms, setSbms] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Generate EBM Data (25 members)
-  const ebmData = Array.from({ length: 25 }).map((_, index) => {
-    if (index === 0) {
-      return {
-        id: `ebm-${index}`,
-        name: "Nalla Sri Ram Charan",
-        role: "Executive Body Member",
-        branch: "AIML",
-        image: null,
-        linkedin: "https://linkedin.com",
-        instagram: "https://instagram.com",
-        email: "charan@srkr.edu.in"
-      };
-    }
-    return {
-      id: `ebm-${index}`,
-      name: `EBM ${index + 1}`,
-      role: "Executive Body Member",
-      branch: "CSE",
-      image: null,
-      linkedin: "#",
-      instagram: "#",
-      email: "#"
+  // Playful clay colors array to pick from based on index
+  const clayColors = ['clay-blue', 'clay-pink', 'clay-lime', 'clay-purple', 'clay-yellow'];
+
+  useEffect(() => {
+    const fetchTeam = async () => {
+      try {
+        const res = await api.get('/users/team');
+        const team = res.data.data.team;
+
+        // Separate fetched team
+        const fetchedEbms = team.filter(member => member.role === 'ebm');
+        const fetchedSbms = team.filter(member => member.role === 'sbm');
+
+        // Pad to 25 items each
+        const paddedEbms = Array.from({ length: 25 }).map((_, i) => {
+          if (fetchedEbms[i]) return fetchedEbms[i];
+          return {
+            _id: `placeholder-ebm-${i}`,
+            name: `EBM ${i + 1}`,
+            role: 'Executive Body Member',
+            branch: 'TBD',
+            profilePhoto: null,
+            linkedin: '',
+            email: ''
+          };
+        });
+
+        const paddedSbms = Array.from({ length: 25 }).map((_, i) => {
+          if (fetchedSbms[i]) return fetchedSbms[i];
+          return {
+            _id: `placeholder-sbm-${i}`,
+            name: `SBM ${i + 1}`,
+            role: 'Senior Body Member',
+            branch: 'TBD',
+            profilePhoto: null,
+            linkedin: '',
+            email: ''
+          };
+        });
+
+        setEbms(paddedEbms);
+        setSbms(paddedSbms);
+      } catch (err) {
+        console.error('Failed to fetch team members', err);
+      } finally {
+        setLoading(false);
+      }
     };
-  });
 
-  // Generate SBM Data (24 members)
-  const sbmData = Array.from({ length: 24 }).map((_, index) => ({
-    id: `sbm-${index}`,
-    name: `SBM ${index + 1}`,
-    role: "Senior Body Member",
-    branch: "IT",
-    image: null,
-    linkedin: "",
-    instagram: "",
-    email: ""
-  }));
+    fetchTeam();
+  }, []);
 
-  const displayData = activeTab === 'EBM' ? ebmData : sbmData;
+  const displayData = activeTab === 'EBM' ? ebms : sbms;
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-32 pb-24">
+    <div className="min-h-screen bg-slate-50 pt-32 pb-24 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold text-slate-900 mb-4">
+          <h1 className="text-4xl md:text-5xl font-heading font-black tracking-tighter text-slate-900 mb-4">
             Meet the Team
           </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+          <p className="text-lg font-medium text-slate-500 max-w-2xl mx-auto">
             The dedicated student leaders driving innovation, managing operations, and architecting the future of ACE.
           </p>
         </div>
 
         {/* Segmented Control */}
         <div className="flex justify-center mb-12">
-          <div className="bg-white p-1.5 rounded-full shadow-sm border border-slate-200 inline-flex">
+          <div className="clay-card clay-slate p-2 inline-flex gap-2">
             <button
               onClick={() => setActiveTab('EBM')}
-              className={`px-8 py-2.5 rounded-full text-sm font-semibold transition-all ${
+              className={`px-8 py-2.5 rounded-2xl text-sm font-bold transition-all ${
                 activeTab === 'EBM' 
-                  ? 'bg-primary text-white shadow-md' 
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'clay-btn clay-btn-indigo text-white' 
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
               }`}
             >
               Executive Body
             </button>
             <button
               onClick={() => setActiveTab('SBM')}
-              className={`px-8 py-2.5 rounded-full text-sm font-semibold transition-all ${
+              className={`px-8 py-2.5 rounded-2xl text-sm font-bold transition-all ${
                 activeTab === 'SBM' 
-                  ? 'bg-primary text-white shadow-md' 
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'clay-btn clay-btn-indigo text-white' 
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
               }`}
             >
               Senior Body
@@ -84,48 +102,58 @@ const TeamDirectory = () => {
           </div>
         </div>
 
-        {/* Directory Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {displayData.map((member) => (
-            <div key={member.id} className="group relative bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
-              
-              {/* Image Container */}
-              <div className="relative aspect-square bg-slate-100 overflow-hidden flex items-center justify-center">
-                {member.image ? (
-                  <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
-                ) : (
-                  <User className="w-20 h-20 text-slate-300" />
-                )}
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-10 h-10 animate-spin text-indigo-500 mb-4" />
+            <p className="font-bold font-mono text-slate-500 tracking-widest uppercase text-sm">Loading Roster...</p>
+          </div>
+        ) : (
+          /* Directory Grid */
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            {displayData.map((member, i) => {
+              const clayColor = clayColors[i % clayColors.length];
+              return (
+                <div key={member._id} className={`group clay-card ${clayColor} overflow-hidden p-3 flex flex-col items-center hover:-translate-y-2 transition-all duration-300 cursor-default`}>
+                  
+                  {/* Image Container */}
+                  <div className="relative w-full aspect-square rounded-2xl bg-white overflow-hidden shadow-inner flex items-center justify-center mb-4">
+                    {member.profilePhoto ? (
+                      <img src={member.profilePhoto} alt={member.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-16 h-16 text-slate-300" />
+                    )}
 
-                {/* Hover Reveal Overlay */}
-                <div className="absolute inset-0 bg-slate-900/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4">
-                  <a href={member.linkedin || '#'} className="bg-white p-3 rounded-full hover:scale-110 transition-transform shadow-lg text-primary">
-                    <LinkIcon className="w-5 h-5" />
-                  </a>
-                  <a href={member.instagram || '#'} className="bg-white p-3 rounded-full hover:scale-110 transition-transform shadow-lg text-pink-600">
-                    <Camera className="w-5 h-5" />
-                  </a>
-                  <a href={`mailto:${member.email || '#'}`} className="bg-white p-3 rounded-full hover:scale-110 transition-transform shadow-lg text-slate-800">
-                    <Mail className="w-5 h-5" />
-                  </a>
+                    {/* Hover Reveal Overlay */}
+                    <div className="absolute inset-0 bg-indigo-900/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3">
+                      {member.linkedin && (
+                        <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="clay-btn clay-btn-white w-10 h-10 p-0 flex items-center justify-center text-indigo-600 hover:text-indigo-700">
+                          <Linkedin className="w-4 h-4" />
+                        </a>
+                      )}
+                      <a href={`mailto:${member.email || '#'}`} className="clay-btn clay-btn-white w-10 h-10 p-0 flex items-center justify-center text-slate-700 hover:text-slate-900">
+                        <Mail className="w-4 h-4" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="text-center w-full px-2 pb-2">
+                    <h3 className="font-heading font-black text-lg text-slate-900 truncate leading-tight">
+                      {member.name}
+                    </h3>
+                    <p className="text-xs font-bold text-indigo-600/80 mt-1 uppercase tracking-wider truncate">
+                      {member.designation || member.role}
+                    </p>
+                    <div className="mt-3 bg-white/60 backdrop-blur-sm px-2.5 py-1 rounded-lg inline-block shadow-sm border border-white/50 text-[10px] font-mono font-bold text-slate-600">
+                      {member.branch}
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              {/* Details */}
-              <div className="p-5 text-center bg-white relative z-10">
-                <h3 className="font-heading font-bold text-lg text-slate-900 truncate">
-                  {member.name}
-                </h3>
-                <p className="text-sm font-medium text-primary mt-1">
-                  {member.role}
-                </p>
-                <p className="text-xs text-slate-500 mt-2 font-mono bg-slate-50 inline-block px-2 py-1 rounded-md">
-                  {member.branch}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
       </div>
     </div>

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   User, Phone, BookOpen, Hash, GraduationCap, Building,
   CheckCircle2, AlertTriangle, Loader2, ShieldCheck, UserCog,
-  ChevronDown, Camera, X, Edit3, Lock, Users
+  ChevronDown, Camera, X, Edit3, Lock, Users, Linkedin
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import BlurText from '../components/react-bits/BlurText';
@@ -69,13 +69,14 @@ const MemberProfile = () => {
     year:               user?.year               || '',
     registrationNumber: user?.registrationNumber || '',
     gender:             user?.gender             || '',
+    linkedin:           user?.linkedin           || '',
   });
   
   const [saving, setSaving]         = useState(false);
   const [toast, setToast]           = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarInputRef              = useRef(null);
-  const [localAvatar, setLocalAvatar] = useState(user?.avatarUrl || '');
+  const [localAvatar, setLocalAvatar] = useState(user?.profilePhoto || '');
   
   // Track focus states for floating labels
   const [focusState, setFocusState] = useState({
@@ -86,6 +87,7 @@ const MemberProfile = () => {
     year: false,
     registrationNumber: false,
     gender: false,
+    linkedin: false,
   });
 
   const setField = (field) => (e) =>
@@ -122,6 +124,7 @@ const MemberProfile = () => {
       year:               user?.year               || '',
       registrationNumber: user?.registrationNumber || '',
       gender:             user?.gender             || '',
+      linkedin:           user?.linkedin           || '',
     });
     setIsEditing(false);
   };
@@ -139,6 +142,7 @@ const MemberProfile = () => {
         year:               formData.year ? Number(formData.year) : undefined,
         registrationNumber: formData.registrationNumber || undefined,
         gender:             formData.gender             || undefined,
+        linkedin:           formData.linkedin           || undefined,
       });
       showToast('Profile updated successfully.', 'success');
       setIsEditing(false);
@@ -150,7 +154,7 @@ const MemberProfile = () => {
   };
 
   // Sync localAvatar when store user updates
-  useEffect(() => { setLocalAvatar(user?.avatarUrl || ''); }, [user?.avatarUrl]);
+  useEffect(() => { setLocalAvatar(user?.profilePhoto || ''); }, [user?.profilePhoto]);
 
   // ── Avatar Upload to R2 ────────────────────────────────────
   const handleAvatarChange = async (e) => {
@@ -166,7 +170,7 @@ const MemberProfile = () => {
       });
       const { url } = res.data.data;
 
-      const profileRes = await api.patch('/users/me', { avatarUrl: url });
+      const profileRes = await api.patch('/users/me', { profilePhoto: url });
       updateProfile(profileRes.data.data.user);
       setLocalAvatar(url);
       showToast('Profile photo updated!', 'success');
@@ -527,6 +531,36 @@ const MemberProfile = () => {
               </Field>
             </div>
           </div>
+
+          {/* Social Section (Only for EBM / SBM) */}
+          {(user?.role === 'ebm' || user?.role === 'sbm') && (
+            <div className="clay-card clay-blue overflow-hidden transition-all duration-300 mt-8" style={{ opacity: isEditing ? 1 : 0.9 }}>
+              <div className="border-b border-blue-100/50 px-5 py-3.5 bg-blue-50/40">
+                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-blue-500">
+                  Social Presence
+                </p>
+              </div>
+              <div className="p-5 sm:p-6 grid grid-cols-1 gap-x-5 gap-y-3">
+                <Field 
+                  label="LinkedIn URL" 
+                  icon={Linkedin} 
+                  focused={focusState.linkedin} 
+                  hasValue={!!formData.linkedin}
+                >
+                  <input
+                    type="url"
+                    placeholder={focusState.linkedin ? "https://linkedin.com/in/username" : ""}
+                    value={formData.linkedin}
+                    onChange={setField('linkedin')}
+                    disabled={!isEditing}
+                    style={inputStyle(focusState.linkedin, !isEditing)}
+                    onFocus={() => setFocusState(prev => ({ ...prev, linkedin: true }))}
+                    onBlur={() => setFocusState(prev => ({ ...prev, linkedin: false }))}
+                  />
+                </Field>
+              </div>
+            </div>
+          )}
 
           {/* Action Buttons (Only visible in Edit Mode) */}
           {isEditing && (

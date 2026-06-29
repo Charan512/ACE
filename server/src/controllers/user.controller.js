@@ -103,7 +103,7 @@ export const updateUserRole = catchAsync(async (req, res, next) => {
  * @access  Private
  */
 export const updateMe = catchAsync(async (req, res, next) => {
-  const { name, phone, branch, year, section, registrationNumber, gender, domain, designation, avatarUrl } = req.body;
+  const { name, phone, branch, year, section, registrationNumber, gender, domain, designation, profilePhoto, linkedin } = req.body;
 
   const updates = {};
   if (name !== undefined) updates.name = name;
@@ -115,8 +115,8 @@ export const updateMe = catchAsync(async (req, res, next) => {
   if (gender !== undefined) updates.gender = gender;
   if (domain !== undefined) updates.domain = domain;
   if (designation !== undefined) updates.designation = designation;
-  // Avatar URL set after a successful direct-to-R2 upload from the client
-  if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+  if (profilePhoto !== undefined) updates.profilePhoto = profilePhoto;
+  if (linkedin !== undefined) updates.linkedin = linkedin;
 
   // Run Mongoose schema validation on updates
   const user = await User.findByIdAndUpdate(
@@ -132,5 +132,21 @@ export const updateMe = catchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: { user },
+  });
+});
+
+/**
+ * @desc    Get all EBMs and SBMs for the public team directory
+ * @route   GET /api/users/team
+ * @access  Public
+ */
+export const getTeamMembers = catchAsync(async (req, res, next) => {
+  const team = await User.find({ role: { $in: ['ebm', 'sbm'] } })
+    .select('name role branch domain designation profilePhoto linkedin')
+    .sort({ role: 1, name: 1 }); // Sort by role, then name
+
+  res.status(200).json({
+    success: true,
+    data: { team },
   });
 });

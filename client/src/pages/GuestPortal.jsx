@@ -42,7 +42,7 @@ const GuestPortal = () => {
 
   return (
     <div className="bg-[#fcfdfd] overflow-hidden font-sans">
-      
+
       {/* ── 1. The Playful Hero Section ── */}
       <section className="min-h-[95vh] flex flex-col justify-center relative overflow-hidden">
         {/* Soft Pastel Background Blobs */}
@@ -51,10 +51,10 @@ const GuestPortal = () => {
         <div className="absolute top-1/3 left-1/3 w-[300px] h-[300px] bg-cyan-300/30 rounded-full blur-[80px] pointer-events-none" />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-7xl mx-auto px-6 w-full relative z-10 pt-32 pb-20">
-          
+
           {/* Left Column */}
           <div className="lg:col-span-7 text-center lg:text-left flex flex-col items-center lg:items-start relative">
-            
+
             {/* Playful Floating Badges */}
             <div className="absolute -top-10 -left-6 transform -rotate-12 animate-pulse hidden md:block">
               <div className="clay-card clay-yellow px-4 py-2 font-black text-amber-700 text-sm rotate-3 flex items-center gap-2">
@@ -65,16 +65,16 @@ const GuestPortal = () => {
             <p className="clay-card clay-blue inline-block px-4 py-1.5 rounded-full text-xs sm:text-sm font-black tracking-widest text-blue-700 uppercase mb-6 shadow-sm">
               SRKR Engineering College · CSE
             </p>
-            
+
             <h1 className="text-6xl sm:text-7xl md:text-8xl font-black tracking-tighter leading-[0.95] text-slate-900 mb-8 drop-shadow-sm">
               Build Cool <br className="hidden sm:block lg:hidden" />
               <span className="text-indigo-600">Stuff.</span>
             </h1>
-            
+
             <p className="text-lg sm:text-2xl text-slate-600 font-bold max-w-lg leading-relaxed mb-10">
               The official tech club of SRKR. Learn deeply, build wildly, and meet awesome people.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row flex-wrap gap-5 mb-12 w-full sm:w-auto px-4 sm:px-0">
               <Link to="/register" className="clay-btn clay-btn-amber px-10 py-5 text-xl w-full sm:w-auto">
                 Join the Club
@@ -108,17 +108,17 @@ const GuestPortal = () => {
         {/* ── Playful Marquee ── */}
         <div className="absolute bottom-0 left-0 w-full whitespace-nowrap overflow-hidden clay-yellow py-3 font-black text-amber-700 text-sm tracking-widest flex z-20 shadow-inner">
           <div className="animate-marquee flex items-center gap-12 drop-shadow-md">
-            <div className="flex items-center gap-2"><Cpu className="w-4 h-4"/> ARTIFICIAL INTELLIGENCE</div>
-            <div className="flex items-center gap-2"><Star className="w-4 h-4"/> WEB3 &amp; BLOCKCHAIN</div>
-            <div className="flex items-center gap-2"><Shield className="w-4 h-4"/> CYBER SECURITY</div>
-            <div className="flex items-center gap-2"><Zap className="w-4 h-4"/> CLOUD COMPUTING</div>
-            <div className="flex items-center gap-2"><Terminal className="w-4 h-4"/> MACHINE LEARNING</div>
-            
-            <div className="flex items-center gap-2"><Cpu className="w-4 h-4"/> ARTIFICIAL INTELLIGENCE</div>
-            <div className="flex items-center gap-2"><Star className="w-4 h-4"/> WEB3 &amp; BLOCKCHAIN</div>
-            <div className="flex items-center gap-2"><Shield className="w-4 h-4"/> CYBER SECURITY</div>
-            <div className="flex items-center gap-2"><Zap className="w-4 h-4"/> CLOUD COMPUTING</div>
-            <div className="flex items-center gap-2"><Terminal className="w-4 h-4"/> MACHINE LEARNING</div>
+            <div className="flex items-center gap-2"><Cpu className="w-4 h-4" /> ARTIFICIAL INTELLIGENCE</div>
+            <div className="flex items-center gap-2"><Star className="w-4 h-4" /> WEB3 &amp; BLOCKCHAIN</div>
+            <div className="flex items-center gap-2"><Shield className="w-4 h-4" /> CYBER SECURITY</div>
+            <div className="flex items-center gap-2"><Zap className="w-4 h-4" /> CLOUD COMPUTING</div>
+            <div className="flex items-center gap-2"><Terminal className="w-4 h-4" /> MACHINE LEARNING</div>
+
+            <div className="flex items-center gap-2"><Cpu className="w-4 h-4" /> ARTIFICIAL INTELLIGENCE</div>
+            <div className="flex items-center gap-2"><Star className="w-4 h-4" /> WEB3 &amp; BLOCKCHAIN</div>
+            <div className="flex items-center gap-2"><Shield className="w-4 h-4" /> CYBER SECURITY</div>
+            <div className="flex items-center gap-2"><Zap className="w-4 h-4" /> CLOUD COMPUTING</div>
+            <div className="flex items-center gap-2"><Terminal className="w-4 h-4" /> MACHINE LEARNING</div>
           </div>
         </div>
       </section>
@@ -134,7 +134,7 @@ const GuestPortal = () => {
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/30 rounded-full blur-2xl"></div>
             <div className="text-center md:text-left relative z-10">
               <div className="inline-flex items-center gap-2 bg-white/60 px-4 py-1.5 rounded-full text-indigo-700 font-black text-sm mb-4">
-                <Calendar className="w-4 h-4" /> 
+                <Calendar className="w-4 h-4" />
                 {new Date(upcomingEvent.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
               </div>
               <h3 className="text-4xl sm:text-5xl font-black mb-2 text-slate-900 tracking-tight leading-tight drop-shadow-sm">{upcomingEvent.title}</h3>
@@ -147,7 +147,7 @@ const GuestPortal = () => {
               >
                 Event Details
               </Link>
-              <button 
+              <button
                 onClick={() => handleRegistrationClick(upcomingEvent)}
                 className="clay-btn clay-btn-amber px-10 py-4 text-lg whitespace-nowrap w-full"
               >
@@ -168,7 +168,7 @@ const GuestPortal = () => {
             <div className="clay-icon-box w-16 h-16 bg-white/60 mb-6 flex items-center justify-center rounded-2xl shadow-sm">
               <Zap className="w-8 h-8 text-rose-600" />
             </div>
-            <h3 className="text-4xl md:text-5xl font-black mb-4 relative z-10 tracking-tight text-slate-900 drop-shadow-sm">Hands-on<br/>Workshops</h3>
+            <h3 className="text-4xl md:text-5xl font-black mb-4 relative z-10 tracking-tight text-slate-900 drop-shadow-sm">Hands-on<br />Workshops</h3>
             <p className="text-rose-900/70 font-bold text-lg leading-relaxed relative z-10 max-w-sm">
               We bypass boring tutorials and dive straight into building fun, production-grade systems!
             </p>
@@ -207,7 +207,7 @@ const GuestPortal = () => {
           style={{ backgroundImage: 'url(https://www.srkrcse.com/assets/images/cse.jpg)' }}
         />
         <div className="absolute inset-0 z-0 bg-slate-950/40 backdrop-blur-sm" />
-        
+
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <div className="clay-card inline-block px-8 py-5 mb-8 rotate-1">
             <h2 className="text-3xl sm:text-4xl font-black tracking-tighter text-slate-900 drop-shadow-sm">Powered by Dept. of CSE</h2>
@@ -247,7 +247,7 @@ const GuestPortal = () => {
             {/* Coordinator Profile 1 */}
             <div className="flex flex-col items-center text-center group">
               <div className="w-48 aspect-square rounded-[2rem] mb-6 overflow-hidden clay-card clay-pink p-2 group-hover:-rotate-3 transition-transform duration-500">
-                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=400&auto=format&fit=crop" alt="Dr. V. Chandrasekhar" className="w-full h-full object-cover rounded-[1.5rem]" />
+                <img src="https://media.licdn.com/dms/image/v2/D5603AQFrj6FLnXzMVw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1731385903614?e=1784160000&v=beta&t=AXXXjNVEmhVfv1EOQ2bzdFQIV6sOPz8VGNaUw-AFfwk" alt="Dr. V. Chandrasekhar" className="w-full h-full object-cover rounded-[1.5rem]" />
               </div>
               <h4 className="text-2xl font-black text-slate-950 tracking-tight mb-1">Dr. V. Chandrasekhar</h4>
               <p className="text-pink-600 font-black tracking-wide text-sm uppercase">Faculty Coordinator</p>

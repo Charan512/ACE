@@ -201,7 +201,12 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
     profilePhoto: {
-      type: String, // R2 public URL
+      type: String, // Cloudinary public URL
+      default: null,
+    },
+    linkedin: {
+      type: String,
+      trim: true,
       default: null,
     },
 

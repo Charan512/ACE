@@ -1,8 +1,11 @@
 import express from 'express';
-import { getMyVault, updateUserRole, updateMe } from '../controllers/user.controller.js';
+import { getMyVault, updateUserRole, updateMe, getTeamMembers } from '../controllers/user.controller.js';
 import { protect, restrictTo } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
+
+// ── Public Routes ───────────────────────────────────────────────
+router.get('/team', getTeamMembers);
 
 // Apply protect middleware to all routes below
 router.use(protect);
