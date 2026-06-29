@@ -9,6 +9,7 @@ import {
   getAttendanceCsv,
   getPaymentStats,
   getAdminNotifications,
+  getTreasurerEventStats,
 } from '../controllers/admin.controller.js';
 import {
   createEvent,
@@ -17,7 +18,7 @@ import {
   deleteEvent,
   publishEvent,
 } from '../controllers/event.controller.js';
-import { protect, restrictTo } from '../middleware/auth.middleware.js';
+import { protect, restrictTo, requiresTreasurer } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
@@ -113,6 +114,14 @@ router.get(
   '/notifications',
   restrictTo('admin'),
   getAdminNotifications
+);
+
+// ── Treasurer Analytics (SBM + Treasurer designation ONLY) ───
+router.get(
+  '/treasurer/events/:eventId/stats',
+  restrictTo('sbm'),
+  requiresTreasurer,
+  getTreasurerEventStats
 );
 
 export default router;

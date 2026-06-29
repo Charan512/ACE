@@ -86,3 +86,18 @@ export const restrictTo = (...roles) => (req, _res, next) => {
   }
   next();
 };
+
+/**
+ * Restricts a route to only the SBM with `designation: 'Treasurer'`.
+ * Must be used AFTER `protect` and `restrictTo('sbm')`.
+ *
+ * Treasurer identity is stored in the DB — never trusted from a client header.
+ */
+export const requiresTreasurer = (req, _res, next) => {
+  if (req.user.designation !== 'Treasurer') {
+    return next(
+      new AppError('Access restricted to the Treasurer.', 403)
+    );
+  }
+  next();
+};

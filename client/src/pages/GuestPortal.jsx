@@ -172,7 +172,7 @@ const GuestPortal = () => {
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <div className="clay-card clay-slate inline-block px-8 py-6 mb-8">
-            <h2 className="text-4xl sm:text-5xl font-heading font-black tracking-tighter">Powered by the Dept. of CSE</h2>
+            <h2 className="text-4xl sm:text-5xl font-heading font-black tracking-tighter text-black">Powered by the Dept. of CSE</h2>
           </div>
           <p className="text-slate-1100 text-lg leading-relaxed mb-10 max-w-2xl mx-auto font-bold">
             SRKR ACE operates in direct synergy with the Computer Science & Engineering department,

@@ -43,11 +43,7 @@ if (process.env.NODE_ENV === 'production' && (process.env.JWT_SECRET.length < 32
 }
 
 const app = express();
-if (!process.env.PORT) {
-  console.error('[Server] FATAL: PORT is not set in .env. Shutting down.');
-  process.exit(1);
-}
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5001;
 
 // ── Security Middleware ──────────────────────────────────────
 app.use(helmet());

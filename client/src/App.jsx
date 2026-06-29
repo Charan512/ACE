@@ -31,6 +31,7 @@ import AdminRegistrations from './pages/AdminRegistrations';
 import AdminCertificates from './pages/AdminCertificates';
 import AdminUsers from './pages/AdminUsers';
 import AdminNotifications from './pages/AdminNotifications';
+import TreasurerDashboard from './pages/TreasurerDashboard';
 
 // ── Ops Pages ────────────────────────────────────────────────
 import OpsLayout          from './components/OpsLayout';
@@ -118,6 +119,8 @@ function App() {
             <Route path="/admin/certificates"       element={<AdminCertificates />} />
             <Route path="/admin/users"              element={<AdminUsers />} />
             <Route path="/admin/notifications"      element={<AdminNotifications />} />
+            {/* Treasurer — only meaningful for sbm+Treasurer; component guards internally */}
+            <Route path="/treasurer"                element={<TreasurerDashboard />} />
           </Route>
         </Route>
         {/* ── Protected Ops Routes (EBM/SBM/Admin) ───────────────── */}

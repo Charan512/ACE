@@ -464,3 +464,122 @@ export const getAdminNotifications = catchAsync(async (req, res, _next) => {
   });
 });
 
+// ─────────────────────────────────────────────────────────────
+// TREASURER ANALYTICS
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * @desc    Get full financial + registration analytics for a single event
+ * @route   GET /api/admin/treasurer/events/:eventId/stats
+ * @access  Private (SBM with designation: 'Treasurer' ONLY)
+ *
+ * Runs 5 parallel aggregation pipelines against the Registration collection.
+ * All amounts returned in INR (not paise).
+ */
+export const getTreasurerEventStats = catchAsync(async (req, res, next) => {
+  const { eventId } = req.params;
+
+  const event = await Event.findById(eventId)
+    .select('title memberFee standardFee maxCapacity eventDate isActive')
+    .lean();
+  if (!event) return next(new AppError('Event not found.', 404));
+
+  const confirmedFilter = { eventId, status: 'confirmed' };
+
+  const [
+    totalConfirmed,
+    revenueAgg,
+    byPaymentMethod,
+    byTier,
+    revenueByTier,
+    overTime,
+  ] = await Promise.all([
+    // 1. Total confirmed registrations
+    Registration.countDocuments(confirmedFilter),
+
+    // 2. Total revenue (sum of amount field, stored in INR)
+    Registration.aggregate([
+      { $match: confirmedFilter },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
+    ]),
+
+    // 3. Online vs Cash breakdown
+    Registration.aggregate([
+      { $match: confirmedFilter },
+      { $group: { _id: '$paymentMethod', count: { $sum: 1 } } },
+    ]),
+
+    // 4. Member vs Non-Member tier breakdown
+    Registration.aggregate([
+      { $match: confirmedFilter },
+      { $group: { _id: '$tier', count: { $sum: 1 } } },
+    ]),
+
+    // 5. Revenue by tier
+    Registration.aggregate([
+      { $match: confirmedFilter },
+      { $group: { _id: '$tier', revenue: { $sum: '$amount' } } },
+    ]),
+
+    // 6. Registrations over time (grouped by day)
+    Registration.aggregate([
+      { $match: confirmedFilter },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+      { $project: { _id: 0, date: '$_id', count: 1 } },
+    ]),
+  ]);
+
+  // Normalise aggregation results into flat objects
+  const paymentMethodMap = { online: 0, cash: 0 };
+  byPaymentMethod.forEach(({ _id, count }) => { paymentMethodMap[_id] = count; });
+
+  const tierMap = { member: 0, non_member: 0 };
+  byTier.forEach(({ _id, count }) => { tierMap[_id] = count; });
+
+  const revenueTierMap = { member: 0, non_member: 0 };
+  revenueByTier.forEach(({ _id, revenue }) => { revenueTierMap[_id] = revenue; });
+
+  const totalRevenueInr = revenueAgg[0]?.total ?? 0;
+  const capacityUsedPercent = event.maxCapacity > 0
+    ? parseFloat(((totalConfirmed / event.maxCapacity) * 100).toFixed(1))
+    : 0;
+
+  res.status(200).json({
+    success: true,
+    event: {
+      _id: event._id,
+      title: event.title,
+      memberFee: event.memberFee,
+      standardFee: event.standardFee,
+      maxCapacity: event.maxCapacity,
+      eventDate: event.eventDate,
+      isActive: event.isActive,
+    },
+    stats: {
+      totalConfirmedRegistrations: totalConfirmed,
+      totalRevenueInr,
+      capacityUsedPercent,
+      byPaymentMethod: {
+        online: paymentMethodMap.online,
+        cash:   paymentMethodMap.cash,
+      },
+      byTier: {
+        member:     tierMap.member,
+        non_member: tierMap.non_member,
+      },
+      revenueByTier: {
+        member:     revenueTierMap.member,
+        non_member: revenueTierMap.non_member,
+      },
+      registrationsOverTime: overTime,
+    },
+  });
+});

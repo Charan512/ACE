@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, CalendarDays, Users, ClipboardList, Award,
-  LogOut, Shield, Menu, X, Bell,
+  LogOut, Shield, Menu, X, Bell, BarChart2,
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import PortalBackground from './ui/PortalBackground';
@@ -50,9 +50,19 @@ const AdminLayout = () => {
   const fullName = isAdmin ? 'ACE Admin' : (user?.name || 'Admin');
 
   // Filter nav items by role
-  const visibleNavItems = NAV_ITEMS.filter(
+  let visibleNavItems = NAV_ITEMS.filter(
     ({ allowedRoles }) => !allowedRoles || allowedRoles.includes(user?.role)
   );
+
+  // Inject Treasurer Analytics link for the designated Treasurer
+  if (user?.role === 'sbm' && user?.designation === 'Treasurer') {
+    visibleNavItems.push({
+      label: 'Financials',
+      to: '/treasurer',
+      icon: BarChart2,
+      end: false,
+    });
+  }
 
   return (
     <div className="min-h-screen text-slate-700 flex flex-col bg-slate-50 selection:bg-blue-100">
