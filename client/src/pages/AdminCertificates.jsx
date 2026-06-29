@@ -378,10 +378,15 @@ const AdminCertificates = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    if (urlInput.trim()) {
-                      setTemplateUrl(urlInput.trim());
-                      showToast('Template URL set.', 'success');
+                    const url = urlInput.trim();
+                    if (!url) return;
+                    
+                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                      return showToast('Please enter a valid web URL starting with http:// or https:// (not a filename).', 'error');
                     }
+
+                    setTemplateUrl(url);
+                    showToast('Template URL set.', 'success');
                   }}
                   className="clay-btn clay-btn-blue px-4 py-2.5 text-sm gap-1.5 shrink-0"
                 >

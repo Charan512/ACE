@@ -10,7 +10,7 @@ import {
   Loader2, AlertTriangle, BarChart2,
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
-import api from '../utils/api';
+import api from '../lib/api';
 
 // ── Color Palette ─────────────────────────────────────────────
 const COLORS = {
