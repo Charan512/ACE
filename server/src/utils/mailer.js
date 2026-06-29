@@ -1,65 +1,81 @@
-import nodemailer from 'nodemailer';
+import * as brevo from '@getbrevo/brevo';
 
 /**
- * Nodemailer transporter — uses Resend's SMTP relay.
+ * Brevo (formerly Sendinblue) SDK Email Sender
  *
- * Why Resend instead of raw Gmail SMTP?
- *   Render.com (free tier) blocks outbound SMTP ports 25, 465, and 587.
- *   Resend's SMTP relay tunnels mail delivery over HTTPS (port 443 internally),
- *   which is never blocked. The Nodemailer interface is 100% unchanged —
- *   all workers continue to call `sendEmail({ to, subject, html })` as before.
- *
- * Setup:
- *   1. Sign up at https://resend.com (free: 3,000 emails/month, 100/day)
- *   2. Verify your sending domain (or use their shared sandbox for testing)
- *   3. Generate an API key → set RESEND_API_KEY in your .env / Render dashboard
- *   4. Set EMAIL_FROM to an address on your verified domain, e.g.:
- *      EMAIL_FROM="ACE ERP <noreply@yourdomain.com>"
- *
- * Local dev without Resend:
- *   Set RESEND_API_KEY=re_test_xxxx (any value) and use Mailtrap/Ethereal for
- *   SMTP_HOST overrides, or just let emails fail silently in dev by not setting
- *   the key — the worker error handler will catch and log it.
+ * Uses the Transactional Emails API to send raw HTML payloads.
+ * This guarantees completely clean and unbranded delivery for production emails.
  */
-const transporter = nodemailer.createTransport({
-  host: 'smtp.resend.com',
-  port: 465,
-  secure: true, // TLS — mandatory for Resend SMTP relay
-  auth: {
-    user: 'resend',                      // Always the literal string 'resend'
-    pass: process.env.RESEND_API_KEY,   // Your Resend API key (re_xxxxxxxxxxxx)
-  },
-});
+
+// Initialize the Brevo API instance
+const apiInstance = new brevo.TransactionalEmailsApi();
+
+// Set the API key
+apiInstance.setApiKey(
+  brevo.TransactionalEmailsApiApiKeys.apiKey,
+  process.env.BREVO_API_KEY
+);
 
 /**
- * Sends an email via the Resend SMTP relay.
+ * Sends an email via the Brevo Transactional HTTPS API.
  *
  * @param {Object}   options
  * @param {string}   options.to          - Recipient email address
  * @param {string}   options.subject     - Email subject line
  * @param {string}   options.html        - HTML body content
- * @param {string}  [options.text]       - Plain text fallback (auto-stripped from HTML if omitted)
- * @param {Array}   [options.attachments] - Nodemailer attachment objects:
- *                                          [{ filename, content: Buffer, contentType }]
- *                                          Buffers are never written to disk (zero-storage mandate).
- * @returns {Promise<Object>} Nodemailer send result
+ * @param {string}  [options.text]       - Plain text fallback
+ * @param {Array}   [options.attachments] - Array of attachment objects:
+ *                                          [{ name, content: Buffer }] // Note: Brevo uses `name` instead of `filename` and base64 string for content if raw. Wait, we need to adapt nodemailer style `{ filename, content }` to Brevo style.
+ * @returns {Promise<Object>} Brevo API response
  */
 const sendEmail = async ({ to, subject, html, text, attachments }) => {
-  const info = await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
-    to,
-    subject,
-    html,
-    text:        text || html.replace(/<[^>]*>/g, ''), // Strip HTML tags for plain-text fallback
-    attachments: attachments || [],
-  });
+  const sendSmtpEmail = new brevo.SendSmtpEmail();
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`[Mailer] Email sent to ${to} — MessageID: ${info.messageId}`);
+  sendSmtpEmail.subject = subject;
+  sendSmtpEmail.htmlContent = html;
+  
+  if (text) {
+    sendSmtpEmail.textContent = text;
+  } else if (html) {
+    sendSmtpEmail.textContent = html.replace(/<[^>]*>/g, '');
   }
 
-  return info;
+  // Parse sender from "Name <email@domain.com>" or just "email@domain.com"
+  const fromEnv = process.env.EMAIL_FROM || "noreply@example.com";
+  const match = fromEnv.match(/(.*?)\s*<(.+)>/);
+  if (match) {
+    sendSmtpEmail.sender = { name: match[1].replace(/"/g, '').trim(), email: match[2].trim() };
+  } else {
+    sendSmtpEmail.sender = { email: fromEnv.trim() };
+  }
+
+  sendSmtpEmail.to = [{ email: to }];
+
+  // Adapt nodemailer-style attachments to Brevo-style
+  if (attachments && attachments.length > 0) {
+    sendSmtpEmail.attachment = attachments.map(att => {
+      // Brevo expects content as base64 string
+      const base64Content = Buffer.isBuffer(att.content) 
+        ? att.content.toString('base64') 
+        : Buffer.from(att.content).toString('base64');
+        
+      return {
+        name: att.filename || att.name,
+        content: base64Content
+      };
+    });
+  }
+
+  try {
+    const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[Mailer] Email sent to ${to} — MessageID: ${data.messageId}`);
+    }
+    return data;
+  } catch (error) {
+    console.error('[Mailer] Error sending email via Brevo:', error.response?.text || error.message);
+    throw error;
+  }
 };
 
 export default sendEmail;
-
