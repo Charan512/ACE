@@ -13,16 +13,14 @@ const NotifCard = ({ notif, onMarkRead }) => {
   });
 
   return (
-    <div className={`flex items-start gap-4 p-5 rounded-2xl border transition-all ${
-      isRead
-        ? 'bg-white border-slate-100'
-        : 'bg-blue-50/60 border-blue-100 shadow-sm'
+    <div className={`clay-card flex items-start gap-4 p-5 transition-all ${
+      isRead ? 'clay-slate' : 'clay-pink'
     }`}>
       {/* Icon */}
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-        isRead ? 'bg-slate-100' : 'bg-blue-600'
-      }`}>
-        <DollarSign className={`w-5 h-5 ${isRead ? 'text-slate-400' : 'text-white'}`} />
+      <div className={`clay-icon-box w-10 h-10 ${
+        isRead ? '' : ''
+      }`} style={{ background: isRead ? '#f1f5f9' : '#dbeafe' }}>
+        <DollarSign className={`w-5 h-5 ${isRead ? 'text-slate-400' : 'text-blue-600'}`} />
       </div>
 
       {/* Body */}
@@ -49,7 +47,7 @@ const NotifCard = ({ notif, onMarkRead }) => {
             </span>
           )}
           {notif.amount != null && (
-            <span className="flex items-center gap-1 text-xs font-mono font-bold text-emerald-600">
+            <span className="clay-badge" style={{ background: '#d1fae5', color: '#059669', borderColor: '#a7f3d0' }}>
               {String.fromCodePoint(0x20B9)}{notif.amount}
             </span>
           )}
@@ -60,7 +58,7 @@ const NotifCard = ({ notif, onMarkRead }) => {
           {!isRead && (
             <button
               onClick={() => onMarkRead(notif._id)}
-              className="text-[11px] font-bold text-blue-600 hover:text-blue-800 cursor-pointer transition-colors"
+              className="clay-btn clay-btn-blue text-[11px] px-3 py-1"
             >
               Mark as read
             </button>
@@ -143,12 +141,12 @@ const AdminNotifications = () => {
 
         <div className="flex items-center gap-2">
           <button onClick={fetchNotifications} disabled={loading}
-            className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-all cursor-pointer disabled:opacity-50">
+            className="clay-btn clay-btn-ghost p-2.5">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           {unreadCount > 0 && (
             <button onClick={handleMarkAllRead} disabled={markingAll}
-              className="flex items-center gap-1.5 text-sm font-bold text-blue-600 hover:text-blue-800 px-4 py-2 rounded-xl border border-blue-100 bg-blue-50 hover:bg-blue-100 transition-all cursor-pointer disabled:opacity-50">
+              className="clay-btn clay-btn-blue flex items-center gap-1.5 text-sm px-4 py-2">
               {markingAll ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
               Mark all read
             </button>
@@ -157,12 +155,12 @@ const AdminNotifications = () => {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl mb-6 w-fit">
+      <div className="flex items-center gap-1 p-1 clay-card clay-indigo rounded-xl mb-6 w-fit">
         {['all', 'unread'].map((f) => (
           <button key={f} onClick={() => setFilter(f)}
             className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer capitalize ${
               filter === f
-                ? 'bg-white shadow-sm text-slate-900'
+                ? 'clay-btn clay-btn-blue shadow-sm'
                 : 'text-slate-500 hover:text-slate-700'
             }`}>
             {f}

@@ -57,7 +57,7 @@ const Login = () => {
         <Database className="w-24 h-24" />
       </div>
 
-      <div className="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-slate-200/50 border border-white p-8 sm:p-10 transition-all">
+      <div className="relative z-10 w-full max-w-md clay-card clay-slate animate-clay-float p-8 sm:p-10">
         <div className="mb-10 text-center">
           <Link to="/" className="text-2xl font-heading font-black tracking-tight text-slate-900 inline-block mb-2">
             SRKR <span className="text-primary">ACE</span>
@@ -68,7 +68,7 @@ const Login = () => {
 
         {/* Error Banner */}
         {error && (
-          <div className="mb-6 flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm font-medium shadow-sm">
+          <div className="mb-6 flex items-start gap-3 p-4 clay-card clay-rose text-red-700 text-sm font-medium">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -87,7 +87,7 @@ const Login = () => {
                 type="email"
                 required
                 autoComplete="email"
-                className="input-modern pl-12 w-full"
+                className="clay-input input-modern pl-12 w-full"
                 placeholder="charan@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -116,7 +116,7 @@ const Login = () => {
                 type="password"
                 required
                 autoComplete="current-password"
-                className="input-modern pl-12 w-full font-mono"
+                className="clay-input input-modern pl-12 w-full font-mono"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -131,7 +131,7 @@ const Login = () => {
               id="login-submit"
               type="submit"
               disabled={isLoading}
-              className="w-full bg-slate-950 text-white font-bold text-lg py-4 px-4 rounded-xl shadow-lg shadow-slate-900/30 hover:shadow-xl hover:bg-primary transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+              className="clay-btn clay-btn-dark w-full text-lg py-4 px-4"
             >
               {isLoading ? (
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />

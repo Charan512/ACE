@@ -2,7 +2,7 @@
 
 /* 
   SRKR ACE Portal Aesthetic
-  Modern Vibrant Light Mode
+  Modern Vibrant Light Mode + Claymorphism Design System
 */
 
 @theme {
@@ -61,11 +61,147 @@
   .font-data {
     @apply font-mono tracking-wider;
   }
+
+  /* ── Claymorphism Base Card ─────────────────────────────── */
+  .clay-card {
+    background: #ffffff;
+    border-radius: 22px;
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow:
+      0 12px 40px -8px rgba(0, 0, 0, 0.10),
+      0 3px 10px -3px rgba(0, 0, 0, 0.06),
+      inset 0 2px 0 rgba(255, 255, 255, 0.98),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+  }
+  .clay-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 24px 60px -12px rgba(0, 0, 0, 0.14),
+      0 6px 16px -6px rgba(0, 0, 0, 0.08),
+      inset 0 2px 0 rgba(255, 255, 255, 0.98),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  /* ── Pastel Rainbow Tints ──────────────────────────────── */
+  .clay-blue   { background: linear-gradient(145deg, #eff6ff 0%, #dbeafe 100%); }
+  .clay-purple { background: linear-gradient(145deg, #f5f3ff 0%, #ede9fe 100%); }
+  .clay-pink   { background: linear-gradient(145deg, #fdf2f8 0%, #fce7f3 100%); }
+  .clay-rose   { background: linear-gradient(145deg, #fff1f2 0%, #ffe4e6 100%); }
+  .clay-orange { background: linear-gradient(145deg, #fff7ed 0%, #ffedd5 100%); }
+  .clay-amber  { background: linear-gradient(145deg, #fffbeb 0%, #fef3c7 100%); }
+  .clay-yellow { background: linear-gradient(145deg, #fefce8 0%, #fef9c3 100%); }
+  .clay-green  { background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 100%); }
+  .clay-teal   { background: linear-gradient(145deg, #f0fdfa 0%, #ccfbf1 100%); }
+  .clay-cyan   { background: linear-gradient(145deg, #ecfeff 0%, #cffafe 100%); }
+  .clay-indigo { background: linear-gradient(145deg, #eef2ff 0%, #e0e7ff 100%); }
+  .clay-lime   { background: linear-gradient(145deg, #f7fee7 0%, #ecfccb 100%); }
+  .clay-slate  { background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%); }
+
+  /* ── Clay Buttons ──────────────────────────────────────── */
+  .clay-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    border-radius: 999px;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    box-shadow:
+      0 8px 22px -5px rgba(0, 0, 0, 0.14),
+      0 2px 6px -2px rgba(0, 0, 0, 0.08),
+      inset 0 2px 0 rgba(255, 255, 255, 0.85),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.10);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    cursor: pointer;
+  }
+  .clay-btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow:
+      0 16px 36px -8px rgba(0, 0, 0, 0.18),
+      0 4px 10px -4px rgba(0, 0, 0, 0.10),
+      inset 0 2px 0 rgba(255, 255, 255, 0.85),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.10);
+  }
+  .clay-btn:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow:
+      0 3px 10px -3px rgba(0, 0, 0, 0.10),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      inset 0 3px 6px rgba(0, 0, 0, 0.08);
+  }
+  .clay-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Coloured button tints */
+  .clay-btn-blue   { background: linear-gradient(160deg, #3b82f6, #2563eb); color: #fff; }
+  .clay-btn-indigo { background: linear-gradient(160deg, #6366f1, #4f46e5); color: #fff; }
+  .clay-btn-green  { background: linear-gradient(160deg, #34d399, #10b981); color: #fff; }
+  .clay-btn-orange { background: linear-gradient(160deg, #fb923c, #f97316); color: #fff; }
+  .clay-btn-rose   { background: linear-gradient(160deg, #fb7185, #f43f5e); color: #fff; }
+  .clay-btn-amber  { background: linear-gradient(160deg, #fcd34d, #f59e0b); color: #78350f; }
+  .clay-btn-slate  { background: linear-gradient(160deg, #64748b, #475569); color: #fff; }
+  .clay-btn-dark   { background: linear-gradient(160deg, #334155, #0f172a); color: #fff; }
+  .clay-btn-ghost  { background: rgba(255,255,255,0.7); color: #334155; }
+
+  /* ── Clay Input ────────────────────────────────────────── */
+  .clay-input {
+    border-radius: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.75);
+    background: #ffffff;
+    box-shadow:
+      inset 0 3px 8px rgba(0, 0, 0, 0.07),
+      inset 0 1px 3px rgba(0, 0, 0, 0.04),
+      0 1px 0 rgba(255, 255, 255, 0.95);
+    transition: all 0.18s ease;
+    outline: none;
+  }
+  .clay-input:focus {
+    border-color: #93c5fd;
+    box-shadow:
+      inset 0 2px 6px rgba(0, 0, 0, 0.05),
+      0 0 0 3.5px rgba(147, 197, 253, 0.40);
+  }
+
+  /* ── Clay Badge ────────────────────────────────────────── */
+  .clay-badge {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 700;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    padding: 0.22rem 0.7rem;
+    border: 1.5px solid rgba(255, 255, 255, 0.7);
+    box-shadow:
+      0 4px 10px -3px rgba(0, 0, 0, 0.10),
+      inset 0 1.5px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  /* ── Clay Icon Box ─────────────────────────────────────── */
+  .clay-icon-box {
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.75);
+    box-shadow:
+      0 6px 18px -4px rgba(0, 0, 0, 0.12),
+      inset 0 2px 0 rgba(255, 255, 255, 0.95),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+  }
 }
 
 @keyframes marquee {
   0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
+}
+
+/* ── Clay Float Animation ───────────────────────────────── */
+@keyframes clay-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
 }
 
 /* ── Member Portal Animations ─────────────────────────────── */
@@ -112,13 +248,14 @@
   0% { background-position: 100% }
   100% { background-position: -100% }
 }
-@layer utilities {
-  .animate-marquee    { animation: marquee 25s linear infinite; }
-  .animate-drift-slow { animation: drift-slow 18s ease-in-out infinite; }
-  .animate-drift-med  { animation: drift-med 12s ease-in-out infinite; }
-  .animate-shimmer    { animation: shimmer-slide 2.5s ease-in-out infinite; }
-  .animate-float      { animation: float-y 4s ease-in-out infinite; }
-  .animate-scan       { animation: scan-line 3s linear infinite; }
-  .animate-shine      { animation: shine 3s linear infinite; }
-}
 
+@layer utilities {
+  .animate-marquee     { animation: marquee 25s linear infinite; }
+  .animate-drift-slow  { animation: drift-slow 18s ease-in-out infinite; }
+  .animate-drift-med   { animation: drift-med 12s ease-in-out infinite; }
+  .animate-shimmer     { animation: shimmer-slide 2.5s ease-in-out infinite; }
+  .animate-float       { animation: float-y 4s ease-in-out infinite; }
+  .animate-scan        { animation: scan-line 3s linear infinite; }
+  .animate-shine       { animation: shine 3s linear infinite; }
+  .animate-clay-float  { animation: clay-float 3.5s ease-in-out infinite; }
+}

@@ -103,14 +103,14 @@ const GuestPortal = () => {
             <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-2">Next Major Operation</h2>
             <p className="text-lg text-slate-500">Secure your pass to our upcoming flagship event.</p>
           </div>
-          <div className="bg-slate-900 rounded-3xl p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between shadow-xl mb-16 gap-6 md:gap-0">
-            <div className="text-white text-center md:text-left">
-              <h3 className="text-3xl font-bold mb-2">{upcomingEvent.title}</h3>
-              <p className="text-slate-400 font-medium">Date: {new Date(upcomingEvent.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+          <div className="clay-card clay-cyan p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between mb-16 gap-6 md:gap-0">
+            <div className="text-center md:text-left">
+              <h3 className="text-3xl font-bold mb-2 text-slate-900">{upcomingEvent.title}</h3>
+              <p className="text-slate-500 font-medium">Date: {new Date(upcomingEvent.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
             </div>
             <Link
               to={`/events/${upcomingEvent._id}`}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-full font-bold transition-all shadow-md whitespace-nowrap"
+              className="clay-btn clay-btn-blue px-8 py-3 whitespace-nowrap"
             >
               View Event Details
             </Link>
@@ -132,27 +132,27 @@ const GuestPortal = () => {
           </div>
 
           {/* Card 2 (Top Right) */}
-          <div className="md:col-span-2 md:row-span-1 bg-white border border-slate-200 p-6 md:p-8 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
+          <div className="clay-card clay-purple md:col-span-2 md:row-span-1 p-6 md:p-8">
             <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-0">
               <div>
                 <h4 className="text-2xl font-bold text-slate-950 mb-2 tracking-tight">Competitive Hackathons</h4>
-                <p className="text-slate-500 font-medium">Test your skills in flagship 24-hour development sprints like Prajwalan. Compete, build, and win massive prizes.</p>
+                <p className="text-slate-600 font-medium">Test your skills in flagship 24-hour development sprints like Prajwalan. Compete, build, and win massive prizes.</p>
               </div>
-              <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
-                <Terminal className="w-6 h-6 text-slate-900" />
+              <div className="clay-icon-box w-12 h-12" style={{ background: '#ede9fe' }}>
+                <Terminal className="w-6 h-6 text-purple-700" />
               </div>
             </div>
           </div>
 
           {/* Card 3 (Bottom Right) */}
-          <div className="md:col-span-2 md:row-span-1 bg-blue-50 border border-blue-100 p-6 md:p-8 rounded-3xl hover:bg-blue-100 transition-colors">
+          <div className="clay-card clay-blue md:col-span-2 md:row-span-1 p-6 md:p-8">
             <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-0">
               <div>
                 <h4 className="text-2xl font-bold text-slate-950 mb-2 tracking-tight">Peer Networking</h4>
                 <p className="text-slate-600 font-medium">Connect with top-tier developers, alumni, and industry professionals. The network is your ultimate utility.</p>
               </div>
-              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">
-                <Users className="w-6 h-6 text-primary" />
+              <div className="clay-icon-box w-12 h-12" style={{ background: '#dbeafe' }}>
+                <Users className="w-6 h-6 text-blue-600" />
               </div>
             </div>
           </div>
@@ -171,7 +171,9 @@ const GuestPortal = () => {
         <div className="absolute inset-0 z-0 bg-slate-950/40 backdrop-blur-sm" />
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl sm:text-5xl font-heading font-black tracking-tighter mb-6">Powered by the Dept. of CSE</h2>
+          <div className="clay-card clay-slate inline-block px-8 py-6 mb-8">
+            <h2 className="text-4xl sm:text-5xl font-heading font-black tracking-tighter">Powered by the Dept. of CSE</h2>
+          </div>
           <p className="text-slate-1100 text-lg leading-relaxed mb-10 max-w-2xl mx-auto font-bold">
             SRKR ACE operates in direct synergy with the Computer Science & Engineering department,
             bridging the massive gap between academic curriculum and cutting-edge industry practices.

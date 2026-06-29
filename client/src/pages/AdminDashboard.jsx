@@ -8,16 +8,15 @@ import { Link } from 'react-router-dom';
 import api from '../lib/api';
 import useAuthStore from '../store/useAuthStore';
 
-const StatCard = ({ label, value, icon: Icon, accent, sublabel, loading, linkTo, linkLabel }) => (
-  <div className="relative bg-white rounded-2xl p-6 border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group" style={{ borderColor: `${accent}20` }}>
-    <div className="absolute -bottom-6 -right-6 w-28 h-28 rounded-full blur-2xl opacity-20" style={{ background: accent }} />
+const StatCard = ({ label, value, icon: Icon, accent, sublabel, loading, linkTo, linkLabel, clayColor }) => (
+  <div className={`clay-card p-6 overflow-hidden group ${clayColor || 'clay-blue'}`}>
     <div className="relative z-10">
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${accent}15` }}>
-          <Icon className="w-5 h-5" style={{ color: accent }} />
+      <div className="flex items-start justify-between mb-5">
+        <div className={`clay-icon-box w-12 h-12`} style={{ background: `${accent}20` }}>
+          <Icon className="w-6 h-6" style={{ color: accent }} />
         </div>
         {linkTo && (
-          <Link to={linkTo} className="flex items-center gap-1 text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: accent }}>
+          <Link to={linkTo} className="flex items-center gap-1 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: accent }}>
             {linkLabel} <ChevronRight className="w-3 h-3" />
           </Link>
         )}
@@ -27,37 +26,43 @@ const StatCard = ({ label, value, icon: Icon, accent, sublabel, loading, linkTo,
           {typeof value === 'number' ? value.toLocaleString() : value}
         </p>
       )}
-      <p className="text-sm font-bold text-slate-500 mt-1">{label}</p>
+      <p className="text-sm font-bold text-slate-600 mt-1.5">{label}</p>
       {sublabel && <p className="text-xs text-slate-400 mt-0.5">{sublabel}</p>}
     </div>
   </div>
 );
 
-const QuickAction = ({ to, icon: Icon, label, description, accent }) => (
-  <Link to={to} className="flex items-center gap-4 p-4 bg-white rounded-xl border border-slate-200 hover:shadow-md hover:border-slate-300 transition-all duration-200 group">
-    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${accent}12` }}>
+const QuickAction = ({ to, icon: Icon, label, description, accent, clayColor }) => (
+  <Link to={to} className={`clay-card flex items-center gap-4 p-5 group ${clayColor || 'clay-slate'}`}>
+    <div className="clay-icon-box w-11 h-11" style={{ background: `${accent}18` }}>
       <Icon className="w-5 h-5" style={{ color: accent }} />
     </div>
     <div className="flex-1 min-w-0">
       <p className="text-sm font-bold text-slate-800">{label}</p>
-      <p className="text-xs text-slate-400 truncate">{description}</p>
+      <p className="text-xs text-slate-500 truncate mt-0.5">{description}</p>
     </div>
-    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0" />
+    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
   </Link>
 );
 
 const PayBar = ({ label, count, total, color }) => (
   <div className="flex items-center gap-3">
-    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
+    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm" style={{ background: color }} />
     <div className="flex-1">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-bold text-slate-600">{label}</span>
-        <span className="text-xs font-mono font-bold text-slate-700">
-          {String.fromCodePoint(0x20B9)}{(total || 0).toLocaleString()} ({count})
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs font-bold text-slate-700">{label}</span>
+        <span className="clay-badge" style={{ background: `${color}18`, color, borderColor: `${color}30` }}>
+          {String.fromCodePoint(0x20B9)}{(total || 0).toLocaleString()} &nbsp;·&nbsp; {count}
         </span>
       </div>
-      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+      <div className="h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner">
         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min(100, (count || 0) * 10)}%`, background: color }} />
+      </div>
+    </div>
+  </div>
+);
+
+const PayStatsPanel = () => {
       </div>
     </div>
   </div>
@@ -75,20 +80,19 @@ const PayStatsPanel = () => {
 
   const handleChange = async (e) => {
     const id = e.target.value;
-    setSel(id);
-    if (!id) { setStats(null); return; }
+    setSel(id); setStats(null);
+    if (!id) return;
     setLoading(true);
     try {
       const r = await api.get(`/admin/events/${id}/payment-stats`);
       setStats(r.data.data);
-    } catch { setStats(null); }
-    finally { setLoading(false); }
+    } catch { /* silent */ } finally { setLoading(false); }
   };
 
-  const total = stats ? (stats.online?.totalAmountINR || 0) + (stats.cash?.totalAmountINR || 0) : 0;
+  const total = (stats?.online?.totalAmountINR || 0) + (stats?.cash?.totalAmountINR || 0);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+    <div className="clay-card clay-teal p-6">
       <div className="flex items-center gap-3 mb-5">
         <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
           <BarChart3 className="w-4 h-4 text-blue-600" />
@@ -99,7 +103,7 @@ const PayStatsPanel = () => {
         </div>
       </div>
       <select value={sel} onChange={handleChange}
-        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none mb-4 cursor-pointer">
+        className="clay-input w-full px-4 py-2.5 text-sm font-semibold text-slate-700 mb-4 cursor-pointer appearance-none">
         <option value="">Select an event</option>
         {events.map((ev) => <option key={ev._id} value={ev._id}>{ev.title}</option>)}
       </select>
@@ -184,20 +188,20 @@ const AdminDashboard = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl border border-emerald-100 p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center"><Wifi className="w-4 h-4 text-emerald-600" /></div>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Live Events</span>
-                </div>
-                <p className="text-4xl font-black font-mono text-slate-900">{activeEvts.length}</p>
+                <div className="clay-card clay-green p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="clay-icon-box w-9 h-9" style={{ background: '#d1fae5' }}><Wifi className="w-4 h-4 text-emerald-600" /></div>
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Live Events</span>
+                  </div>
+                  <p className="text-4xl font-black font-mono text-slate-900">{activeEvts.length}</p>
                 <p className="text-sm text-slate-400 mt-1">registrations open</p>
               </div>
-              <div className="bg-white rounded-2xl border border-amber-100 p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center"><WifiOff className="w-4 h-4 text-amber-600" /></div>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Draft Events</span>
-                </div>
-                <p className="text-4xl font-black font-mono text-slate-900">{draftEvts.length}</p>
+                <div className="clay-card clay-amber p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="clay-icon-box w-9 h-9" style={{ background: '#fef3c7' }}><WifiOff className="w-4 h-4 text-amber-600" /></div>
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Draft Events</span>
+                  </div>
+                  <p className="text-4xl font-black font-mono text-slate-900">{draftEvts.length}</p>
                 <p className="text-sm text-slate-400 mt-1">awaiting publish</p>
               </div>
             </div>
@@ -225,7 +229,7 @@ const AdminDashboard = () => {
         </div>
         <div className="flex items-center gap-3">
           <Link to="/admin/notifications" title="Cash Registration Notifications"
-            className="relative p-2.5 rounded-xl bg-white border border-slate-200 hover:border-amber-300 hover:bg-amber-50 transition-all shadow-sm">
+            className="clay-btn relative p-2.5 rounded-xl bg-white border border-slate-200 hover:border-amber-300 hover:bg-amber-50 transition-all shadow-sm">
             <Bell className="w-5 h-5 text-slate-500" />
             {unreadCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-1 shadow-sm">
@@ -234,7 +238,7 @@ const AdminDashboard = () => {
             )}
           </Link>
           <button onClick={fetchAdminData} disabled={loading}
-            className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-600 bg-white border border-slate-200 hover:border-blue-200 rounded-xl px-4 py-2 transition-all shadow-sm cursor-pointer disabled:opacity-50">
+            className="clay-btn flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-600 bg-white border border-slate-200 hover:border-blue-200 rounded-xl px-4 py-2 transition-all shadow-sm cursor-pointer disabled:opacity-50">
             <Activity className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </button>
@@ -246,10 +250,9 @@ const AdminDashboard = () => {
       <section>
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">System Overview</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          <StatCard label="Registered Accounts" sublabel="All roles excluding guests" value={stats.totalAccounts} icon={Users} accent="#3b82f6" loading={loading} linkTo="/admin/users" linkLabel="View all" />
-          <StatCard label="Verified Members" sublabel="Active ACE memberships" value={stats.totalVerifiedMembers} icon={UserCheck} accent="#10b981" loading={loading} linkTo="/admin/users?role=member" linkLabel="View members" />
-          <StatCard label="Active Events" sublabel="Live registrations open" value={stats.activeEvents} icon={CalendarCheck} accent="#8b5cf6" loading={loading} linkTo="/admin/events" linkLabel="Manage" />
-        </div>
+          <StatCard label="Registered Accounts" sublabel="All roles excluding guests" value={stats.totalAccounts} icon={Users} accent="#3b82f6" loading={loading} linkTo="/admin/users" linkLabel="View all" clayColor="clay-blue" />
+          <StatCard label="Verified Members" sublabel="Active ACE memberships" value={stats.totalVerifiedMembers} icon={UserCheck} accent="#10b981" loading={loading} linkTo="/admin/users?role=member" linkLabel="View members" clayColor="clay-green" />
+          <StatCard label="Active Events" sublabel="Live registrations open" value={stats.activeEvents} icon={CalendarCheck} accent="#8b5cf6" loading={loading} linkTo="/admin/events" linkLabel="Manage" clayColor="clay-purple" />  </div>
       </section>
 
       <section>
@@ -260,16 +263,16 @@ const AdminDashboard = () => {
       <section>
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <QuickAction to="/admin/events" icon={CalendarCheck} label="Manage Events" description="Create, publish, toggle, delete events" accent="#3b82f6" />
-          <QuickAction to="/admin/registrations" icon={TrendingUp} label="View Registrations" description="Attendees, CSV export, payment stats" accent="#10b981" />
-          <QuickAction to="/admin/certificates" icon={DollarSign} label="Certificate Forge" description="Upload templates, release to members" accent="#f59e0b" />
-          <QuickAction to="/admin/users" icon={Users} label="User Directory" description="Members, SBMs, EBMs — role management" accent="#8b5cf6" />
+          <QuickAction to="/admin/events" icon={CalendarCheck} label="Manage Events" description="Create events, toggle live status, update details" accent="#3b82f6" clayColor="clay-blue" />
+          <QuickAction to="/admin/registrations" icon={TrendingUp} label="View Registrations" description="Attendees, CSV export, payment stats" accent="#10b981" clayColor="clay-green" />
+          <QuickAction to="/admin/certificates" icon={DollarSign} label="Certificate Forge" description="Upload templates, release to members" accent="#f59e0b" clayColor="clay-amber" />
+          <QuickAction to="/admin/users" icon={Users} label="User Directory" description="Members, SBMs, EBMs — role management" accent="#8b5cf6" clayColor="clay-purple" />
         </div>
       </section>
 
       <section>
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">System Status</h2>
-        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+        <div className="clay-card clay-slate p-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`w-2.5 h-2.5 rounded-full ${stats.activeJobs > 0 ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
