@@ -88,24 +88,22 @@ const EventsPage = () => {
                 {event.title}
               </h2>
               <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
-                  <Calendar className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm font-bold text-slate-700">
-                    {new Date(event.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
-                  <MapPin className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm font-bold text-slate-700">{event.venue || 'TBA'}</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-200/80 shadow-sm">
-                  <span className="text-xs uppercase tracking-widest text-slate-400 font-bold">Standard</span>
-                  <span className="text-sm font-mono font-medium text-slate-600 line-through">₹{event.standardFee}</span>
-                </div>
-                <div className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-2 rounded-full shadow-md shadow-blue-500/20">
-                  <span className="text-xs uppercase tracking-widest text-blue-200 font-bold">Member</span>
-                  <span className="text-sm font-mono font-bold text-white">₹{event.memberFee}</span>
-                </div>
+                <span className="clay-badge clay-blue text-blue-700">
+                  <Calendar className="w-4 h-4 mr-1" />
+                  {new Date(event.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </span>
+                <span className="clay-badge clay-teal text-teal-700">
+                  <MapPin className="w-4 h-4 mr-1" />
+                  {event.venue || 'TBA'}
+                </span>
+                <span className="clay-badge clay-slate text-slate-500">
+                  <span className="text-xs uppercase tracking-widest font-bold mr-1">Standard</span>
+                  <span className="font-mono line-through">₹{event.standardFee}</span>
+                </span>
+                <span className="clay-badge clay-blue text-blue-800">
+                  <span className="text-xs uppercase tracking-widest font-bold mr-1">Member</span>
+                  <span className="font-mono font-bold">₹{event.memberFee}</span>
+                </span>
               </div>
             </div>
 
@@ -135,7 +133,7 @@ const EventsPage = () => {
 
               {/* Right Column (Details & Conversion) */}
               <div className="lg:col-span-7 flex flex-col gap-10">
-                <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-slate-100 shadow-sm">
+                <div className="clay-card clay-slate p-6">
                   <p className="text-lg text-slate-600 leading-relaxed whitespace-pre-wrap">
                     {event.description}
                   </p>
@@ -146,7 +144,7 @@ const EventsPage = () => {
                   {event.coordinators && event.coordinators.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {event.coordinators.map((coord, idx) => (
-                        <div key={idx} className="bg-white/80 backdrop-blur-sm border border-slate-200/80 rounded-2xl p-5 shadow-sm flex flex-col gap-2 transition-all hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200">
+                        <div key={idx} className="clay-card clay-blue p-5 flex flex-col gap-2">
                           <span className="font-semibold text-slate-900 text-lg">{coord.name}</span>
                           <div className="flex items-center gap-2 text-blue-600">
                             <Phone className="w-4 h-4" />
@@ -165,7 +163,7 @@ const EventsPage = () => {
                 <div className="mt-4">
                   <button 
                     onClick={() => handleRegistrationClick(event)}
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white text-xl font-bold py-5 rounded-2xl transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:shadow-xl hover:-translate-y-1"
+                    className="clay-btn clay-btn-blue w-full text-xl font-bold py-5"
                   >
                     Register for Event
                   </button>

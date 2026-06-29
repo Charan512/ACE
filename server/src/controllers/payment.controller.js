@@ -271,7 +271,7 @@ export const createOrder = catchAsync(async (req, res, next) => {
 
   const merchantTransactionId = generateMerchantTxnId();
   const redirectUrl           = `${process.env.CLIENT_URL}/payment/callback`;
-  const callbackUrl           = `${process.env.SERVER_URL || 'http://localhost:5000'}/api/payments/webhook`;
+  const callbackUrl           = `${process.env.SERVER_URL}/api/payments/webhook`;
 
   // ── DEV: Skip PhonePe API, return mock redirect ─────────────
   if (process.env.NODE_ENV !== 'production') {
@@ -369,7 +369,7 @@ export const createMembershipOrder = catchAsync(async (req, res, next) => {
 
   const merchantTransactionId = generateMerchantTxnId();
   const redirectUrl           = `${process.env.CLIENT_URL}/payment/callback`;
-  const callbackUrl           = `${process.env.SERVER_URL || 'http://localhost:5000'}/api/payments/webhook`;
+  const callbackUrl           = `${process.env.SERVER_URL}/api/payments/webhook`;
 
   // ── DEV: Mock redirect ───────────────────────────────────────
   if (process.env.NODE_ENV !== 'production') {
@@ -665,7 +665,7 @@ export const createGuestEventOrder = catchAsync(async (req, res, next) => {
 
   const merchantTransactionId = generateMerchantTxnId();
   const redirectUrl           = `${process.env.CLIENT_URL}/payment/callback`;
-  const callbackUrl           = `${process.env.SERVER_URL || 'http://localhost:5000'}/api/payments/webhook`;
+  const callbackUrl           = `${process.env.SERVER_URL}/api/payments/webhook`;
 
   // ── 5. DEV: Mock redirect ──────────────────────────────────────
   if (process.env.NODE_ENV !== 'production') {

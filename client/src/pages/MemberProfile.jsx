@@ -1,27 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   User, Phone, BookOpen, Hash, GraduationCap, Building,
   CheckCircle2, AlertTriangle, Loader2, ShieldCheck, UserCog,
-  ChevronDown
+  ChevronDown, Camera,
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import BlurText from '../components/react-bits/BlurText';
+import api from '../lib/api';
 
-// ── Shared Styles ─────────────────────────────────────────────
-const SECTION = {
-  background: 'rgba(255, 255, 255, 0.7)',
-  backdropFilter: 'blur(12px)',
-  WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid rgba(226, 232, 240, 0.8)',
-  borderRadius: '16px',
-  overflow: 'hidden',
-  boxShadow: '0 4px 20px -2px rgba(0,0,0,0.02)',
-};
-const SECTION_HEADER = {
-  borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
-  padding: '14px 22px',
-  background: 'rgba(248, 250, 252, 0.6)',
-};
+// ── Shared styles removed — using clay-card from index.css now
 
 // ── Form Field Wrapper with Floating Labels & Micro-Animations 
 const Field = ({ label, icon: Icon, children, focused, hasValue }) => {
@@ -81,8 +68,11 @@ const MemberProfile = () => {
     registrationNumber: user?.registrationNumber || '',
   });
   
-  const [saving, setSaving] = useState(false);
-  const [toast, setToast]   = useState(null);
+  const [saving, setSaving]         = useState(false);
+  const [toast, setToast]           = useState(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef              = useRef(null);
+  const [localAvatar, setLocalAvatar] = useState(user?.avatarUrl || '');
   
   // Track focus states for floating labels
   const [focusState, setFocusState] = useState({
@@ -117,6 +107,38 @@ const MemberProfile = () => {
       showToast(err.response?.data?.message || 'Failed to update profile.', 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Sync localAvatar when store user updates
+  useEffect(() => { setLocalAvatar(user?.avatarUrl || ''); }, [user?.avatarUrl]);
+
+  // ── Avatar Upload to R2 ────────────────────────────────────
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      // Single-step: POST multipart directly to our backend → Cloudinary
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await api.post('/upload/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const { url } = res.data.data;
+
+      // Persist avatarUrl to DB and update Zustand store
+      const profileRes = await api.patch('/users/me', { avatarUrl: url });
+      updateProfile(profileRes.data.data.user);
+      setLocalAvatar(url);
+      showToast('Profile photo updated!', 'success');
+    } catch (err) {
+      showToast('Photo upload failed. Try again.', 'error');
+      console.error('[Avatar] Upload error:', err.message);
+    } finally {
+      setAvatarUploading(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
     }
   };
 
@@ -157,9 +179,7 @@ const MemberProfile = () => {
 
         {/* ── Page Header ──────────────────────────────────── */}
         <div className="flex items-center gap-4 mb-8">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-indigo-50 border border-indigo-100"
-          >
+          <div className="clay-icon-box w-10 h-10" style={{ background: '#eef2ff' }}>
             <UserCog className="w-5 h-5 text-indigo-500" />
           </div>
           <div>
@@ -173,11 +193,7 @@ const MemberProfile = () => {
         </div>
 
         {/* ── Identity Card with Progress Ring ────────────── */}
-        <div className="relative p-5 sm:p-6 mb-8 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-indigo-200" style={{
-          background: 'rgba(255,255,255,0.7)',
-          border: '1px solid rgba(226,232,240,0.8)',
-          backdropFilter: 'blur(12px)',
-        }}>
+        <div className="clay-card clay-indigo relative p-5 sm:p-6 mb-8 overflow-hidden">
           {/* Subtle corner glow */}
           <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none" style={{
             background: 'radial-gradient(circle at top right, rgba(99,102,241,0.05) 0%, transparent 65%)',
@@ -185,11 +201,27 @@ const MemberProfile = () => {
           
           <div className="flex items-center justify-between relative z-10 gap-4">
             <div className="flex items-center gap-4 min-w-0">
-              <div
-                className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center text-base font-mono font-black text-white shrink-0 shadow-inner"
-                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
-              >
-                {initials}
+              {/* ── Clickable Avatar ────────────────────────── */}
+              <div className="relative shrink-0 group cursor-pointer" onClick={() => !avatarUploading && avatarInputRef.current?.click()}>
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shadow-lg border-3 border-white"
+                  style={{ border: '3px solid white' }}>
+                  {localAvatar ? (
+                    <img src={localAvatar} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-base font-mono font-black text-white"
+                      style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                      {initials}
+                    </div>
+                  )}
+                </div>
+                {/* Camera overlay on hover */}
+                <div className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  {avatarUploading
+                    ? <Loader2 className="w-5 h-5 text-white animate-spin" />
+                    : <Camera className="w-5 h-5 text-white" />
+                  }
+                </div>
+                <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
               </div>
               <div className="min-w-0">
                 <p className="text-base sm:text-lg font-bold text-slate-800 truncate">{user?.name || '—'}</p>
@@ -245,9 +277,9 @@ const MemberProfile = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
 
           {/* Contact Section */}
-          <div style={SECTION}>
-            <div style={SECTION_HEADER}>
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-slate-500">
+          <div className="clay-card clay-blue overflow-hidden">
+            <div className="border-b border-blue-100/50 px-5 py-3.5 bg-blue-50/40">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-blue-500">
                 Contact Information
               </p>
             </div>
@@ -289,9 +321,9 @@ const MemberProfile = () => {
           </div>
 
           {/* Academic Section */}
-          <div style={SECTION}>
-            <div style={SECTION_HEADER}>
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-slate-500">
+          <div className="clay-card clay-purple overflow-hidden">
+            <div className="border-b border-purple-100/50 px-5 py-3.5 bg-purple-50/40">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-purple-500">
                 Academic Details
               </p>
             </div>
@@ -416,15 +448,7 @@ const MemberProfile = () => {
           <button
             type="submit"
             disabled={saving || (completionPercentage === 100 && Object.keys(formData).every(k => formData[k] === (user[k] || '')))}
-            className="w-full sm:w-auto flex items-center justify-center gap-2.5 font-mono font-bold px-8 py-3.5 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm min-h-[44px] group"
-            style={{
-              background: 'rgba(99,102,241,0.85)',
-              border: '1px solid rgba(129,140,248,0.4)',
-              color: '#ffffff',
-              boxShadow: '0 0 20px rgba(99,102,241,0.2)',
-            }}
-            onMouseEnter={e => { if (!e.currentTarget.disabled) e.currentTarget.style.background = 'rgba(99,102,241,1)'; }}
-            onMouseLeave={e => { if (!e.currentTarget.disabled) e.currentTarget.style.background = 'rgba(99,102,241,0.85)'; }}
+            className="clay-btn clay-btn-indigo w-full sm:w-auto gap-2.5 font-mono font-bold px-8 py-3.5 text-sm min-h-[44px] group"
           >
             {saving
               ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>

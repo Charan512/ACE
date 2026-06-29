@@ -10,14 +10,7 @@ import {
 } from 'lucide-react';
 import api from '../lib/api';
 
-// ── Shared Styles ─────────────────────────────────────────────
-const CARD = {
-  background: 'rgba(255, 255, 255, 0.7)',
-  backdropFilter: 'blur(12px)',
-  WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid rgba(226, 232, 240, 0.8)',
-  borderRadius: '16px',
-};
+// ── Shared Styles removed — using clay-card from index.css now
 
 // ── Toast ─────────────────────────────────────────────────────
 const Toast = ({ toast }) => {
@@ -146,15 +139,15 @@ const MemberDashboard = () => {
             {/* Stats chips */}
             {!loading && (
               <div className="flex items-center gap-3 flex-wrap">
-                <SpotlightCard className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-mono font-medium text-indigo-700 bg-indigo-50 border-indigo-100">
-                  <CalendarDays className="w-4 h-4" />
+                <span className="clay-badge clay-indigo text-indigo-700">
+                  <CalendarDays className="w-3.5 h-3.5 mr-1" />
                   {vaultEvents.length} event{vaultEvents.length !== 1 ? 's' : ''}
-                </SpotlightCard>
+                </span>
                 {certsAvailable > 0 && (
-                  <SpotlightCard className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-mono font-medium text-emerald-700 bg-emerald-50 border-emerald-100">
-                    <Award className="w-4 h-4" />
+                  <span className="clay-badge clay-green text-emerald-700">
+                    <Award className="w-3.5 h-3.5 mr-1" />
                     {certsAvailable} cert{certsAvailable !== 1 ? 's' : ''}
-                  </SpotlightCard>
+                  </span>
                 )}
               </div>
             )}
@@ -162,28 +155,18 @@ const MemberDashboard = () => {
 
           {/* Profile incomplete warning */}
           {!user?.registrationNumber && (
-            <div
-              className="mt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl"
-              style={{ background: 'rgba(120,53,15,0.12)', border: '1px solid rgba(245,158,11,0.18)' }}
-            >
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="w-4 h-4 shrink-0" style={{ color: '#d97706' }} />
-                <p className="text-sm font-medium" style={{ color: '#d97706' }}>
-                  Roll number missing — required for certificate generation.
-                </p>
-              </div>
-              <a
-                href="/member/profile"
-                className="text-xs font-mono font-semibold px-4 py-2 rounded-xl transition-all shrink-0"
-                style={{
-                  color: '#fbbf24',
-                  border: '1px solid rgba(245,158,11,0.3)',
-                  background: 'rgba(245,158,11,0.08)',
-                }}
-              >
-                Complete profile →
-              </a>
+            <div className="clay-card clay-amber mt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
+              <p className="text-sm font-medium text-amber-800">
+                Roll number missing — required for certificate generation.
+              </p>
             </div>
+            <a href="/member/profile"
+              className="clay-btn clay-btn-amber text-xs font-mono font-semibold px-4 py-2 shrink-0">
+              Complete profile →
+            </a>
+          </div>
           )}
         </section>
 
@@ -202,12 +185,9 @@ const MemberDashboard = () => {
                 <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#4f5882' }} />
               </div>
             ) : upcomingEvents.length === 0 ? (
-              <div
-                className="w-full flex flex-col items-center justify-center py-16 rounded-2xl gap-2"
-                style={{ border: '1px dashed rgba(255,255,255,0.08)' }}
-              >
-                <CalendarDays className="w-8 h-8 mb-1" style={{ color: '#1e293b' }} />
-                <p className="text-sm" style={{ color: '#475569' }}>No events available right now.</p>
+              <div className="clay-card clay-slate w-full flex flex-col items-center justify-center py-16 gap-2">
+                <CalendarDays className="w-8 h-8 mb-1 text-slate-400" />
+                <p className="text-sm text-slate-500">No events available right now.</p>
               </div>
             ) : (
               upcomingEvents.map((ev) => {

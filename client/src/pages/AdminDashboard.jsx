@@ -63,12 +63,6 @@ const PayBar = ({ label, count, total, color }) => (
 );
 
 const PayStatsPanel = () => {
-      </div>
-    </div>
-  </div>
-);
-
-const PayStatsPanel = () => {
   const [events, setEvents] = useState([]);
   const [sel, setSel] = useState('');
   const [stats, setStats] = useState(null);

@@ -43,7 +43,7 @@ const transporter = nodemailer.createTransport({
  */
 const sendEmail = async ({ to, subject, html, text }) => {
   const info = await transporter.sendMail({
-    from: process.env.EMAIL_FROM || '"ACE ERP" <noreply@ace.org>',
+    from: process.env.EMAIL_FROM,
     to,
     subject,
     html,

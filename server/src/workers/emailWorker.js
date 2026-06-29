@@ -70,7 +70,7 @@ const emailWorker = new Worker(
                   font-size:28px;letter-spacing:0.3em;color:#00d4ff;font-family:monospace;text-align:center;
                   border-radius:2px;margin:0 0 16px;">${otp}</code>
                 <p style="color:#475569;font-size:13px;margin:0;">
-                  This OTP expires in ${process.env.OTP_EXPIRY_MINUTES || 10} minutes.
+                  This OTP expires in ${process.env.OTP_EXPIRY_MINUTES} minutes.
                   Do not share this with anyone.
                 </p>
               </div>

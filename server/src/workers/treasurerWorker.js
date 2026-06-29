@@ -2,6 +2,7 @@ import { Worker } from 'bullmq';
 import { createRedisConnection } from '../config/redis.js';
 import redis from '../config/redis.js';
 import Transaction from '../models/Transaction.js';
+import User from '../models/User.js';
 import sendEmail from '../utils/mailer.js';
 import { buildTreasurerDigestEmail } from '../utils/emailTemplates.js';
 import { TREASURER_META_KEY } from '../queues/treasurerQueue.js';
@@ -48,8 +49,21 @@ const treasurerWorker = new Worker(
     if (transactions.length === 0) {
       console.warn('[TreasurerWorker] Metadata indicated pending registrations, but DB returned 0.');
     } else {
-      // ── 3. Build & Send Email ──────────────────────────────
-      const treasurerEmail = process.env.TREASURER_EMAIL || 'treasurer@ace.org';
+      // ── 3. Resolve treasurer email from DB ─────────────────
+      // Treasurer is not an env var — it is derived from the User collection.
+      // A user seeded/assigned the 'Treasurer' designation is the recipient.
+      const treasurerUser = await User.findOne({ designation: 'Treasurer' })
+        .select('email name')
+        .lean();
+
+      if (!treasurerUser) {
+        console.error('[TreasurerWorker] No user with designation "Treasurer" found in DB. Digest email aborted.');
+        return;
+      }
+
+      const treasurerEmail = treasurerUser.email;
+
+      // ── 4. Build & Send Email ──────────────────────────────
       const emailContent = buildTreasurerDigestEmail(transactions, {
         firstRegistrationAt: firstAt,
         pendingCount,
@@ -62,7 +76,7 @@ const treasurerWorker = new Worker(
         html: emailContent.html,
       });
 
-      console.log(`[TreasurerWorker] Digest sent to ${treasurerEmail} with ${transactions.length} records.`);
+      console.log(`[TreasurerWorker] Digest sent to ${treasurerEmail} (${treasurerUser.name}) with ${transactions.length} records.`);
     }
 
     // ── 4. Reset Redis Metadata ──────────────────────────────

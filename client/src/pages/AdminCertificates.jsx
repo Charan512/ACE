@@ -13,9 +13,10 @@ import {
   Plus,
   X,
   Type,
+  Link,
+  Check,
 } from 'lucide-react';
 import api from '../lib/api';
-import axios from 'axios';
 
 // ── Toast ─────────────────────────────────────────────────────
 const Toast = ({ toast }) => {
@@ -55,6 +56,8 @@ const AdminCertificates = () => {
   const [draggingIdx, setDraggingIdx] = useState(null);
 
   const [toast, setToast] = useState(null);
+  const [uploadMode, setUploadMode] = useState('file'); // 'file' | 'url'
+  const [urlInput, setUrlInput] = useState('');
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -111,28 +114,22 @@ const AdminCertificates = () => {
     if (ev) loadEventTemplate(ev);
   };
 
-  // ── Upload Template (Pre-Signed URLs) ──────────────────────
+  // ── Upload Template via Cloudinary ────────────────────────
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
     try {
-      // 1. Request pre-signed URL from our backend
-      const { data } = await api.get('/admin/upload/presigned-url', {
-        params: { fileName: file.name, fileType: file.type },
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const { data } = await api.post('/admin/upload/template', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      const { uploadUrl, publicUrl } = data.data;
-
-      // 2. Direct upload to R2 using axios (bypassing node processing)
-      await axios.put(uploadUrl, file, {
-        headers: { 'Content-Type': file.type },
-      });
-
-      // 3. Save URL to state
-      setTemplateUrl(publicUrl);
-      showToast('Template uploaded successfully.', 'success');
+      setTemplateUrl(data.data.url);
+      showToast('Template uploaded to Cloudinary ✓', 'success');
     } catch (error) {
       console.error('Upload error:', error);
       showToast('Failed to upload template.', 'error');
@@ -317,34 +314,81 @@ const AdminCertificates = () => {
         <div className="lg:col-span-5 space-y-6 flex flex-col h-full max-h-[800px]">
 
           {/* Upload Zone */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 shrink-0">
-            <div className="flex items-center gap-2 mb-4">
-              <Upload className="w-4 h-4 text-slate-400" />
-              <h3 className="text-sm font-black text-slate-700 uppercase tracking-wide">Base Template</h3>
-            </div>
-
-            <div className="flex items-center gap-4">
-              {templateUrl && (
-                <div className="relative w-24 h-16 rounded-lg border border-slate-200 overflow-hidden shadow-sm shrink-0 bg-slate-50">
-                  <img src={templateUrl} alt="Preview" className="w-full h-full object-cover" />
-                  <button type="button" onClick={() => setTemplateUrl('')}
-                    className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 hover:bg-red-500 transition-colors">
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              )}
-              <div className="flex-1">
-                <label className={`flex flex-col items-center justify-center w-full h-16 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${uploading ? 'bg-slate-100 border-slate-300' : 'bg-white border-blue-200 hover:border-blue-400 hover:bg-blue-50'}`}>
-                  <div className="flex items-center justify-center gap-2">
-                    {uploading ? <Loader2 className="w-5 h-5 text-blue-500 animate-spin" /> : <ImageIcon className="w-5 h-5 text-blue-500" />}
-                    <span className="text-sm font-semibold text-slate-700">
-                      {uploading ? 'Uploading to R2...' : 'Upload Image'}
-                    </span>
-                  </div>
-                  <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
-                </label>
+          <div className="clay-card clay-blue p-5 shrink-0">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Upload className="w-4 h-4 text-blue-500" />
+                <h3 className="text-sm font-black text-slate-700 uppercase tracking-wide">Base Template</h3>
+              </div>
+              {/* Toggle pill */}
+              <div className="flex items-center gap-1 p-1 bg-white/60 rounded-xl border border-blue-100">
+                <button
+                  onClick={() => setUploadMode('file')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    uploadMode === 'file' ? 'bg-blue-600 text-white shadow' : 'text-slate-500 hover:text-slate-800'
+                  }`}>
+                  <ImageIcon className="w-3 h-3" /> Upload File
+                </button>
+                <button
+                  onClick={() => setUploadMode('url')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    uploadMode === 'url' ? 'bg-blue-600 text-white shadow' : 'text-slate-500 hover:text-slate-800'
+                  }`}>
+                  <Link className="w-3 h-3" /> Paste URL
+                </button>
               </div>
             </div>
+
+            {/* Preview strip */}
+            {templateUrl && (
+              <div className="relative w-full h-20 rounded-xl border border-blue-100 overflow-hidden shadow-sm mb-3 bg-slate-50">
+                <img src={templateUrl} alt="Preview" className="w-full h-full object-cover" />
+                <button type="button" onClick={() => { setTemplateUrl(''); setUrlInput(''); }}
+                  className="absolute top-1.5 right-1.5 bg-black/60 text-white rounded-full p-1 hover:bg-red-500 transition-colors">
+                  <X className="w-3 h-3" />
+                </button>
+                <span className="absolute bottom-1.5 left-2 text-[10px] font-mono font-bold text-white bg-black/50 px-1.5 py-0.5 rounded">Template set ✓</span>
+              </div>
+            )}
+
+            {uploadMode === 'file' ? (
+              <label className={`flex flex-col items-center justify-center w-full h-16 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+                uploading ? 'bg-blue-50 border-blue-300' : 'bg-white border-blue-200 hover:border-blue-500 hover:bg-blue-50'
+              }`}>
+                <div className="flex items-center gap-2">
+                  {uploading
+                    ? <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                    : <ImageIcon className="w-5 h-5 text-blue-500" />}
+                  <span className="text-sm font-semibold text-slate-700">
+                    {uploading ? 'Uploading to R2…' : 'Click to upload image'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">PNG, JPG, WEBP — max 10 MB</p>
+                <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
+              </label>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  className="clay-input flex-1 px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400"
+                  placeholder="https://example.com/certificate-template.png"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (urlInput.trim()) {
+                      setTemplateUrl(urlInput.trim());
+                      showToast('Template URL set.', 'success');
+                    }
+                  }}
+                  className="clay-btn clay-btn-blue px-4 py-2.5 text-sm gap-1.5 shrink-0"
+                >
+                  <Check className="w-4 h-4" /> Apply
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Text Nodes List */}

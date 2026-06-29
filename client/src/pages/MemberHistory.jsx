@@ -6,22 +6,15 @@ import {
 import api from '../lib/api';
 import BlurText from '../components/react-bits/BlurText';
 
-// ── Shared Styles ─────────────────────────────────────────────
-const CARD = {
-  background: 'rgba(255, 255, 255, 0.7)',
-  backdropFilter: 'blur(12px)',
-  WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid rgba(226, 232, 240, 0.8)',
-  borderRadius: '16px',
-};
+// ── Shared Styles removed — using clay-card from index.css now
 
 // ── Stat Block ────────────────────────────────────────────────
-const StatBlock = ({ value, label, color = '#818cf8' }) => (
-  <div className="flex-1 p-4 sm:p-5 rounded-2xl" style={CARD}>
+const StatBlock = ({ value, label, color = '#818cf8', clayColor = 'clay-indigo' }) => (
+  <div className={`clay-card ${clayColor} flex-1 p-4 sm:p-5`}>
     <p className="text-2xl sm:text-3xl font-mono font-black" style={{ color }}>
       {value}
     </p>
-    <p className="text-[10px] font-mono font-medium uppercase tracking-[0.15em] mt-1.5" style={{ color: '#475569' }}>
+    <p className="text-[10px] font-mono font-medium uppercase tracking-[0.15em] mt-1.5 text-slate-500">
       {label}
     </p>
   </div>
@@ -39,14 +32,13 @@ const CertCell = ({ ev, downloadingId, onDownload, mobile = false }) => {
 
   if (!ev.hasCertificate) {
     return (
-      <div
-        className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-semibold whitespace-nowrap ${mobile ? 'w-full justify-center' : ''}`}
-        style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', color: '#d97706' }}
+      <span
+        className={`clay-badge clay-amber text-amber-700 whitespace-nowrap ${mobile ? 'w-full justify-center' : ''}`}
         title="The admin has not released a certificate for this event yet."
       >
-        <Clock className="w-3 h-3 shrink-0" />
+        <Clock className="w-3 h-3 shrink-0 mr-1" />
         Not released yet
-      </div>
+      </span>
     );
   }
 
@@ -55,14 +47,7 @@ const CertCell = ({ ev, downloadingId, onDownload, mobile = false }) => {
       id={`dl-cert-${ev._id}`}
       onClick={() => onDownload(ev._id, ev.title)}
       disabled={isDownloading}
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-mono font-semibold transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide whitespace-nowrap ${mobile ? 'w-full justify-center min-h-[44px]' : 'min-h-[36px]'}`}
-      style={{
-        background: isDownloading ? 'rgba(99,102,241,0.14)' : 'rgba(99,102,241,0.1)',
-        border: '1px solid rgba(129,140,248,0.25)',
-        color: '#818cf8',
-      }}
-      onMouseEnter={e => { if (!isDownloading) e.currentTarget.style.background = 'rgba(99,102,241,0.2)'; }}
-      onMouseLeave={e => { if (!isDownloading) e.currentTarget.style.background = 'rgba(99,102,241,0.1)'; }}
+      className={`clay-btn clay-btn-indigo text-[10px] font-mono font-semibold uppercase tracking-wide whitespace-nowrap ${mobile ? 'w-full justify-center min-h-[44px] gap-2 px-4 py-2' : 'gap-2 px-3 py-1.5 min-h-[36px]'}`}
     >
       {isDownloading
         ? <><Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" /> Generating…</>
@@ -246,17 +231,15 @@ const MemberHistory = () => {
           <>
             {/* ── Stats Row ───────────────────────────────── */}
             <div className="flex gap-4 mb-8">
-              <StatBlock value={filteredVault.length} label={filter === 'all' ? "Events Attended" : filter === 'active' ? "Active Events" : "Completed Events"} color="#818cf8" />
-              <StatBlock value={certCount} label="Certs Available" color="#34d399" />
+              <StatBlock value={filteredVault.length} label={filter === 'all' ? "Events Attended" : filter === 'active' ? "Active Events" : "Completed Events"} color="#818cf8" clayColor="clay-indigo" />
+              <StatBlock value={certCount} label="Certs Available" color="#34d399" clayColor="clay-green" />
               {pendingCertCount > 0 && (
-                <StatBlock value={pendingCertCount} label="Certs Pending" color="#d97706" />
+                <StatBlock value={pendingCertCount} label="Certs Pending" color="#d97706" clayColor="clay-amber" />
               )}
             </div>
 
             {/* ── Desktop Table ────────────────────────────── */}
-            <div
-              className="hidden sm:block rounded-2xl overflow-hidden mb-6 border border-slate-200 bg-white/50 backdrop-blur-sm"
-            >
+            <div className="clay-card clay-slate hidden sm:block overflow-hidden mb-6">
               <div className="overflow-x-auto w-full">
                 <table className="w-full min-w-[580px] text-left border-collapse">
                   <thead>
@@ -313,7 +296,7 @@ const MemberHistory = () => {
             {/* ── Mobile Cards ─────────────────────────────── */}
             <div className="sm:hidden space-y-3">
               {filteredVault.map((ev) => (
-                <div key={ev._id} className="p-5 rounded-2xl" style={CARD}>
+                <div key={ev._id} className="clay-card clay-pink p-5">
                   <div className="flex items-start justify-between gap-3 mb-4">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-slate-800 leading-snug">{ev.title}</p>

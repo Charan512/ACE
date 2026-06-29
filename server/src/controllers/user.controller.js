@@ -103,7 +103,7 @@ export const updateUserRole = catchAsync(async (req, res, next) => {
  * @access  Private
  */
 export const updateMe = catchAsync(async (req, res, next) => {
-  const { phone, branch, year, section, registrationNumber, domain, designation } = req.body;
+  const { phone, branch, year, section, registrationNumber, domain, designation, avatarUrl } = req.body;
 
   const updates = {};
   if (phone !== undefined) updates.phone = phone;
@@ -111,9 +111,10 @@ export const updateMe = catchAsync(async (req, res, next) => {
   if (year !== undefined) updates.year = year;
   if (section !== undefined) updates.section = section;
   if (registrationNumber !== undefined) updates.registrationNumber = registrationNumber;
-  // Body member fields — only write if provided; don't overwrite with null if absent
   if (domain !== undefined) updates.domain = domain;
   if (designation !== undefined) updates.designation = designation;
+  // Avatar URL set after a successful direct-to-R2 upload from the client
+  if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
 
   // Run Mongoose schema validation on updates
   const user = await User.findByIdAndUpdate(

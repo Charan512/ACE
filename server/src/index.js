@@ -33,16 +33,21 @@ import opsRoutes from './routes/ops.routes.js';
 
 // ── Production Safety Guards ─────────────────────────────────
 // Prevents accidental deployment with a weak development JWT secret.
-if (process.env.NODE_ENV === 'production') {
-  const secret = process.env.JWT_SECRET || '';
-  if (!secret || secret.length < 32 || secret.toLowerCase().includes('dev') || secret.toLowerCase().includes('secret')) {
-    console.error('[Server] FATAL: Weak or missing JWT_SECRET detected in production. Shutting down.');
-    process.exit(1);
-  }
+if (!process.env.JWT_SECRET) {
+  console.error('[Server] FATAL: JWT_SECRET is not set in .env. Shutting down.');
+  process.exit(1);
+}
+if (process.env.NODE_ENV === 'production' && (process.env.JWT_SECRET.length < 32 || process.env.JWT_SECRET.toLowerCase().includes('dev') || process.env.JWT_SECRET.toLowerCase().includes('secret'))) {
+  console.error('[Server] FATAL: Weak JWT_SECRET detected in production. Shutting down.');
+  process.exit(1);
 }
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+if (!process.env.PORT) {
+  console.error('[Server] FATAL: PORT is not set in .env. Shutting down.');
+  process.exit(1);
+}
+const PORT = process.env.PORT;
 
 // ── Security Middleware ──────────────────────────────────────
 app.use(helmet());
@@ -90,7 +95,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/admin/upload', uploadRoutes);
+app.use('/api/admin/upload', uploadRoutes); // admin/ebm/sbm: posters, certificate templates
+app.use('/api/upload', uploadRoutes);        // any authenticated user: avatar uploads
 app.use('/api/ops', opsRoutes);
 
 // ── 404 Handler ──────────────────────────────────────────────

@@ -4,9 +4,8 @@ import crypto from 'crypto';
 // Credentials loaded from environment — NEVER hardcoded.
 export const PHONEPE_MERCHANT_ID = process.env.PHONEPE_MERCHANT_ID;
 const SALT_KEY                   = process.env.PHONEPE_SALT_KEY;
-export const SALT_INDEX          = process.env.PHONEPE_SALT_INDEX || '1';
-export const PHONEPE_BASE_URL    = process.env.PHONEPE_BASE_URL ||
-  'https://api-preprod.phonepe.com/apis/pg-sandbox'; // UAT default
+export const SALT_INDEX          = process.env.PHONEPE_SALT_INDEX;
+export const PHONEPE_BASE_URL    = process.env.PHONEPE_BASE_URL;
 
 /**
  * Generates the X-VERIFY checksum for a PhonePe API request.
