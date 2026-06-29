@@ -2,11 +2,19 @@ import { useState, useEffect, useRef } from 'react';
 import {
   User, Phone, BookOpen, Hash, GraduationCap, Building,
   CheckCircle2, AlertTriangle, Loader2, ShieldCheck, UserCog,
-  ChevronDown, Camera, X, Edit3, Lock, Users, Linkedin
+  ChevronDown, Camera, X, Edit3, Lock, Users
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import BlurText from '../components/react-bits/BlurText';
 import api from '../lib/api';
+
+const LinkedinIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+    <rect x="2" y="9" width="4" height="12" />
+    <circle cx="4" cy="4" r="2" />
+  </svg>
+);
 
 // ── Form Field Wrapper with Floating Labels & Micro-Animations 
 const Field = ({ label, icon: Icon, children, focused, hasValue }) => {
@@ -543,7 +551,7 @@ const MemberProfile = () => {
               <div className="p-5 sm:p-6 grid grid-cols-1 gap-x-5 gap-y-3">
                 <Field 
                   label="LinkedIn URL" 
-                  icon={Linkedin} 
+                  icon={LinkedinIcon} 
                   focused={focusState.linkedin} 
                   hasValue={!!formData.linkedin}
                 >

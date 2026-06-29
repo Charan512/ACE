@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Linkedin, Mail, User, Loader2 } from 'lucide-react';
+import { Mail, User, Loader2 } from 'lucide-react';
 import api from '../lib/api';
+
+const LinkedinIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+    <rect x="2" y="9" width="4" height="12" />
+    <circle cx="4" cy="4" r="2" />
+  </svg>
+);
 
 const TeamDirectory = () => {
   const [activeTab, setActiveTab] = useState('EBM');
@@ -128,7 +136,7 @@ const TeamDirectory = () => {
                     <div className="absolute inset-0 bg-indigo-900/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3">
                       {member.linkedin && (
                         <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="clay-btn clay-btn-white w-10 h-10 p-0 flex items-center justify-center text-indigo-600 hover:text-indigo-700">
-                          <Linkedin className="w-4 h-4" />
+                          <LinkedinIcon className="w-4 h-4" />
                         </a>
                       )}
                       <a href={`mailto:${member.email || '#'}`} className="clay-btn clay-btn-white w-10 h-10 p-0 flex items-center justify-center text-slate-700 hover:text-slate-900">
