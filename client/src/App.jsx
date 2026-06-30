@@ -138,6 +138,7 @@ function App() {
         >
           <Route element={<AdminLayout />}>
             <Route path="/admin"                    element={<AdminDashboard />} />
+            <Route path="/admin/profile"            element={<MemberProfile />} />
             <Route path="/admin/events"             element={<AdminEvents />} />
             <Route path="/admin/registrations"      element={<AdminRegistrations />} />
             <Route path="/admin/certificates"       element={<AdminCertificates />} />
@@ -164,6 +165,7 @@ function App() {
         >
           <Route element={<OpsLayout />}>
             <Route path="/ops"                        element={<OpsDashboard />} />
+            <Route path="/ops/profile"                element={<MemberProfile />} />
             <Route path="/ops/events/:eventId"        element={<EventControlRoom />} />
           </Route>
           {/* Scanner is full-screen (no OpsLayout chrome) */}

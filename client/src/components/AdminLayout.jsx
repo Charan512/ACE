@@ -121,9 +121,30 @@ const AdminLayout = () => {
         {/* Right side */}
         <div className="flex items-center gap-4 shrink-0">
           
-          {/* Desktop: Notifications + Logout */}
+          {/* Desktop: Profile, Notifications + Logout */}
           <div className="hidden lg:flex items-center gap-2">
             
+            {/* Profile Button */}
+            <NavLink
+              to="/admin/profile"
+              className="group flex items-center gap-3 px-3 py-1.5 rounded-[18px] transition-all duration-300 border border-transparent hover:bg-slate-100/60 hover:border-slate-200/50 hover:shadow-sm cursor-pointer mr-2"
+              title="View Profile"
+            >
+              <div className="flex flex-col items-end">
+                <span className="text-sm font-bold text-slate-900 tracking-tight group-hover:text-blue-700 transition-colors">{fullName}</span>
+                {roleLabel !== 'Admin' && (
+                  <span className="text-[10px] font-mono font-bold tracking-widest text-blue-500 uppercase">{roleLabel}</span>
+                )}
+              </div>
+              <div
+                className="relative flex items-center justify-center w-10 h-10 rounded-xl font-mono font-black text-white shrink-0 shadow-inner group-hover:scale-[1.05] transition-transform duration-300"
+                style={{ background: 'linear-gradient(135deg, #2563eb, #4f46e5)' }}
+              >
+                {initials}
+                <div className="absolute inset-0 rounded-xl ring-2 ring-blue-400 ring-offset-2 ring-offset-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+              </div>
+            </NavLink>
+
             {isAdmin && (
               <NavLink
                 to="/admin/notifications"
@@ -190,7 +211,7 @@ const AdminLayout = () => {
 
           <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-8">
             {/* Highly Emphasized Profile Section */}
-            <div className="flex flex-col items-center text-center p-6 bg-white rounded-3xl border border-slate-200 shadow-sm">
+            <NavLink to="/admin/profile" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center text-center p-6 bg-white rounded-3xl border border-slate-200 shadow-sm hover:border-blue-300 transition-colors cursor-pointer">
               <div
                 className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-mono font-bold text-white mb-4 shadow-md"
                 style={{ background: 'linear-gradient(135deg, #2563eb, #4f46e5)' }}
@@ -201,7 +222,7 @@ const AdminLayout = () => {
               <span className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider">
                 {roleLabel}
               </span>
-            </div>
+            </NavLink>
 
             {/* Nav Links */}
             <nav className="flex flex-col gap-2">
