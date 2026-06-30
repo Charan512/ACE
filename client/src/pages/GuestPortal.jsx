@@ -192,9 +192,9 @@ const GuestPortal = () => {
               <div className="w-16 h-16 bg-lime-400 border-[3px] border-slate-900 mb-6 flex items-center justify-center rounded-xl shadow-[4px_4px_0_0_#0f172a] transform -rotate-3">
                 <Globe className="w-8 h-8 text-slate-900" />
               </div>
-              <h3 className="text-3xl font-black mb-4 uppercase text-slate-900">Open<br />Source</h3>
+              <h3 className="text-3xl font-black mb-4 uppercase text-slate-900">Skill<br />Building</h3>
               <p className="text-slate-800 font-bold text-lg leading-relaxed">
-                Contribute to real projects, build your portfolio, and make a dent in the universe.
+                Get the mentorship and hands-on guidance you need to rapidly level up your technical skill set.
               </p>
             </div>
           </div>
