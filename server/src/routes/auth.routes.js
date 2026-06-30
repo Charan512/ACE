@@ -15,16 +15,16 @@ const router = Router();
 
 /**
  * Strict limiter for login attempts — prevents brute-force credential stuffing.
- * 5 attempts per 15 minutes per IP. Returns a generic message.
+ * 5 attempts per 5 minutes per IP. Returns a generic message.
  */
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 5 * 60 * 1000, // 5 minutes
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     success: false,
-    message: 'Too many login attempts. Please try again in 15 minutes.',
+    message: 'Too many login attempts. Please try again in 5 minutes.',
   },
 });
 

@@ -223,8 +223,7 @@ const AdminDashboard = () => {
 
       <section>
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">System Overview</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          <StatCard label="Registered Accounts" sublabel="All roles excluding guests" value={stats.totalAccounts} icon={Users} accent="#3b82f6" loading={loading} linkTo="/admin/users" linkLabel="View all" clayColor="clay-blue" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <StatCard label="Verified Members" sublabel="Active ACE memberships" value={stats.totalVerifiedMembers} icon={UserCheck} accent="#10b981" loading={loading} linkTo="/admin/users?role=member" linkLabel="View members" clayColor="clay-green" />
           <StatCard label="Active Events" sublabel="Live registrations open" value={stats.activeEvents} icon={CalendarCheck} accent="#8b5cf6" loading={loading} linkTo="/admin/events" linkLabel="Manage" clayColor="clay-purple" />  </div>
       </section>
