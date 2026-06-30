@@ -12,8 +12,9 @@ const GuestPortal = () => {
     const fetchLatestEvent = async () => {
       try {
         const res = await api.get('/events?status=upcoming&sort=eventDate&limit=1');
-        if (res.data.data.events.length > 0) {
-          setUpcomingEvent(res.data.data.events[0]);
+        const events = res.data.data || [];
+        if (events.length > 0) {
+          setUpcomingEvent(events[0]);
         }
       } catch (err) {
         console.error('Failed to fetch latest event:', err);
