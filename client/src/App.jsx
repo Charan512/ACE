@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -56,6 +57,28 @@ const MainLayout = () => (
 // ─────────────────────────────────────────────────────────────
 // APP ROOT
 // ─────────────────────────────────────────────────────────────
+
+const RootRoute = () => {
+  const { user, isLoading } = useAuthStore();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0B0F19]">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
+  
+  if (user) {
+    if (['admin', 'ebm', 'sbm'].includes(user.role)) {
+      return <Navigate to="/admin" replace />;
+    }
+    return <Navigate to="/member/dashboard" replace />;
+  }
+  
+  return <GuestPortal />;
+};
+
 function App() {
   const fetchProfile = useAuthStore((state) => state.fetchProfile);
 
@@ -74,7 +97,7 @@ function App() {
       <Routes>
         {/* ── Public Routes ───────────────────────────── */}
         <Route element={<MainLayout />}>
-          <Route path="/" element={<GuestPortal />} />
+          <Route path="/" element={<RootRoute />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:eventId" element={<EventDetailPage />} />
           <Route path="/team" element={<TeamDirectory />} />

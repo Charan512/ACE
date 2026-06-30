@@ -78,19 +78,19 @@ const MemberLayout = () => {
           boxShadow: '0 10px 40px -10px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)',
         }}
       >
-        <div className="flex items-center gap-6">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner"
-              style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1))', border: '1px solid rgba(99,102,241,0.2)' }}
-            >
-              <Sparkles className="w-5 h-5" style={{ color: '#6366f1' }} />
-            </div>
-            <div className="flex flex-col leading-tight hidden sm:flex">
-              <span className="text-sm font-black text-slate-900 tracking-tight">ACE Portal</span>
-              <span className="text-[9px] font-mono font-bold uppercase tracking-widest" style={{ color: '#8b5cf6' }}>member.access</span>
-            </div>
+        <div className="flex items-center gap-4 sm:gap-6 flex-1">
+          {/* Mobile Menu Button (Left) */}
+          <button
+            className="md:hidden p-2 rounded-xl bg-slate-100/80 text-slate-600 hover:bg-slate-200 transition-colors"
+            onClick={() => setIsMobileMenuOpen(true)}
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
+          {/* Logo (Desktop only) */}
+          <div className="hidden md:flex flex-col leading-tight">
+            <span className="text-sm font-black text-slate-900 tracking-tight">ACE Portal</span>
+            <span className="text-[9px] font-mono font-bold uppercase tracking-widest" style={{ color: '#8b5cf6' }}>member.access</span>
           </div>
 
           {/* Desktop Segmented Nav Links */}
@@ -121,27 +121,28 @@ const MemberLayout = () => {
         {/* Right side */}
         <div className="flex items-center gap-4">
           
-          {/* Desktop: Highly Emphasized User Profile + Logout */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="flex items-center gap-2">
             
-            {/* Unified Profile Button */}
+            {/* Unified Profile Button (Visible on both mobile and desktop) */}
             <NavLink
               to="/member/profile"
               className={({ isActive }) =>
-                `group flex items-center gap-3 px-3 py-1.5 rounded-[18px] transition-all duration-300 cursor-pointer border border-transparent
-                ${isActive ? 'bg-indigo-50/80 border-indigo-100/50 shadow-sm' : 'hover:bg-slate-100/60 hover:border-slate-200/50 hover:shadow-sm'}`
+                `group flex items-center gap-3 px-1 md:px-3 py-1 md:py-1.5 rounded-[18px] transition-all duration-300 cursor-pointer border border-transparent
+                ${isActive ? 'md:bg-indigo-50/80 md:border-indigo-100/50 md:shadow-sm' : 'md:hover:bg-slate-100/60 md:hover:border-slate-200/50 md:hover:shadow-sm'}`
               }
               title="View Profile"
             >
-              <div className="flex flex-col items-end">
+              {/* Desktop Name/Role Text */}
+              <div className="hidden md:flex flex-col items-end">
                 <span className="text-sm font-bold text-slate-900 tracking-tight group-hover:text-indigo-700 transition-colors">{firstName}</span>
                 {roleLabel !== 'Member' && (
                   <span className="text-[10px] font-mono font-bold tracking-widest text-indigo-500 uppercase">{roleLabel}</span>
                 )}
               </div>
               
+              {/* Profile Avatar Image */}
               <div
-                className="relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl font-mono font-black text-white shrink-0 shadow-inner group-hover:scale-[1.05] transition-transform duration-300 overflow-hidden"
+                className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl font-mono font-black text-white shrink-0 shadow-inner group-hover:scale-[1.05] transition-transform duration-300 overflow-hidden"
                 style={{ background: user?.profilePhoto ? '#f8fafc' : 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
               >
                 {user?.profilePhoto ? (
@@ -154,24 +155,16 @@ const MemberLayout = () => {
               </div>
             </NavLink>
 
-            <div className="w-px h-8 bg-slate-200/80 mx-1" />
+            <div className="hidden md:block w-px h-8 bg-slate-200/80 mx-1" />
 
             <button
               onClick={handleLogout}
-              className="p-2.5 rounded-xl transition-all duration-200 cursor-pointer text-slate-400 hover:text-rose-500 hover:bg-rose-50 hover:shadow-sm"
+              className="hidden md:block p-2.5 rounded-xl transition-all duration-200 cursor-pointer text-slate-400 hover:text-rose-500 hover:bg-rose-50 hover:shadow-sm"
               title="Log out"
             >
               <LogOut className="w-5 h-5" />
             </button>
           </div>
-
-          {/* Mobile: Hamburger Button */}
-          <button
-            className="md:hidden p-2 rounded-xl bg-slate-100/80 text-slate-600 hover:bg-slate-200 transition-colors"
-            onClick={() => setIsMobileMenuOpen(true)}
-          >
-            <Menu className="w-5 h-5" />
-          </button>
         </div>
       </header>
 
