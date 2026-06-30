@@ -58,44 +58,6 @@ export const getMyVault = catchAsync(async (req, res, next) => {
   });
 });
 
-/**
- * @desc    Update a user's role (Admin Only)
- * @route   PATCH /api/users/:id/role
- * @access  Private (Admin Only)
- *
- * @deprecated Use PATCH /api/admin/users/:id/role instead — it handles
- * domain, designation, and properly enforces the role firewall.
- * This endpoint is kept for backward compatibility only.
- */
-export const updateUserRole = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
-  const { role } = req.body;
-
-  if (!role) {
-    return next(new AppError('Role is required.', 400));
-  }
-
-  // Validate against the current canonical role enum (guest removed)
-  const validRoles = ['admin', 'sbm', 'ebm', 'member'];
-  if (!validRoles.includes(role)) {
-    return next(new AppError(`Invalid role. Must be one of: ${validRoles.join(', ')}.`, 400));
-  }
-
-  const user = await User.findByIdAndUpdate(
-    id,
-    { role },
-    { new: true, runValidators: true }
-  ).select('-password');
-
-  if (!user) {
-    return next(new AppError('User not found.', 404));
-  }
-
-  res.status(200).json({
-    success: true,
-    data: { user },
-  });
-});
 
 /**
  * @desc    Update current user's profile info (e.g. collegeId, phone, branch, year)

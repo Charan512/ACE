@@ -55,15 +55,7 @@ const AdminLayout = () => {
     ({ allowedRoles }) => !allowedRoles || allowedRoles.includes(user?.role)
   );
 
-  // Inject Treasurer Analytics link for the designated Treasurer
-  if (user?.role === 'sbm' && user?.designation === 'Treasurer') {
-    visibleNavItems.push({
-      label: 'Financials',
-      to: '/treasurer',
-      icon: BarChart2,
-      end: false,
-    });
-  }
+  // Treasurer link moved to OpsLayout
 
   return (
     <div className="min-h-screen text-slate-700 flex flex-col bg-slate-50 selection:bg-blue-100">

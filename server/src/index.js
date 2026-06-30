@@ -185,7 +185,6 @@ const shutdown = async (signal) => {
   console.log(`\n[Server] ${signal} received — graceful shutdown initiated.`);
   await Promise.allSettled([
     emailWorker.close(),
-    treasurerWorker.close(),
     lateConverterWorker.close(),
     certificateWorker.close(),
   ]);

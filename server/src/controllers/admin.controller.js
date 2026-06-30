@@ -98,12 +98,12 @@ export const getEventRegistrations = catchAsync(async (req, res, next) => {
   if (!event) return next(new AppError('Event not found.', 404));
 
   const [registrations, total] = await Promise.all([
-    Registration.find({ eventId })
+    Registration.find({ eventId, status: 'confirmed' })
       .populate('userId', 'name email aceId branch section year phone')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
-    Registration.countDocuments({ eventId }),
+    Registration.countDocuments({ eventId, status: 'confirmed' }),
   ]);
 
   res.status(200).json({
@@ -384,7 +384,7 @@ export const getAttendanceCsv = catchAsync(async (req, res, next) => {
 export const getPaymentStats = catchAsync(async (req, res, next) => {
   const { eventId } = req.params;
 
-  const event = await Event.findById(eventId).select('title');
+  const event = await Event.findById(eventId).select('title memberFee standardFee');
   if (!event) return next(new AppError('Event not found.', 404));
 
   const stats = await Registration.aggregate([
@@ -393,7 +393,15 @@ export const getPaymentStats = catchAsync(async (req, res, next) => {
       $group: {
         _id:           '$paymentMethod',
         count:         { $sum: 1 },
-        totalAmountINR: { $sum: '$amount' },
+        totalAmountINR: { 
+          $sum: { 
+            $cond: [
+              { $eq: ['$tier', 'member'] },
+              event.memberFee,
+              event.standardFee
+            ]
+          } 
+        },
       },
     },
   ]);
@@ -465,8 +473,49 @@ export const getAdminNotifications = catchAsync(async (req, res, _next) => {
 });
 
 // ─────────────────────────────────────────────────────────────
+// MARK NOTIFICATION AS READ
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * @route   PATCH /api/admin/notifications/:id/read
+ * @access  Private (Admin Only)
+ */
+export const markNotificationRead = catchAsync(async (req, res, next) => {
+  const AdminNotification = (await import('../models/AdminNotification.js')).default;
+  const { id } = req.params;
+
+  const notif = await AdminNotification.findByIdAndUpdate(
+    id,
+    { $set: { isRead: true } },
+    { new: true }
+  );
+  if (!notif) return next(new AppError('Notification not found.', 404));
+
+  res.status(200).json({ success: true, data: notif });
+});
+
+/**
+ * @route   PATCH /api/admin/notifications/read-all
+ * @access  Private (Admin Only)
+ */
+export const markAllNotificationsRead = catchAsync(async (_req, res) => {
+  const AdminNotification = (await import('../models/AdminNotification.js')).default;
+
+  const result = await AdminNotification.updateMany(
+    { isRead: false },
+    { $set: { isRead: true } }
+  );
+
+  res.status(200).json({
+    success: true,
+    message: `${result.modifiedCount} notification(s) marked as read.`,
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
 // TREASURER ANALYTICS
 // ─────────────────────────────────────────────────────────────
+
 
 /**
  * @desc    Get full financial + registration analytics for a single event

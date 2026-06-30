@@ -9,6 +9,8 @@ import {
   getAttendanceCsv,
   getPaymentStats,
   getAdminNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
   getTreasurerEventStats,
   getAppSettings,
   updateAppSettings,
@@ -117,6 +119,20 @@ router.get(
   '/notifications',
   restrictTo('admin'),
   getAdminNotifications
+);
+
+// NOTE: /read-all MUST be registered BEFORE /:id/read
+// Otherwise Express matches 'read-all' as an :id param.
+router.patch(
+  '/notifications/read-all',
+  restrictTo('admin'),
+  markAllNotificationsRead
+);
+
+router.patch(
+  '/notifications/:id/read',
+  restrictTo('admin'),
+  markNotificationRead
 );
 
 // ── Treasurer Analytics (SBM + Treasurer designation ONLY) ───

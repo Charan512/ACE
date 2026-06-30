@@ -233,10 +233,10 @@ const MemberProfile = () => {
               <UserCog className="w-5 h-5 text-indigo-500" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex">
+              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex">
                 <BlurText text="My Profile" delay={50} animateBy="letters" direction="bottom" />
               </h1>
-              <p className="text-xs font-mono mt-0.5 text-slate-500">
+              <p className="text-xs font-mono mt-0.5 text-indigo-100">
                 Update your academic and contact information
               </p>
             </div>
@@ -274,12 +274,15 @@ const MemberProfile = () => {
                     </div>
                   )}
                 </div>
-                {/* Camera overlay on hover */}
-                <div className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  {avatarUploading
-                    ? <Loader2 className="w-5 h-5 text-white animate-spin" />
-                    : <Camera className="w-5 h-5 text-white" />
-                  }
+                {/* Always-visible badge indicator */}
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white border border-slate-200 shadow-md flex items-center justify-center text-slate-700 group-hover:text-indigo-600 group-hover:scale-110 transition-all z-20">
+                  {avatarUploading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-500" />
+                  ) : localAvatar ? (
+                    <Edit3 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  ) : (
+                    <Camera className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  )}
                 </div>
                 <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
               </div>
@@ -340,7 +343,7 @@ const MemberProfile = () => {
           {/* Contact Section */}
           <div className="clay-card clay-blue overflow-hidden transition-all duration-300" style={{ opacity: isEditing ? 1 : 0.9 }}>
             <div className="border-b border-blue-100/50 px-5 py-3.5 bg-blue-50/40">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-blue-500">
+              <p className="text-xs font-mono font-black uppercase tracking-[0.2em] text-blue-600">
                 Identity & Contact
               </p>
             </div>
@@ -415,7 +418,7 @@ const MemberProfile = () => {
           {/* Academic Section */}
           <div className="clay-card clay-purple overflow-hidden transition-all duration-300" style={{ opacity: isEditing ? 1 : 0.9 }}>
             <div className="border-b border-purple-100/50 px-5 py-3.5 bg-purple-50/40">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-purple-500">
+              <p className="text-xs font-mono font-black uppercase tracking-[0.2em] text-purple-600">
                 Academic Details
               </p>
             </div>
@@ -540,35 +543,33 @@ const MemberProfile = () => {
             </div>
           </div>
 
-          {/* Social Section (Only for EBM / SBM) */}
-          {(user?.role === 'ebm' || user?.role === 'sbm') && (
-            <div className="clay-card clay-blue overflow-hidden transition-all duration-300 mt-8" style={{ opacity: isEditing ? 1 : 0.9 }}>
-              <div className="border-b border-blue-100/50 px-5 py-3.5 bg-blue-50/40">
-                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-blue-500">
-                  Social Presence
-                </p>
-              </div>
-              <div className="p-5 sm:p-6 grid grid-cols-1 gap-x-5 gap-y-3">
-                <Field 
-                  label="LinkedIn URL" 
-                  icon={LinkedinIcon} 
-                  focused={focusState.linkedin} 
-                  hasValue={!!formData.linkedin}
-                >
-                  <input
-                    type="url"
-                    placeholder={focusState.linkedin ? "https://linkedin.com/in/username" : ""}
-                    value={formData.linkedin}
-                    onChange={setField('linkedin')}
-                    disabled={!isEditing}
-                    style={inputStyle(focusState.linkedin, !isEditing)}
-                    onFocus={() => setFocusState(prev => ({ ...prev, linkedin: true }))}
-                    onBlur={() => setFocusState(prev => ({ ...prev, linkedin: false }))}
-                  />
-                </Field>
-              </div>
+          {/* Social Section */}
+          <div className="clay-card clay-blue overflow-hidden transition-all duration-300 mt-8" style={{ opacity: isEditing ? 1 : 0.9 }}>
+            <div className="border-b border-blue-100/50 px-5 py-3.5 bg-blue-50/40">
+              <p className="text-xs font-mono font-black uppercase tracking-[0.2em] text-blue-600">
+                Social Presence
+              </p>
             </div>
-          )}
+            <div className="p-5 sm:p-6 grid grid-cols-1 gap-x-5 gap-y-3">
+              <Field 
+                label="LinkedIn URL" 
+                icon={LinkedinIcon} 
+                focused={focusState.linkedin} 
+                hasValue={!!formData.linkedin}
+              >
+                <input
+                  type="url"
+                  placeholder={focusState.linkedin ? "https://linkedin.com/in/username" : ""}
+                  value={formData.linkedin}
+                  onChange={setField('linkedin')}
+                  disabled={!isEditing}
+                  style={inputStyle(focusState.linkedin, !isEditing)}
+                  onFocus={() => setFocusState(prev => ({ ...prev, linkedin: true }))}
+                  onBlur={() => setFocusState(prev => ({ ...prev, linkedin: false }))}
+                />
+              </Field>
+            </div>
+          </div>
 
           {/* Action Buttons (Only visible in Edit Mode) */}
           {isEditing && (

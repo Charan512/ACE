@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -7,10 +7,11 @@ import {
 } from 'recharts';
 import {
   TrendingUp, IndianRupee, Users, Zap, ChevronDown,
-  Loader2, AlertTriangle, BarChart2,
+  Loader2, AlertTriangle, BarChart2, ArrowLeft,
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import api from '../lib/api';
+import ConstellationBackground from '../components/ui/ConstellationBackground';
 
 // ── Color Palette ─────────────────────────────────────────────
 const COLORS = {
@@ -27,15 +28,24 @@ const CyberTooltip = ({ active, payload, label, prefix = '', suffix = '' }) => {
   if (!active || !payload?.length) return null;
   return (
     <div
-      className="px-3 py-2 rounded-lg text-xs font-mono border"
-      style={{ background: '#0d1117', borderColor: '#00d4ff33', color: '#e2e8f0' }}
+      className="px-4 py-3 rounded-xl text-xs font-mono backdrop-blur-md shadow-xl"
+      style={{ 
+        background: 'rgba(13, 17, 23, 0.85)', 
+        borderColor: '#00d4ff60', 
+        borderWidth: '1px',
+        color: '#e2e8f0',
+        boxShadow: '0 0 20px rgba(0, 212, 255, 0.15)'
+      }}
     >
-      {label && <p className="mb-1 text-slate-400">{label}</p>}
-      {payload.map((entry, i) => (
-        <p key={i} style={{ color: entry.color || COLORS.cyan }}>
-          {entry.name}: {prefix}{entry.value?.toLocaleString('en-IN')}{suffix}
-        </p>
-      ))}
+      {label && <p className="mb-2 text-slate-400 font-bold uppercase tracking-widest text-[10px] pb-2 border-b border-slate-700/50">{label}</p>}
+      <div className="flex flex-col gap-1.5">
+        {payload.map((entry, i) => (
+          <p key={i} className="flex items-center gap-2 font-bold" style={{ color: entry.color || COLORS.cyan }}>
+            <span className="w-2 h-2 rounded-full" style={{ background: entry.color || COLORS.cyan }}></span>
+            {entry.name}: {prefix}{entry.value?.toLocaleString('en-IN')}{suffix}
+          </p>
+        ))}
+      </div>
     </div>
   );
 };
@@ -43,35 +53,54 @@ const CyberTooltip = ({ active, payload, label, prefix = '', suffix = '' }) => {
 // ── KPI Card ──────────────────────────────────────────────────
 const KpiCard = ({ icon: Icon, label, value, sub, accent = COLORS.cyan }) => (
   <div
-    className="rounded-2xl p-5 flex flex-col gap-3 border"
-    style={{ background: '#0d1117', borderColor: `${accent}33` }}
+    className="rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden group transition-all duration-300 hover:-translate-y-1"
+    style={{ 
+      background: 'rgba(13, 17, 23, 0.7)', 
+      backdropFilter: 'blur(12px)',
+      border: `1px solid ${accent}40`,
+      boxShadow: `0 8px 32px -8px ${accent}20, inset 0 0 16px ${accent}10`
+    }}
   >
-    <div className="flex items-center gap-2">
+    {/* Glowing orb in the background */}
+    <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-20 blur-3xl transition-all duration-500 group-hover:opacity-40" style={{ background: accent }}></div>
+    
+    <div className="flex items-center gap-3 relative z-10">
       <div
-        className="w-8 h-8 rounded-lg flex items-center justify-center"
-        style={{ background: `${accent}18`, border: `1px solid ${accent}44` }}
+        className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-lg"
+        style={{ background: `${accent}15`, border: `1px solid ${accent}50`, boxShadow: `0 0 10px ${accent}30` }}
       >
-        <Icon className="w-4 h-4" style={{ color: accent }} />
+        <Icon className="w-5 h-5" style={{ color: accent }} />
       </div>
-      <span className="text-xs text-slate-400 uppercase tracking-widest font-mono">{label}</span>
+      <span className="text-xs text-slate-400 uppercase tracking-widest font-mono font-bold">{label}</span>
     </div>
-    <span
-      className="text-3xl font-black font-mono leading-none"
-      style={{ color: accent }}
-    >
-      {value}
-    </span>
-    {sub && <span className="text-xs text-slate-500 font-mono">{sub}</span>}
+    <div className="flex flex-col gap-1 relative z-10 mt-2">
+      <span
+        className="text-4xl sm:text-5xl font-black font-mono leading-none tracking-tight"
+        style={{ color: accent, textShadow: `0 0 20px ${accent}60` }}
+      >
+        {value}
+      </span>
+      {sub && <span className="text-xs text-slate-500 font-mono mt-1 font-semibold">{sub}</span>}
+    </div>
   </div>
 );
 
 // ── Chart Section Wrapper ─────────────────────────────────────
 const Section = ({ title, children }) => (
   <div
-    className="rounded-2xl p-5 border"
-    style={{ background: '#0d1117', borderColor: '#ffffff0f' }}
+    className="rounded-2xl p-6 relative overflow-hidden"
+    style={{ 
+      background: 'rgba(13, 17, 23, 0.6)', 
+      backdropFilter: 'blur(12px)',
+      border: '1px solid rgba(0, 212, 255, 0.1)',
+      boxShadow: '0 4px 24px -8px rgba(0,0,0,0.5)'
+    }}
   >
-    <h3 className="text-xs uppercase tracking-widest font-mono text-slate-400 mb-4">{title}</h3>
+    <div className="absolute top-0 left-0 w-full h-1" style={{ background: 'linear-gradient(90deg, #00d4ff00, #00d4ff40, #00d4ff00)' }}></div>
+    <h3 className="text-xs uppercase tracking-widest font-mono font-bold text-slate-400 mb-6 flex items-center gap-2">
+      <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
+      {title}
+    </h3>
     {children}
   </div>
 );
@@ -94,6 +123,7 @@ const TreasurerDashboard = () => {
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
   const [eventsLoading, setEventsLoading] = useState(true);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Fetch all events for the selector dropdown
   useEffect(() => {
@@ -145,32 +175,42 @@ const TreasurerDashboard = () => {
 
   return (
     <div
-      className="min-h-screen px-4 pb-16"
-      style={{ background: '#0B0F19', fontFamily: "'JetBrains Mono', monospace" }}
+      className="min-h-screen px-4 pb-16 relative"
+      style={{ 
+        backgroundColor: '#0B0F19', 
+        fontFamily: "'JetBrains Mono', monospace" 
+      }}
     >
+      <ConstellationBackground />
       {/* ── Header ─────────────────────────────────────────── */}
-      <div className="pt-8 pb-6 border-b mb-8" style={{ borderColor: '#ffffff0f' }}>
+      <div className="pt-8 pb-6 border-b mb-8 relative z-10" style={{ borderColor: '#ffffff0f' }}>
         <div className="flex items-center gap-3 mb-1">
+          <Link to="/ops" className="flex items-center gap-1 text-xs uppercase tracking-widest font-mono text-slate-500 hover:text-white transition-colors mr-2">
+            <ArrowLeft className="w-4 h-4" /> Ops Hub
+          </Link>
           <BarChart2 className="w-5 h-5" style={{ color: COLORS.cyan }} />
           <span
-            className="text-xs uppercase tracking-widest font-mono"
+            className="text-xs uppercase tracking-widest font-mono font-bold"
             style={{ color: COLORS.cyan }}
           >
-            ACE ERP · Treasurer Analytics
+            Treasurer Analytics
           </span>
         </div>
         <h1
-          className="text-3xl sm:text-4xl font-black tracking-tight text-white"
+          className="text-4xl sm:text-5xl font-black tracking-tight mt-2 mb-1"
+          style={{
+            background: `linear-gradient(to right, #ffffff, ${COLORS.cyan})`,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            textShadow: `0 0 40px ${COLORS.cyan}40`
+          }}
         >
           Financial Intelligence
         </h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Per-event registration &amp; revenue breakdown — read-only view
-        </p>
       </div>
 
       {/* ── Event Selector ──────────────────────────────────── */}
-      <div className="mb-8">
+      <div className="mb-8 relative z-50">
         <label className="block text-xs text-slate-400 uppercase tracking-widest mb-2 font-mono">
           Select Event
         </label>
@@ -179,27 +219,93 @@ const TreasurerDashboard = () => {
             <Loader2 className="w-4 h-4 animate-spin" /> Loading events…
           </div>
         ) : (
-          <div className="relative inline-block w-full max-w-md">
-            <select
-              value={selectedId}
-              onChange={(e) => setSelectedId(e.target.value)}
-              className="w-full appearance-none rounded-xl px-4 py-3 pr-10 text-sm font-mono text-white border outline-none focus:ring-2 cursor-pointer"
+          <div className="relative inline-block w-full max-w-md group">
+            {/* Custom Dropdown Trigger */}
+            <div
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="w-full relative rounded-xl px-5 py-3.5 pr-12 text-sm font-mono font-bold cursor-pointer transition-all duration-300 flex items-center justify-between"
               style={{
-                background: '#0d1117',
-                borderColor: '#00d4ff33',
-                color: '#e2e8f0',
+                background: 'rgba(13, 17, 23, 0.7)',
+                backdropFilter: 'blur(12px)',
+                borderColor: isDropdownOpen ? '#00d4ff80' : '#00d4ff40',
+                borderWidth: '1px',
+                color: '#00d4ff',
+                boxShadow: isDropdownOpen 
+                  ? '0 4px 20px -5px rgba(0, 212, 255, 0.3), inset 0 0 15px rgba(0, 212, 255, 0.1)' 
+                  : '0 4px 20px -5px rgba(0, 212, 255, 0.15), inset 0 0 10px rgba(0, 212, 255, 0.05)',
+                textShadow: '0 0 10px rgba(0, 212, 255, 0.4)'
               }}
             >
-              {events.map((ev) => (
-                <option key={ev._id} value={ev._id} style={{ background: '#0d1117' }}>
-                  {ev.title}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-              style={{ color: COLORS.cyan }}
-            />
+              <span className="truncate">
+                {events.find(ev => ev._id === selectedId)?.title || 'Select Event'}
+              </span>
+              <div 
+                className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none w-6 h-6 rounded flex items-center justify-center transition-all duration-300"
+                style={{ 
+                  background: isDropdownOpen ? 'rgba(0, 212, 255, 0.25)' : 'rgba(0, 212, 255, 0.15)', 
+                  border: isDropdownOpen ? '1px solid rgba(0, 212, 255, 0.6)' : '1px solid rgba(0, 212, 255, 0.4)',
+                  transform: isDropdownOpen ? 'translateY(-50%) rotate(180deg)' : 'translateY(-50%) rotate(0deg)'
+                }}
+              >
+                <ChevronDown className="w-3.5 h-3.5" style={{ color: COLORS.cyan }} />
+              </div>
+              {/* Glowing side accent */}
+              <div className="absolute top-1/2 -left-[1px] w-[3px] h-6 -translate-y-1/2 bg-cyan-400 rounded-full shadow-[0_0_12px_#00d4ff]"></div>
+            </div>
+
+            {/* Custom Dropdown Menu */}
+            {isDropdownOpen && (
+              <>
+                {/* Invisible backdrop to catch outside clicks */}
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setIsDropdownOpen(false)} 
+                />
+                
+                <div 
+                  className="absolute top-[calc(100%+8px)] left-0 w-full z-50 rounded-xl overflow-hidden backdrop-blur-xl transition-all"
+                  style={{
+                    background: 'rgba(13, 17, 23, 0.9)',
+                    borderColor: '#00d4ff40',
+                    borderWidth: '1px',
+                    boxShadow: '0 10px 40px -10px rgba(0, 212, 255, 0.2), 0 0 20px -5px rgba(0,0,0,0.5)'
+                  }}
+                >
+                  <div className="max-h-[300px] overflow-y-auto">
+                    {events.map((ev) => {
+                      const isSelected = selectedId === ev._id;
+                      return (
+                        <div
+                          key={ev._id}
+                          onClick={() => { setSelectedId(ev._id); setIsDropdownOpen(false); }}
+                          className="px-5 py-3.5 text-sm font-mono cursor-pointer transition-colors duration-200"
+                          style={{
+                            color: isSelected ? '#00d4ff' : '#94a3b8',
+                            background: isSelected ? 'rgba(0, 212, 255, 0.08)' : 'transparent',
+                            borderLeft: isSelected ? '3px solid #00d4ff' : '3px solid transparent',
+                            fontWeight: isSelected ? 'bold' : 'normal'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.background = 'rgba(0, 212, 255, 0.04)';
+                              e.currentTarget.style.color = '#cbd5e1';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.background = 'transparent';
+                              e.currentTarget.style.color = '#94a3b8';
+                            }
+                          }}
+                        >
+                          {ev.title}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -207,7 +313,7 @@ const TreasurerDashboard = () => {
       {/* ── Error State ─────────────────────────────────────── */}
       {error && (
         <div
-          className="flex items-center gap-3 rounded-xl px-4 py-3 mb-6 text-sm font-mono border"
+          className="flex items-center gap-3 rounded-xl px-4 py-3 mb-6 text-sm font-mono border relative z-10"
           style={{ background: '#1a0a0a', borderColor: '#f43f5e55', color: '#f87171' }}
         >
           <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -217,7 +323,7 @@ const TreasurerDashboard = () => {
 
       {/* ── Loading Spinner ──────────────────────────────────── */}
       {loading && (
-        <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <div className="flex flex-col items-center justify-center py-20 gap-3 relative z-10">
           <Loader2 className="w-8 h-8 animate-spin" style={{ color: COLORS.cyan }} />
           <span className="text-xs text-slate-500 font-mono">Aggregating data…</span>
         </div>
@@ -225,7 +331,7 @@ const TreasurerDashboard = () => {
 
       {/* ── Main Analytics ───────────────────────────────────── */}
       {stats && eventMeta && !loading && (
-        <div className="space-y-6">
+        <div className="space-y-6 relative z-10">
 
           {/* Event badge */}
           <div
@@ -236,7 +342,7 @@ const TreasurerDashboard = () => {
             {eventMeta.title}
             <span className="text-slate-500">·</span>
             <span className="text-slate-400">
-              Capacity {stats.capacityUsedPercent}% filled
+              {eventMeta.maxCapacity ? `Capacity ${stats.capacityUsedPercent}% filled` : 'Unlimited Capacity'}
             </span>
           </div>
 
@@ -246,7 +352,7 @@ const TreasurerDashboard = () => {
               icon={Users}
               label="Total Registrations"
               value={stats.totalConfirmedRegistrations.toLocaleString('en-IN')}
-              sub={`of ${eventMeta.maxCapacity.toLocaleString('en-IN')} seats`}
+              sub={eventMeta.maxCapacity ? `of ${eventMeta.maxCapacity.toLocaleString('en-IN')} seats` : 'Unlimited seats'}
               accent={COLORS.cyan}
             />
             <KpiCard

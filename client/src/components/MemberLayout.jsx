@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, User, History, LogOut, Sparkles, Menu, X, ShieldCheck } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
-import PortalBackground from './ui/PortalBackground';
+import SoftAurora from './react-bits/SoftAurora';
 
 // ── Nav Items ─────────────────────────────────────────────────
 const NAV_ITEMS = [
@@ -42,8 +42,25 @@ const MemberLayout = () => {
   const firstName = user?.name?.split(' ')[0] || 'Member';
 
   return (
-    <div className="min-h-screen text-slate-700 flex flex-col bg-slate-50 selection:bg-indigo-100">
-      <PortalBackground />
+    <div className="min-h-screen text-slate-700 flex flex-col selection:bg-indigo-100 relative bg-slate-900">
+      <div className="fixed inset-0 z-0 opacity-90 overflow-hidden">
+        <SoftAurora
+          speed={0.6}
+          scale={1.5}
+          brightness={1.0}
+          color1="#f7f7f7"
+          color2="#b26ebb"
+          noiseFrequency={2.5}
+          noiseAmplitude={1.0}
+          bandHeight={0.5}
+          bandSpread={1.0}
+          octaveDecay={0.1}
+          layerOffset={0}
+          colorSpeed={1.0}
+          enableMouseInteraction={true}
+          mouseInfluence={0.25}
+        />
+      </div>
 
       {/* ──────────────────────────────────────────────────────
           PREMIUM FLOATING DESKTOP HEADER + MOBILE HEADER
@@ -118,16 +135,22 @@ const MemberLayout = () => {
             >
               <div className="flex flex-col items-end">
                 <span className="text-sm font-bold text-slate-900 tracking-tight group-hover:text-indigo-700 transition-colors">{firstName}</span>
-                <span className="text-[10px] font-mono font-bold tracking-widest text-indigo-500 uppercase">{roleLabel}</span>
+                {roleLabel !== 'Member' && (
+                  <span className="text-[10px] font-mono font-bold tracking-widest text-indigo-500 uppercase">{roleLabel}</span>
+                )}
               </div>
               
               <div
-                className="relative flex items-center justify-center w-10 h-10 rounded-xl font-mono font-black text-white shrink-0 shadow-inner group-hover:scale-[1.05] transition-transform duration-300"
-                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+                className="relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl font-mono font-black text-white shrink-0 shadow-inner group-hover:scale-[1.05] transition-transform duration-300 overflow-hidden"
+                style={{ background: user?.profilePhoto ? '#f8fafc' : 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
               >
-                {initials}
+                {user?.profilePhoto ? (
+                  <img src={user.profilePhoto} alt={firstName} className="w-full h-full object-cover" />
+                ) : (
+                  initials
+                )}
                 {/* Subtle indicator ring on hover */}
-                <div className="absolute inset-0 rounded-xl ring-2 ring-indigo-400 ring-offset-2 ring-offset-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 rounded-xl ring-2 ring-indigo-400 ring-offset-2 ring-offset-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               </div>
             </NavLink>
 
@@ -183,15 +206,21 @@ const MemberLayout = () => {
             {/* Highly Emphasized Profile Section */}
             <div className="flex flex-col items-center text-center p-6 bg-white rounded-3xl border border-slate-200 shadow-sm">
               <div
-                className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-mono font-bold text-white mb-4 shadow-md"
-                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+                className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-mono font-black text-white mb-4 shadow-md overflow-hidden"
+                style={{ background: user?.profilePhoto ? '#f8fafc' : 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
               >
-                {initials}
+                {user?.profilePhoto ? (
+                  <img src={user.profilePhoto} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  initials
+                )}
               </div>
-              <h2 className="text-lg font-bold text-slate-900 mb-1">{user?.name || 'Member'}</h2>
-              <span className="px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider">
-                {roleLabel}
-              </span>
+              <h2 className="text-lg font-bold text-slate-900 mb-1">{user?.name || 'User'}</h2>
+              {roleLabel !== 'Member' && (
+                <span className="px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider">
+                  {roleLabel}
+                </span>
+              )}
             </div>
 
             {/* Nav Links */}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ScanLine, LogOut, Zap, Menu, X } from 'lucide-react';
+import { LayoutDashboard, ScanLine, LogOut, Zap, Menu, X, BarChart2 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import PortalBackground from './ui/PortalBackground';
 
@@ -42,6 +42,17 @@ const OpsLayout = () => {
     : '—';
   const firstName = user?.name?.split(' ')[0] || 'Coordinator';
 
+  // Inject Treasurer Analytics link for the designated Treasurer
+  let visibleNavItems = [...NAV_ITEMS];
+  if ((user?.role === 'sbm' || user?.role === 'ebm') && user?.designation === 'Treasurer') {
+    visibleNavItems.push({
+      label: 'Financials',
+      to: '/treasurer',
+      icon: BarChart2,
+      end: false,
+    });
+  }
+
   return (
     <div className="min-h-screen text-slate-700 flex flex-col bg-slate-50 selection:bg-orange-100">
       <PortalBackground />
@@ -78,7 +89,7 @@ const OpsLayout = () => {
 
           {/* Desktop Segmented Nav */}
           <nav className="hidden md:flex items-center gap-1 bg-slate-100/50 p-1 rounded-2xl border border-slate-200/60 shadow-inner">
-            {NAV_ITEMS.map(({ label, to, icon: Icon, end }) => (
+            {visibleNavItems.map(({ label, to, icon: Icon, end }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -179,7 +190,7 @@ const OpsLayout = () => {
 
             {/* Nav */}
             <nav className="flex flex-col gap-2">
-              {NAV_ITEMS.map(({ label, to, icon: Icon, end }) => (
+              {visibleNavItems.map(({ label, to, icon: Icon, end }) => (
                 <NavLink key={to} to={to} end={end}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={({ isActive }) =>

@@ -63,13 +63,30 @@ export const getAllEvents = catchAsync(async (req, res, _next) => {
   const isAdmin = req.user && ['admin', 'ebm', 'sbm'].includes(req.user.role);
 
   // ── Build query filter ────────────────────────────────────
-  // Non-admins only see published events. Draft events are internal working
-  // documents and must never leak to the public or member-facing feed.
   const filter = isAdmin ? {} : { status: 'published' };
 
-  const rawEvents = await Event.find(filter)
+  // ?status=upcoming — only events that haven't passed yet
+  if (req.query.status === 'upcoming') {
+    filter.eventDate = { $gte: new Date() };
+  }
+
+  // ── Sort ─────────────────────────────────────────────────
+  // ?sort=desc (default: asc by eventDate)
+  const sortDir = req.query.sort === 'desc' ? -1 : 1;
+
+  // ── Limit ────────────────────────────────────────────────
+  // ?limit=N — cap at 200 to prevent runaway queries
+  const limitVal = req.query.limit
+    ? Math.min(200, Math.max(1, parseInt(req.query.limit, 10) || 50))
+    : undefined; // undefined = no limit (return all)
+
+  let query = Event.find(filter)
     .populate('createdBy', 'name aceId role')
-    .sort({ eventDate: 1 });
+    .sort({ eventDate: sortDir });
+
+  if (limitVal) query = query.limit(limitVal);
+
+  const rawEvents = await query;
 
   // ── Serialize with virtuals ────────────────────────────────
   const events = rawEvents.map((ev) => ev.toObject({ virtuals: true }));
@@ -85,6 +102,7 @@ export const getAllEvents = catchAsync(async (req, res, _next) => {
     data: visibleEvents,
   });
 });
+
 
 /**
  * GET /api/events/:id

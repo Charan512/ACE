@@ -121,10 +121,18 @@ function App() {
             <Route path="/admin/users"              element={<AdminUsers />} />
             <Route path="/admin/notifications"      element={<AdminNotifications />} />
             <Route path="/admin/settings"           element={<AdminSettings />} />
-            {/* Treasurer — only meaningful for sbm+Treasurer; component guards internally */}
-            <Route path="/treasurer"                element={<TreasurerDashboard />} />
           </Route>
         </Route>
+
+        {/* ── Protected Standalone Treasurer Route ───────────────── */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'sbm', 'ebm']} />
+          }
+        >
+          <Route path="/treasurer" element={<TreasurerDashboard />} />
+        </Route>
+
         {/* ── Protected Ops Routes (EBM/SBM/Admin) ───────────────── */}
         <Route
           element={

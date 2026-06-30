@@ -95,7 +95,7 @@ const GuestPortal = () => {
                 <div className="absolute -top-4 -right-4 w-12 h-12 bg-rose-500 rounded-full border-4 border-slate-900 flex items-center justify-center animate-pulse z-20">
                   <Star className="w-6 h-6 text-white" />
                 </div>
-                
+
                 <div className="text-center md:text-left relative z-10">
                   <div className="inline-flex items-center gap-2 brutal-badge brutal-white px-4 py-1.5 text-slate-900 mb-4">
                     <Calendar className="w-4 h-4" />
@@ -105,7 +105,7 @@ const GuestPortal = () => {
                   <p className="text-slate-800 font-bold text-lg mb-8 line-clamp-2">
                     {upcomingEvent.description}
                   </p>
-                  
+
                   <div className="flex flex-col gap-3">
                     <button
                       onClick={() => handleRegistrationClick(upcomingEvent)}
@@ -203,22 +203,38 @@ const GuestPortal = () => {
 
       {/* ── 3. Department Section ── */}
       <section id="department" className="relative py-32 sm:py-40 border-t-[3px] border-slate-900">
-        <div className="absolute inset-0 z-0 opacity-40 grayscale sepia bg-blend-multiply bg-amber-200" 
+        <div className="absolute inset-0 z-0 opacity-40 grayscale sepia bg-blend-multiply bg-amber-200"
           style={{ backgroundImage: 'url(https://www.srkrcse.com/assets/images/cse.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}
         />
         <div className="absolute inset-0 z-0 bg-slate-900/60" />
 
-        <div className="relative z-10 max-w-4xl mx-auto text-center px-6">
-          <div className="brutal-badge brutal-lime px-8 py-4 mb-8 -rotate-2 inline-block">
-            <h2 className="text-3xl sm:text-5xl font-black uppercase text-slate-900">Powered by Dept. of CSE</h2>
+        <div className="relative z-10 max-w-6xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-16">
+
+            {/* HOD Profile */}
+            <div className="flex flex-col items-center text-center group shrink-0">
+              <div className="w-56 sm:w-64 aspect-square rounded-2xl mb-6 overflow-hidden brutal-card brutal-purple p-0 group-hover:scale-105 transition-transform duration-200">
+                <img src="https://www.srkrcse.com/assets/images/hod.jpeg" alt="Dr. Bh. V. S. R. K. Raju" className="w-full h-full object-cover border-b-[3px] border-slate-900" />
+              </div>
+              <h4 className="text-3xl font-black text-white tracking-tight mb-2 uppercase">Dr. Bh. V. S. R. K. Raju</h4>
+              <p className="brutal-badge brutal-lime px-3 py-1 text-slate-900">Head of Department</p>
+            </div>
+
+            {/* Text Side */}
+            <div className="flex-1 text-center md:text-left">
+              <div className="brutal-badge brutal-lime px-8 py-4 mb-8 -rotate-2 inline-block">
+                <h2 className="text-3xl sm:text-5xl font-black uppercase text-slate-900">Powered by Dept. of CSE</h2>
+              </div>
+              <p className="text-xl sm:text-2xl text-white font-bold leading-relaxed bg-slate-900/80 p-6 rounded-xl border-[3px] border-slate-900 shadow-[6px_6px_0_0_#a3e635] mb-8">
+                Backed by the legacy of the Computer Science and Engineering Department at SRKR Engineering College.
+                We bridge the gap between academic theory and bleeding-edge industry practice.
+              </p>
+              <a href="https://www.srkrcse.com/" target="_blank" rel="noopener noreferrer" className="brutal-btn brutal-white px-8 py-4 text-lg text-slate-900 inline-flex items-center">
+                Visit CSE Department <Globe className="w-5 h-5 ml-2" />
+              </a>
+            </div>
+
           </div>
-          <p className="text-xl sm:text-3xl text-white font-bold leading-relaxed bg-slate-900/80 p-6 rounded-xl border-[3px] border-slate-900 shadow-[6px_6px_0_0_#a3e635] mb-8">
-            Backed by the legacy of the Computer Science and Engineering Department at SRKR Engineering College. 
-            We bridge the gap between academic theory and bleeding-edge industry practice.
-          </p>
-          <a href="https://www.srkrcse.com/" target="_blank" rel="noopener noreferrer" className="brutal-btn brutal-white px-8 py-4 text-lg text-slate-900">
-            Visit CSE Department <Globe className="w-5 h-5 ml-2" />
-          </a>
         </div>
       </section>
 
@@ -227,38 +243,50 @@ const GuestPortal = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20">
             <h2 className="text-5xl md:text-7xl font-black tracking-tighter text-slate-900 uppercase">
-              Faculty Mentors
+              Faculty Coordinators
             </h2>
             <div className="h-2 w-32 bg-slate-900 mx-auto mt-6" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mx-auto">
-            
-            {/* HOD Profile */}
-            <div className="flex flex-col items-center text-center group">
-              <div className="w-56 aspect-square rounded-2xl mb-6 overflow-hidden brutal-card brutal-purple p-0 group-hover:-rotate-3 transition-transform duration-200">
-                <img src="https://www.srkrcse.com/assets/images/hod.jpeg" alt="Dr. Bh. V. S. R. K. Raju" className="w-full h-full object-cover border-b-[3px] border-slate-900" />
-              </div>
-              <h4 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase">Dr. Bh. V. S. R. K. Raju</h4>
-              <p className="brutal-badge brutal-white px-3 py-1 text-slate-900">Head of Department</p>
-            </div>
 
             {/* Coordinator Profile 1 */}
-            <div className="flex flex-col items-center text-center group">
-              <div className="w-56 aspect-square rounded-2xl mb-6 overflow-hidden brutal-card brutal-cyan p-0 group-hover:rotate-3 transition-transform duration-200">
+            <div className="flex flex-col items-center text-center group h-full">
+              <div className="w-56 aspect-square rounded-2xl mb-6 overflow-hidden brutal-card brutal-cyan p-0 group-hover:rotate-3 transition-transform duration-200 shrink-0">
                 <img src="https://media.licdn.com/dms/image/v2/D5603AQFrj6FLnXzMVw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1731385903614?e=1784160000&v=beta&t=AXXXjNVEmhVfv1EOQ2bzdFQIV6sOPz8VGNaUw-AFfwk" alt="Dr. V. Chandrasekhar" className="w-full h-full object-cover border-b-[3px] border-slate-900" />
               </div>
-              <h4 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase">Dr. V. Chandrasekhar</h4>
-              <p className="brutal-badge brutal-white px-3 py-1 text-slate-900">Faculty Coordinator</p>
+              <h4 className="text-3xl font-black text-slate-900 tracking-tight mb-4 uppercase">Dr. V. Chandrasekhar</h4>
+              <div className="mt-auto flex flex-col items-center gap-1.5">
+                <p className="brutal-badge brutal-white px-3 py-1 text-slate-900 text-sm">Assistant Professor</p>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Dept. of CSE</p>
+              </div>
             </div>
 
             {/* Coordinator Profile 2 */}
-            <div className="flex flex-col items-center text-center group">
-              <div className="w-56 aspect-square rounded-2xl mb-6 overflow-hidden brutal-card brutal-lime p-0 group-hover:-rotate-3 transition-transform duration-200">
+            <div className="flex flex-col items-center text-center group h-full">
+              <div className="w-56 aspect-square rounded-2xl mb-6 overflow-hidden brutal-card brutal-lime p-0 group-hover:-rotate-3 transition-transform duration-200 shrink-0">
                 <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop" alt="Hemalatha" className="w-full h-full object-cover border-b-[3px] border-slate-900" />
               </div>
-              <h4 className="text-3xl font-black text-slate-900 tracking-tight mb-2 uppercase">Smt. Hemalatha</h4>
-              <p className="brutal-badge brutal-white px-3 py-1 text-slate-900">Faculty Coordinator</p>
+              <h4 className="text-3xl font-black text-slate-900 tracking-tight mb-4 uppercase">Smt. Hemalatha</h4>
+              <div className="mt-auto flex flex-col items-center gap-1.5">
+                <p className="brutal-badge brutal-white px-3 py-1 text-slate-900 text-sm">Assistant Professor</p>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Dept. of CSE</p>
+              </div>
+            </div>
+
+            {/* Coordinator Profile 3 */}
+            <div className="flex flex-col items-center text-center group h-full">
+              <div className="w-56 aspect-square rounded-2xl mb-6 overflow-hidden brutal-card brutal-purple p-0 flex items-center justify-center bg-purple-100 group-hover:scale-105 transition-transform duration-200 shrink-0">
+                {/* Empty spot / placeholder avatar */}
+                <div className="w-full h-full bg-gradient-to-br from-purple-200 to-fuchsia-200 flex items-center justify-center border-b-[3px] border-slate-900">
+                  <span className="text-6xl font-black text-purple-900/40">HK</span>
+                </div>
+              </div>
+              <h4 className="text-3xl font-black text-slate-900 tracking-tight mb-4 uppercase">Hari Krishna</h4>
+              <div className="mt-auto flex flex-col items-center gap-1.5">
+                <p className="brutal-badge brutal-white px-3 py-1 text-slate-900 text-sm">Assistant Professor</p>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Dept. of CSE</p>
+              </div>
             </div>
 
           </div>

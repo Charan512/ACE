@@ -5,8 +5,8 @@ import {
   RefreshCw, UploadCloud, X, Users, Link2, FormInput,
   ChevronDown, Trash2, GripVertical, Zap, Globe, FileText, Mail, Eye, EyeOff, Save,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
-import axios from 'axios';
 
 // ── Toast ─────────────────────────────────────────────────────
 const Toast = ({ toast }) => {
@@ -305,7 +305,7 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
     }));
   };
 
-  // Pre-signed Upload Logic
+  // Direct Cloudinary Upload Logic via Backend
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -314,25 +314,15 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
     setErr('');
 
     try {
-      // 1. Get pre-signed URL from our backend
-      const { data } = await api.get('/admin/upload/presigned-url', {
-        params: {
-          fileName: file.name,
-          fileType: file.type,
-        },
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const { data } = await api.post('/admin/upload/poster', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      const { uploadUrl, publicUrl } = data.data;
-
-      // 2. Direct upload to Cloudflare R2 / S3 using axios to avoid auth headers interference
-      await axios.put(uploadUrl, file, {
-        headers: {
-          'Content-Type': file.type,
-        },
-      });
-
-      // 3. Save the public URL to form state
-      setForm((prev) => ({ ...prev, posterImage: publicUrl }));
+      // Save the public URL to form state
+      setForm((prev) => ({ ...prev, posterImage: data.data.url }));
     } catch (error) {
       console.error('Upload error:', error);
       setErr('Failed to upload poster image.');
