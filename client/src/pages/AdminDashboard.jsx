@@ -9,40 +9,27 @@ import api from '../lib/api';
 import useAuthStore from '../store/useAuthStore';
 
 const StatCard = ({ label, value, icon: Icon, accent, sublabel, loading, linkTo, linkLabel, clayColor }) => (
-  <div className={`clay-card p-6 overflow-hidden group ${clayColor || 'clay-blue'}`}>
+  <div className={`clay-card p-8 overflow-hidden group ${clayColor || 'clay-blue'}`}>
     <div className="relative z-10">
-      <div className="flex items-start justify-between mb-5">
+      <div className="flex items-start justify-between mb-6">
         <div className={`clay-icon-box w-12 h-12`} style={{ background: `${accent}20` }}>
           <Icon className="w-6 h-6" style={{ color: accent }} />
         </div>
         {linkTo && (
-          <Link to={linkTo} className="flex items-center gap-1 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: accent }}>
-            {linkLabel} <ChevronRight className="w-3 h-3" />
+          <Link to={linkTo} className="flex items-center gap-1 text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: accent }}>
+            {linkLabel} <ChevronRight className="w-4 h-4" />
           </Link>
         )}
       </div>
-      {loading ? <Loader2 className="w-7 h-7 animate-spin text-slate-300 my-1" /> : (
-        <p className="text-4xl font-black text-slate-900 tracking-tight font-mono">
+      {loading ? <Loader2 className="w-8 h-8 animate-spin text-slate-300 my-2" /> : (
+        <p className="text-5xl font-black text-slate-900 tracking-tight font-mono">
           {typeof value === 'number' ? value.toLocaleString() : value}
         </p>
       )}
-      <p className="text-sm font-bold text-slate-600 mt-1.5">{label}</p>
-      {sublabel && <p className="text-xs text-slate-400 mt-0.5">{sublabel}</p>}
+      <p className="text-base font-bold text-slate-600 mt-3">{label}</p>
+      {sublabel && <p className="text-sm text-slate-400 mt-2">{sublabel}</p>}
     </div>
   </div>
-);
-
-const QuickAction = ({ to, icon: Icon, label, description, accent, clayColor }) => (
-  <Link to={to} className={`clay-card flex items-center gap-4 p-5 group ${clayColor || 'clay-slate'}`}>
-    <div className="clay-icon-box w-11 h-11" style={{ background: `${accent}18` }}>
-      <Icon className="w-5 h-5" style={{ color: accent }} />
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-sm font-bold text-slate-800">{label}</p>
-      <p className="text-xs text-slate-500 truncate mt-0.5">{description}</p>
-    </div>
-    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
-  </Link>
 );
 
 const PayBar = ({ label, count, total, color }) => (
@@ -86,45 +73,45 @@ const PayStatsPanel = () => {
   const total = (stats?.online?.totalAmountINR || 0) + (stats?.cash?.totalAmountINR || 0);
 
   return (
-    <div className="clay-card clay-teal p-6">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
-          <BarChart3 className="w-4 h-4 text-blue-600" />
+    <div className="clay-card clay-teal p-8">
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+          <BarChart3 className="w-6 h-6 text-blue-600" />
         </div>
         <div>
-          <p className="text-sm font-bold text-slate-700">Revenue Breakdown</p>
-          <p className="text-xs text-slate-400">Online vs cash per event</p>
+          <p className="text-base font-bold text-slate-700">Revenue Breakdown</p>
+          <p className="text-sm text-slate-400">Online vs cash per event</p>
         </div>
       </div>
       <select value={sel} onChange={handleChange}
-        className="clay-input w-full px-4 py-2.5 text-sm font-semibold text-slate-700 mb-4 cursor-pointer appearance-none">
+        className="clay-input w-full px-5 py-3 text-base font-semibold text-slate-700 mb-6 cursor-pointer appearance-none">
         <option value="">Select an event</option>
         {events.map((ev) => <option key={ev._id} value={ev._id}>{ev.title}</option>)}
       </select>
-      {loading && <div className="flex items-center gap-2 text-slate-400 py-4"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-xs font-semibold">Loading...</span></div>}
+      {loading && <div className="flex items-center gap-2 text-slate-400 py-6"><Loader2 className="w-5 h-5 animate-spin" /><span className="text-sm font-semibold">Loading...</span></div>}
       {stats && !loading && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-slate-500 font-semibold">Total Revenue</span>
-            <span className="text-xl font-black font-mono text-slate-900">{String.fromCodePoint(0x20B9)}{total.toLocaleString()}</span>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm text-slate-500 font-semibold">Total Revenue</span>
+            <span className="text-3xl font-black font-mono text-slate-900">{String.fromCodePoint(0x20B9)}{total.toLocaleString()}</span>
           </div>
           <PayBar label="Online (PhonePe)" count={stats.online?.count || 0} total={stats.online?.totalAmountINR || 0} color="#3b82f6" />
           <PayBar label="Cash (Walk-in)" count={stats.cash?.count || 0} total={stats.cash?.totalAmountINR || 0} color="#10b981" />
-          <div className="flex gap-3 mt-4">
-            <div className="flex-1 bg-blue-50 border border-blue-100 rounded-xl p-3 text-center">
-              <CreditCard className="w-4 h-4 text-blue-500 mx-auto mb-1" />
-              <p className="text-xl font-black font-mono text-blue-700">{stats.online?.count || 0}</p>
-              <p className="text-[10px] text-blue-500 font-bold">Online</p>
+          <div className="flex gap-5 mt-6">
+            <div className="flex-1 bg-blue-50 border border-blue-100 rounded-xl p-5 text-center shadow-sm">
+              <CreditCard className="w-6 h-6 text-blue-500 mx-auto mb-2" />
+              <p className="text-3xl font-black font-mono text-blue-700">{stats.online?.count || 0}</p>
+              <p className="text-xs text-blue-500 font-bold uppercase tracking-widest mt-1">Online</p>
             </div>
-            <div className="flex-1 bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center">
-              <DollarSign className="w-4 h-4 text-emerald-500 mx-auto mb-1" />
-              <p className="text-xl font-black font-mono text-emerald-700">{stats.cash?.count || 0}</p>
-              <p className="text-[10px] text-emerald-500 font-bold">Cash</p>
+            <div className="flex-1 bg-emerald-50 border border-emerald-100 rounded-xl p-5 text-center shadow-sm">
+              <DollarSign className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
+              <p className="text-3xl font-black font-mono text-emerald-700">{stats.cash?.count || 0}</p>
+              <p className="text-xs text-emerald-500 font-bold uppercase tracking-widest mt-1">Cash</p>
             </div>
           </div>
         </div>
       )}
-      {!stats && !loading && sel && <p className="text-xs text-slate-400 text-center py-4">No payment data yet.</p>}
+      {!stats && !loading && sel && <p className="text-sm text-slate-400 text-center py-6">No payment data yet.</p>}
     </div>
   );
 };
@@ -199,13 +186,6 @@ const AdminDashboard = () => {
                 <p className="text-sm text-slate-400 mt-1">awaiting publish</p>
               </div>
             </div>
-            <section>
-              <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Quick Links</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <QuickAction to="/ops" icon={BarChart3} label="Ops Dashboard" description="Check-in, scan ACE IDs, cash register" accent="#3b82f6" />
-                <QuickAction to="/admin/registrations" icon={TrendingUp} label="View Registrations" description="Browse attendees by event" accent="#10b981" />
-              </div>
-            </section>
           </>
         )}
       </div>
@@ -213,7 +193,7 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="px-6 py-8 max-w-6xl mx-auto space-y-10">
+    <div className="px-6 py-8 max-w-6xl mx-auto space-y-12">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Dashboard</h1>
@@ -255,18 +235,8 @@ const AdminDashboard = () => {
       </section>
 
       <section>
-        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <QuickAction to="/admin/events" icon={CalendarCheck} label="Manage Events" description="Create events, toggle live status, update details" accent="#3b82f6" clayColor="clay-blue" />
-          <QuickAction to="/admin/registrations" icon={TrendingUp} label="View Registrations" description="Attendees, CSV export, payment stats" accent="#10b981" clayColor="clay-green" />
-          <QuickAction to="/admin/certificates" icon={DollarSign} label="Certificate Forge" description="Upload templates, release to members" accent="#f59e0b" clayColor="clay-amber" />
-          <QuickAction to="/admin/users" icon={Users} label="User Directory" description="Members, SBMs, EBMs — role management" accent="#8b5cf6" clayColor="clay-purple" />
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">System Status</h2>
-        <div className="clay-card clay-slate p-5">
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">System Status</h2>
+        <div className="clay-card clay-slate p-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`w-2.5 h-2.5 rounded-full ${stats.activeJobs > 0 ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
