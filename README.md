@@ -6,7 +6,7 @@ Built on the MERN stack (MongoDB, Express, React, Node.js), powered by PhonePe P
 
 ## 1. System Overview
 
-ACE ERP manages role-based member directories, event registrations, automated billing, credentials vaults, and asynchronous email notifications. The platform operates on a secure backend system with a unified frontend designed in an **Industrial Cyber-Minimalism** theme.
+ACE manages role-based member directories, event registrations, automated billing, credentials vaults, and asynchronous email notifications. The platform operates on a secure backend system with a unified frontend designed in an **Industrial Cyber-Minimalism** theme.
 
 ### Key Functional Areas
 * **RBAC & Identity Engine:** Manages levels from Guests and Members to Student Board Members (SBM), Executive Board Members (EBM), and Administrators. Members receive unique sequential IDs (`26ACE0___`) generated via an atomic MongoDB counters collection.
