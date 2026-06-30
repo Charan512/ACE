@@ -81,13 +81,13 @@ const MemberLayout = () => {
         <div className="flex items-center gap-4 sm:gap-6 flex-1">
           {/* Mobile Menu Button (Left) */}
           <button
-            className="md:hidden p-2 rounded-xl bg-slate-100/80 text-slate-600 hover:bg-slate-200 transition-colors"
+            className="md:hidden p-2 rounded-xl bg-slate-100/80 text-slate-600 hover:bg-slate-200 transition-colors z-10"
             onClick={() => setIsMobileMenuOpen(true)}
           >
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Logo (Desktop only) */}
+          {/* Logo (Desktop) */}
           <div className="hidden md:flex flex-col leading-tight">
             <span className="text-sm font-black text-slate-900 tracking-tight">ACE Portal</span>
             <span className="text-[9px] font-mono font-bold uppercase tracking-widest" style={{ color: '#8b5cf6' }}>member.access</span>
@@ -116,6 +116,12 @@ const MemberLayout = () => {
               </NavLink>
             ))}
           </nav>
+        </div>
+
+        {/* Mobile Logo (Center) */}
+        <div className="absolute left-1/2 -translate-x-1/2 md:hidden flex flex-col items-center leading-tight pointer-events-none">
+          <span className="text-sm font-black text-slate-900 tracking-tight">ACE Portal</span>
+          <span className="text-[9px] font-mono font-bold uppercase tracking-widest" style={{ color: '#8b5cf6' }}>member.access</span>
         </div>
 
         {/* Right side */}
