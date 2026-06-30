@@ -260,7 +260,7 @@ const AdminUsers = () => {
       )}
 
       {/* ── Page Header ─────────────────────────────── */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">User Directory</h1>
           <p className="text-sm text-slate-500 mt-1">{allUsers.length} total accounts in system</p>
@@ -276,7 +276,7 @@ const AdminUsers = () => {
       </div>
 
       {/* ── Tabs ─────────────────────────────────────── */}
-      <div className="flex items-center gap-1 mb-6 bg-slate-100 rounded-xl p-1 w-fit">
+      <div className="flex items-center flex-wrap sm:flex-nowrap gap-1 mb-6 bg-slate-100 rounded-xl p-1 w-full sm:w-fit">
         {TABS.map(({ key, label, icon: Icon, accent }) => {
           const isActive = activeTab === key;
           return (
@@ -321,7 +321,7 @@ const AdminUsers = () => {
               placeholder="Search name, email, ACE ID..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64 font-medium"
+              className="pl-9 pr-4 py-2 text-base sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64 font-medium"
             />
           </div>
         </div>

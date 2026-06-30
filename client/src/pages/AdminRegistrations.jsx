@@ -327,7 +327,7 @@ const AdminRegistrations = () => {
               placeholder="Search name, phone, email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64 font-medium"
+              className="pl-9 pr-4 py-2 text-base sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64 font-medium"
             />
           </div>
         </div>
