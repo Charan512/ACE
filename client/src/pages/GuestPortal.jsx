@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, Users, Zap, Terminal, Code2, Globe, Shield, Cpu, ArrowRight, Star } from 'lucide-react';
+import { Calendar, Users, Zap, Terminal, Code2, Globe, Shield, Cpu, ArrowRight, Star, X } from 'lucide-react';
 import api from '../lib/api';
+import useAuthStore from '../store/useAuthStore';
 
 const GuestPortal = () => {
   const navigate = useNavigate();
   const [upcomingEvent, setUpcomingEvent] = useState(null);
+  const { isAuthenticated } = useAuthStore();
+  const [isInterceptModalOpen, setIsInterceptModalOpen] = useState(false);
 
   useEffect(() => {
     // Fetch the latest upcoming event to feature on the hero
@@ -24,7 +27,11 @@ const GuestPortal = () => {
   }, []);
 
   const handleRegistrationClick = (event) => {
-    navigate(`/register?event=${event._id}`);
+    if (isAuthenticated) {
+      navigate('/member/dashboard');
+    } else {
+      setIsInterceptModalOpen(true);
+    }
   };
 
   return (
@@ -323,6 +330,53 @@ const GuestPortal = () => {
           </div>
         </div>
       </section>
+
+      {/* ── Intercept Modal ── */}
+      {isInterceptModalOpen && upcomingEvent && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full p-8 relative animate-in fade-in zoom-in duration-200">
+            <button 
+              onClick={() => setIsInterceptModalOpen(false)}
+              className="absolute top-6 right-6 text-slate-400 hover:text-slate-900 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            
+            <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
+              <Shield className="w-8 h-8 text-indigo-600" />
+            </div>
+            
+            <h3 className="text-2xl font-black text-slate-950 tracking-tight mb-2 uppercase">Registration Options</h3>
+            <p className="text-slate-500 mb-8 font-medium">
+              You are currently not logged in. ACE Members receive exclusive discounts on all operations.
+            </p>
+            
+            <div className="flex flex-col gap-4">
+              <Link 
+                to="/login" 
+                className="w-full brutal-btn brutal-blue py-4 flex justify-center items-center gap-2"
+              >
+                <span>Login as ACE Member</span>
+                <span className="opacity-90 font-mono text-sm">(₹{upcomingEvent.memberFee})</span>
+              </Link>
+              
+              <button 
+                onClick={() => {
+                  setIsInterceptModalOpen(false);
+                  navigate(`/events/checkout/${upcomingEvent._id}?type=guest`);
+                }}
+                className="w-full border-[3px] border-slate-900 bg-white text-slate-900 py-3.5 rounded-xl hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-1 shadow-[4px_4px_0_0_#0f172a] hover:translate-y-1 hover:shadow-[2px_2px_0_0_#0f172a]"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-bold">Continue as Guest</span>
+                  <span className="opacity-75 font-mono text-sm">(₹{upcomingEvent.standardFee})</span>
+                </div>
+                <span className="block text-xs font-bold text-slate-500">Proceed with standard non-member pricing</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
