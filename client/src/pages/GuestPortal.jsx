@@ -296,24 +296,6 @@ const GuestPortal = () => {
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer id="contact" className="py-12 bg-slate-900 border-t-[3px] border-slate-900">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-black text-white mb-6 uppercase">SRKR <span className="text-lime-400">ACE</span></h2>
-          <div className="flex justify-center gap-6 mb-8">
-            <a href="#" className="w-12 h-12 bg-white rounded-xl border-[3px] border-slate-900 flex items-center justify-center hover:translate-x-1 hover:translate-y-1 transition-transform shadow-[4px_4px_0_0_#a3e635]">
-              <Globe className="w-6 h-6 text-slate-900" />
-            </a>
-            <a href="#" className="w-12 h-12 bg-white rounded-xl border-[3px] border-slate-900 flex items-center justify-center hover:translate-x-1 hover:translate-y-1 transition-transform shadow-[4px_4px_0_0_#22d3ee]">
-              <Terminal className="w-6 h-6 text-slate-900" />
-            </a>
-          </div>
-          <p className="text-slate-400 font-bold font-mono uppercase tracking-wider text-sm">
-            © {new Date().getFullYear()} SRKR ACE. ALL RIGHTS RESERVED.
-          </p>
-        </div>
-      </footer>
-
     </div>
   );
 };
