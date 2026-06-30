@@ -1,6 +1,5 @@
-# ACE ERP
-
-Enterprise Resource Planning (ERP) platform for the **Association of Computer Engineers (ACE)**.  
+# ACE 
+ platform for the **Association of Computer Engineers (ACE)**.  
 Built on the MERN stack (MongoDB, Express, React, Node.js), powered by PhonePe PG v1, BullMQ + Redis, and a zero-storage headless canvas certificate engine.
 
 ---
