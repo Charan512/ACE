@@ -29,7 +29,7 @@ const EventCard = ({ event, onRegister, isRegistering = false, isRegistered = fa
   const hasDiscount = memberFee < standardFee;
 
   return (
-    <div className="group glass-card flex flex-col h-full overflow-hidden rounded-3xl relative z-10">
+    <div className="group bg-[#0B0F19]/80 backdrop-blur-xl border border-white/10 shadow-2xl flex flex-col h-full overflow-hidden rounded-3xl relative z-10">
       {/* Card body */}
       <div className="flex flex-col flex-1 p-5 sm:p-6 gap-4">
 
@@ -39,9 +39,9 @@ const EventCard = ({ event, onRegister, isRegistering = false, isRegistered = fa
             {tags.map((tag, idx) => (
               <span
                 key={idx}
-                className="inline-flex items-center gap-1 glass-badge px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-indigo-900"
+                className="inline-flex items-center gap-1 glass-badge bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-indigo-300"
               >
-                <Tag className="w-3 h-3 text-indigo-500" />
+                <Tag className="w-3 h-3 text-indigo-400" />
                 {tag}
               </span>
             ))}
@@ -50,68 +50,67 @@ const EventCard = ({ event, onRegister, isRegistering = false, isRegistered = fa
 
         {/* Year Exclusivity Badge */}
         {getYearExclusivityLabel(event.allowedYears) && (
-          <div className="inline-flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-amber-900 bg-amber-100/50 border border-amber-200/50 shadow-sm backdrop-blur-md">
+          <div className="inline-flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-amber-300 bg-amber-500/10 border border-amber-500/30 shadow-sm backdrop-blur-md">
             {getYearExclusivityLabel(event.allowedYears)}
           </div>
         )}
 
         {/* Title */}
-        <h3 className="text-xl font-bold text-slate-900 leading-tight">
+        <h3 className="text-xl font-bold text-slate-100 leading-tight">
           {title}
         </h3>
 
         {/* Description */}
-        <p className="text-sm font-medium text-slate-700/80 leading-relaxed line-clamp-3 flex-1">
+        <p className="text-sm font-medium text-slate-300/80 leading-relaxed line-clamp-3 flex-1">
           {description}
         </p>
 
         {/* Meta */}
-        <div className="flex flex-col gap-2 text-xs font-semibold text-slate-700 pt-4 border-t border-white/40">
+        <div className="flex flex-col gap-2 text-xs font-semibold text-slate-300 pt-4 border-t border-white/10">
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-indigo-500" />
-            <span>{formattedDate}</span>
+            <Calendar className="w-4 h-4 text-indigo-400" />
+            <span className="font-mono">{formattedDate}</span>
           </div>
           <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-pink-500" />
+            <MapPin className="w-4 h-4 text-pink-400" />
             <span className="truncate">{venue || 'Venue TBA'}</span>
           </div>
         </div>
       </div>
 
       {/* Pricing + CTA */}
-      <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-5 bg-white/20 border-t border-white/40">
+      <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-5 bg-white/5 border-t border-white/10">
         {/* Price block */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-900 tracking-tight">
+            <span className="text-2xl font-mono font-bold text-slate-100 tracking-tight">
               ₹{memberFee}
             </span>
             {hasDiscount && (
-              <span className="text-sm font-medium text-slate-500 line-through">
+              <span className="text-sm font-mono font-medium text-slate-400 line-through">
                 ₹{standardFee}
               </span>
             )}
           </div>
           {hasDiscount && (
-            <span className="glass-badge rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-600">
+            <span className="glass-badge bg-indigo-500/10 border border-indigo-500/20 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-300">
               Member price
             </span>
           )}
         </div>
 
-        {/* CTA Button */}
         <button
           id={`register-btn-${_id}`}
           onClick={() => onRegister(_id)}
           disabled={!isRegistrationOpen || isRegistering || isRegistered}
           className={`w-full flex items-center justify-center gap-2 py-3 px-4 text-sm font-bold uppercase tracking-wider min-h-[48px] rounded-2xl ${
             isRegistered
-              ? 'glass-panel opacity-80 cursor-not-allowed text-indigo-700'
+              ? 'bg-indigo-500/10 border border-indigo-500/20 opacity-80 cursor-not-allowed text-indigo-300'
               : !isRegistrationOpen
-              ? 'bg-slate-200/50 text-slate-500 border border-slate-300/50 opacity-60 cursor-not-allowed'
+              ? 'bg-white/5 text-slate-400 border border-white/10 opacity-60 cursor-not-allowed'
               : isRegistering
-              ? 'glass-btn opacity-80 cursor-not-allowed text-slate-700'
-              : 'glass-btn text-indigo-900'
+              ? 'glass-btn opacity-80 cursor-not-allowed text-slate-300'
+              : 'glass-btn bg-indigo-500/20 border-indigo-500/40 hover:bg-indigo-500/30 text-indigo-200'
           }`}
         >
           {isRegistered ? (
