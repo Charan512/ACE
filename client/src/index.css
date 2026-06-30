@@ -195,6 +195,57 @@
       inset 0 3px 0 rgba(255, 255, 255, 1),
       inset 0 -2px 0 rgba(0, 0, 0, 0.08);
   }
+
+  /* ── Neo-Brutalism (Guest Portal) ─────────────────────── */
+  .brutal-card {
+    border: 3px solid #0f172a;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 6px 6px 0px 0px #0f172a;
+    transition: all 0.2s ease;
+  }
+  .brutal-card:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 4px 4px 0px 0px #0f172a;
+  }
+
+  .brutal-btn {
+    border: 3px solid #0f172a;
+    border-radius: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 4px 4px 0px 0px #0f172a;
+    transition: all 0.1s ease;
+    cursor: pointer;
+  }
+  .brutal-btn:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px 0px #0f172a;
+  }
+  .brutal-btn:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0px 0px 0px 0px #0f172a;
+  }
+
+  .brutal-badge {
+    border: 2px solid #0f172a;
+    border-radius: 9999px;
+    font-weight: 900;
+    text-transform: uppercase;
+    box-shadow: 3px 3px 0px 0px #0f172a;
+  }
+
+  /* Brutal Tints */
+  .brutal-yellow { background-color: #fbbf24; }
+  .brutal-pink   { background-color: #f43f5e; color: white; }
+  .brutal-cyan   { background-color: #22d3ee; }
+  .brutal-lime   { background-color: #a3e635; }
+  .brutal-white  { background-color: #ffffff; }
+  .brutal-purple { background-color: #c084fc; color: white; }
 }
 
 @keyframes marquee {
