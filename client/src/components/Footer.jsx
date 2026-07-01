@@ -68,8 +68,7 @@ const Footer = () => {
             &copy; 2026 Association of Computer Engineers, SRKR. All rights reserved.
           </div>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-slate-600 transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-slate-600 transition-colors">Terms of Service</a>
+            <span>Made with love by <a href="https://nsrcharan.vercel.app" target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-600 font-semibold transition-colors">nsrc</a></span>
           </div>
         </div>
 
