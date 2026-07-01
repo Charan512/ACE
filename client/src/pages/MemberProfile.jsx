@@ -7,6 +7,7 @@ import {
 import useAuthStore from '../store/useAuthStore';
 import BlurText from '../components/react-bits/BlurText';
 import api from '../lib/api';
+import ImageCropperModal from '../components/ImageCropperModal';
 
 const LinkedinIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -85,6 +86,7 @@ const MemberProfile = () => {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarInputRef              = useRef(null);
   const [localAvatar, setLocalAvatar] = useState(user?.profilePhoto || '');
+  const [cropImageSrc, setCropImageSrc] = useState(null);
   
   // Track focus states for floating labels
   const [focusState, setFocusState] = useState({
@@ -165,13 +167,24 @@ const MemberProfile = () => {
   useEffect(() => { setLocalAvatar(user?.profilePhoto || ''); }, [user?.profilePhoto]);
 
   // ── Avatar Upload to R2 ────────────────────────────────────
-  const handleAvatarChange = async (e) => {
+  const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    // Read file as Data URL to pass to cropper
+    const reader = new FileReader();
+    reader.addEventListener('load', () => setCropImageSrc(reader.result));
+    reader.readAsDataURL(file);
+    
+    if (avatarInputRef.current) avatarInputRef.current.value = '';
+  };
+
+  const handleCropDone = async (croppedBlob) => {
+    setCropImageSrc(null); // Close modal
     setAvatarUploading(true);
     try {
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('image', croppedBlob, 'avatar.jpg');
 
       const res = await api.post('/upload/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -187,7 +200,6 @@ const MemberProfile = () => {
       console.error('[Avatar] Upload error:', err.message);
     } finally {
       setAvatarUploading(false);
-      if (avatarInputRef.current) avatarInputRef.current.value = '';
     }
   };
 
@@ -596,6 +608,15 @@ const MemberProfile = () => {
         </form>
 
       </div>
+      
+      {/* ── Cropper Modal ────────────────────────────────────── */}
+      {cropImageSrc && (
+        <ImageCropperModal
+          imageSrc={cropImageSrc}
+          onClose={() => setCropImageSrc(null)}
+          onCropDone={handleCropDone}
+        />
+      )}
     </div>
   );
 };
