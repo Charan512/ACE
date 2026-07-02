@@ -1,21 +1,53 @@
-# ACE 
- platform for the **Association of Computer Engineers (ACE)**.  
+# ACE ERP
+Platform for the **Association of Computer Engineers (ACE)**.  
 Built on the MERN stack (MongoDB, Express, React, Node.js), powered by PhonePe PG v1, BullMQ + Redis, and a zero-storage headless canvas certificate engine.
 
 ---
 
-## 1. System Overview
+## 1. System Overview & Portal Capabilities
 
-ACE manages role-based member directories, event registrations, automated billing, credentials vaults, and asynchronous email notifications. The platform operates on a secure backend system with a unified frontend designed in an **Industrial Cyber-Minimalism** theme.
+ACE is partitioned into 5 distinct portals, each serving a specific role and set of capabilities.
 
-### Key Functional Areas
-* **RBAC & Identity Engine:** Manages levels from Guests and Members to Student Board Members (SBM), Executive Board Members (EBM), and Administrators. Members receive unique sequential IDs (`26ACE0___`) generated via an atomic MongoDB counters collection.
-* **Dual-Tier Event Registrations:** Dynamically determines event pricing based on user role (Member vs. Non-Member) and tracks transaction status securely.
-* **Server-Redirect PhonePe Payments:** Integrates PhonePe PG v1 redirect model. Verifies Razorpay-alternative webhooks using PhonePe's checksum mechanism (`X-VERIFY` header validation).
-* **Asynchronous Jobs & Background Workers:** Processes deferred tasks through Redis-backed BullMQ queues. This includes:
-  - **10-Hour Treasurer Digest:** Gathers event registrations and emails a consolidated digest to the Treasurer.
-  - **Late Converter Migration:** Back-ports a guest's historical event registrations and certificates to their permanent Member Vault when they purchase a full membership.
-* **Zero-Storage headless Certificate Renderer:** Fetches base blank certificate templates to RAM from Cloudflare R2, applies high-resolution text overlays dynamically using `@napi-rs/canvas` based on event metrics, and streams the buffer directly to the client.
+### 1.1 Guest & Public Portal
+**Target Audience:** Non-authenticated users, prospective members, and general event attendees.
+- **Public Event Discovery:** View a catalog of upcoming and past events.
+- **Event Registration & Checkout:** Register for events and purchase tickets through integrated payment gateways (Razorpay/PhonePe) as a guest.
+- **Team Directory:** View public profiles of the Executive and Student Body Members.
+- **Authentication Gateway:** Secure login and password recovery flows.
+- **Membership Interest:** Submit forms to register interest in joining the organization.
+
+### 1.2 Member Portal
+**Target Audience:** Registered General Members.
+- **Personal Dashboard:** A central hub displaying the member's dynamic ID card, upcoming registered events, and the latest organizational announcements.
+- **Fast Check-in QR:** A personalized, dynamic QR code generated for rapid scanning at event entrances.
+- **Event History (The Vault):** A detailed log of all previously attended events and activities.
+- **Certificate Locker:** Access, unlock, and download dynamically generated certificates for completed events.
+- **Profile Management:** Update personal contact information, academic details (branch, section, year), and social links.
+- **Avatar Customization:** Upload and visually crop profile pictures directly within the portal.
+
+### 1.3 Operations (Ops) Hub
+**Target Audience:** Student Body Members (SBM), Executive Body Members (EBM), and System Admins.
+- **Live Event Control Room:** A real-time dashboard used during active events to broadcast live announcements, monitor real-time check-in counts, and control event states (e.g., pausing registration).
+- **QR Door Scanner:** A high-speed, camera-integrated scanning interface used by volunteers at event entrances to instantly validate member QR codes and log attendance.
+- **Rapid Cash Registration:** An interface for volunteers to manually register attendees who are paying with physical cash at the door.
+- **Instant Member Onboarding:** Quickly register completely new users into the system and instantly generate their official Member IDs on the spot.
+
+### 1.4 System Administration (Admin) Portal
+**Target Audience:** Executive Body Members (EBM) and System Admins.
+- **Global Command Dashboard:** High-level metrics overview, including total revenue, active vs. draft events, total member counts, and active background system jobs.
+- **Event Architect:** Create and configure new events. Features include setting pricing tiers, drafting descriptions, and building custom dynamic registration forms.
+- **Registration Management:** Review all incoming event registrations, approve or reject pending requests, and filter data by specific events.
+- **Certificate Forge:** A visual drag-and-drop builder for designing event certificates. Admins can upload base template images and position dynamic text nodes (like Name, Date, and Event Title) that automatically populate for each user.
+- **User Directory & Access Control:** View the complete database of registered users. Admins can promote users to SBM/EBM roles or restrict access.
+- **Mass Communications:** Send targeted push notifications or emails to specific cohorts.
+- **System Settings:** Configure global platform variables, audit logs, and trigger emergency system modes.
+
+### 1.5 Treasurer Analytics Portal
+**Target Audience:** Users with the specific "Treasurer" designation.
+- **Financial Overview:** Deep dive into the organization's revenue streams.
+- **Payment Gateway Analysis:** Track funds captured online versus offline cash collections at the door.
+- **Discrepancy Engine:** Automatically compare the expected revenue (based on scanned attendees) against the actual reported collections to highlight financial mismatches.
+- **Automated Financial Digests:** A background engine that automatically compiles and emails comprehensive 10-hour financial reports to the Treasurer during active events.
 
 ---
 
@@ -26,13 +58,19 @@ The following diagrams illustrate the core structure, payment flows, and backgro
 ### 2.1 Complete System Architecture Overview
 ```mermaid
 graph TD
-    subgraph Client Layer
-        Vite["React SPA / Vite"]
+    subgraph Client Layer [Vite / React SPA]
+        GP[Guest Portal]
+        MP[Member Portal]
+        OP[Ops Hub]
+        AP[Admin Portal]
+        TP[Treasurer Portal]
     end
 
-    subgraph Application Server
-        Express["Express.js Server / Node.js 18+"]
-        Canvas["@napi-rs/canvas Engine"]
+    subgraph Application Server [Node.js / Express]
+        Auth[RBAC Auth Middleware]
+        EC[Event & Registration Controllers]
+        CC[Canvas Certificate Generator]
+        PaymentC[Payment Controller]
     end
 
     subgraph Database & Caching
@@ -46,15 +84,29 @@ graph TD
         SMTP["SMTP Mail Server"]
     end
 
-    Vite <--> |"HTTPS / JSON API"| Express
-    Express <--> |"Mongoose ODM"| Mongo
-    Express <--> |"BullMQ Queues"| Redis
-    Express --> |"Fetch Base Templates"| R2
-    Express --> |"Stream Buffer"| Vite
-    Express <--> |"PG Redirect & Status API"| PhonePe
-    Express --> |"Transports Emails"| SMTP
-```
+    %% Client to Server routing
+    GP --> Auth
+    MP --> Auth
+    OP --> Auth
+    AP --> Auth
+    TP --> Auth
 
+    %% Server Internal
+    Auth --> EC
+    Auth --> CC
+    Auth --> PaymentC
+
+    %% Server to DB
+    EC <--> |"Mongoose ODM"| Mongo
+    PaymentC <--> |"Mongoose ODM"| Mongo
+    EC <--> |"BullMQ Jobs"| Redis
+    PaymentC <--> |"BullMQ Jobs"| Redis
+
+    %% Third party communication
+    CC --> |"Fetch Templates"| R2
+    PaymentC <--> |"S2S Webhooks & Validation"| PhonePe
+    EC --> |"Transport Emails"| SMTP
+```
 
 ### 2.2 Payment Initialization & Webhook Verification Flow
 ```mermaid
