@@ -46,8 +46,6 @@ ACE is partitioned into 5 distinct portals, each serving a specific role and set
 **Target Audience:** Users with the specific "Treasurer" designation.
 - **Financial Overview:** Deep dive into the organization's revenue streams.
 - **Payment Gateway Analysis:** Track funds captured online versus offline cash collections at the door.
-- **Discrepancy Engine:** Automatically compare the expected revenue (based on scanned attendees) against the actual reported collections to highlight financial mismatches.
-- **Automated Financial Digests:** A background engine that automatically compiles and emails comprehensive 10-hour financial reports to the Treasurer during active events.
 
 ---
 
@@ -134,17 +132,7 @@ sequenceDiagram
     Frontend->>User: Display Status & Unlock Access
 ```
 
-### 2.3 The Treasurer Digest Debounce Lifecycle
-```mermaid
-stateDiagram-v2
-    [*] --> Idle: Queue Empty
-    Idle --> RunningTimer: First Registration occurs (Start 2.5h TTL)
-    RunningTimer --> ResetTimer: Next Registration occurs (within 2.5h)
-    ResetTimer --> RunningTimer: Reset TTL countdown to 2.5h
-    RunningTimer --> Flushed: 2.5h TTL hits 0 OR 10h Absolute Ceiling Reached
-    Flushed --> EmailSent: Trigger Worker (Collect registrations & generate HTML)
-    EmailSent --> Idle: Reset State
-```
+
 
 ---
 
@@ -327,4 +315,4 @@ The repository includes a [`render.yaml`](file:///Users/sriramcharannalla/Projec
    → { "success": true, "message": "ACE ERP Server is operational." }
    ```
 
-> **Note on BullMQ workers:** Workers (email, treasurer digest, late converter) are co-located inside the Express process on the same Render web service. Render's `SIGTERM` is handled gracefully — workers complete in-flight jobs before shutdown.
+> **Note on BullMQ workers:** Workers (email, late converter) are co-located inside the Express process on the same Render web service. Render's `SIGTERM` is handled gracefully — workers complete in-flight jobs before shutdown.
