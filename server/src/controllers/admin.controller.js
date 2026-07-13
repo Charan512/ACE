@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Event from '../models/Event.js';
 import Registration from '../models/Registration.js';
@@ -542,6 +543,7 @@ export const getTreasurerEventStats = catchAsync(async (req, res, next) => {
     byTier,
     revenueByTier,
     overTime,
+    cashRegistrationsByAgent,
   ] = await Promise.all([
     // 1. Total confirmed registrations
     Registration.countDocuments(confirmedFilter),
@@ -583,6 +585,37 @@ export const getTreasurerEventStats = catchAsync(async (req, res, next) => {
       },
       { $sort: { _id: 1 } },
       { $project: { _id: 0, date: '$_id', count: 1 } },
+    ]),
+
+    // 7. Cash Registrations by Agent
+    Registration.aggregate([
+      { $match: { eventId: new mongoose.Types.ObjectId(eventId), status: 'confirmed', paymentMethod: 'cash', cashRegisteredBy: { $ne: null } } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'cashRegisteredBy',
+          foreignField: '_id',
+          as: 'agent'
+        }
+      },
+      { $unwind: '$agent' },
+      {
+        $group: {
+          _id: '$agent._id',
+          name: { $first: '$agent.name' },
+          role: { $first: '$agent.role' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } },
+      {
+        $project: {
+          _id: 0,
+          name: 1,
+          role: 1,
+          count: 1
+        }
+      }
     ]),
   ]);
 
@@ -629,6 +662,7 @@ export const getTreasurerEventStats = catchAsync(async (req, res, next) => {
         non_member: revenueTierMap.non_member,
       },
       registrationsOverTime: overTime,
+      cashRegistrationsByAgent,
     },
   });
 });

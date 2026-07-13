@@ -501,6 +501,35 @@ const TreasurerDashboard = () => {
               </div>
             </Section>
           )}
+          {/* ── Offline Registrations by Agent Data Table ──────── */}
+          {stats.cashRegistrationsByAgent && stats.cashRegistrationsByAgent.length > 0 && (
+            <Section title="Offline Registrations by Agent">
+              <div className="overflow-x-auto rounded-xl border border-[#ffffff0a] mt-2">
+                <table className="w-full text-left text-sm font-mono text-slate-300">
+                  <thead className="bg-[#121826] text-slate-400 text-xs uppercase tracking-widest border-b border-[#ffffff0a]">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Agent Name</th>
+                      <th className="px-4 py-3 font-medium">Role</th>
+                      <th className="px-4 py-3 font-medium text-right">Registrations</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#ffffff0a]">
+                    {stats.cashRegistrationsByAgent.map((agent, i) => (
+                      <tr key={i} className="hover:bg-[#ffffff05] transition-colors">
+                        <td className="px-4 py-3 font-bold text-white">{agent.name}</td>
+                        <td className="px-4 py-3">
+                          <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 px-2 py-0.5 rounded text-[10px] uppercase">
+                            {agent.role}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 font-bold text-cyan-400 text-right">{agent.count.toLocaleString('en-IN')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Section>
+          )}
 
         </div>
       )}
