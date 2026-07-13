@@ -171,6 +171,8 @@ const OpsScanner = () => {
 
   const isMode1 = mode === 'verify';
 
+  const startPromiseRef = useRef(null);
+
   // ── Start Scanner ────────────────────────────────────────
   const startScanner = useCallback(async () => {
     if (!qrRef.current) return;
@@ -178,12 +180,14 @@ const OpsScanner = () => {
       const html5QrCode = new Html5Qrcode('qr-reader');
       scannerRef.current = html5QrCode;
 
-      await html5QrCode.start(
+      startPromiseRef.current = html5QrCode.start(
         { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 240, height: 240 } },
+        { fps: 10 }, // Scanning entire frame, using our custom overlay for UI
         onScanSuccess,
         () => {} // ignore decode failures
       );
+      
+      await startPromiseRef.current;
       setScanning(true);
     } catch (err) {
       setInitError('Camera access denied or not available.');
@@ -196,9 +200,27 @@ const OpsScanner = () => {
   const stopScanner = useCallback(async () => {
     if (scannerRef.current) {
       try {
-        await scannerRef.current.stop();
+        // Await the start promise to ensure we don't call stop() while starting
+        if (startPromiseRef.current) {
+          await startPromiseRef.current.catch(() => {});
+        }
+        
+        // Force stop tracks on the video element as a fallback
+        try {
+          const videoEl = document.querySelector('#qr-reader video');
+          if (videoEl && videoEl.srcObject) {
+            videoEl.srcObject.getTracks().forEach(track => track.stop());
+          }
+        } catch (e) {}
+
+        // State 2 is SCANNING
+        if (scannerRef.current.getState && scannerRef.current.getState() === 2) {
+          await scannerRef.current.stop();
+        }
         scannerRef.current.clear();
-      } catch { /* already stopped */ }
+      } catch (err) {
+        console.error('[OpsScanner] Failed to stop', err);
+      }
     }
     setScanning(false);
   }, []);
@@ -268,7 +290,7 @@ const OpsScanner = () => {
       {/* ── Top Bar ──────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-4 z-20 relative">
         <button
-          onClick={() => { stopScanner(); navigate(-1); }}
+          onClick={async () => { await stopScanner(); navigate(-1); }}
           className="flex items-center gap-2 text-white/70 font-medium text-sm hover:text-white transition-colors"
         >
           <X className="w-5 h-5" /> Close
@@ -328,7 +350,7 @@ const OpsScanner = () => {
             <p className="text-white font-bold">Camera Unavailable</p>
             <p className="text-sm text-slate-400 font-mono">{initError}</p>
             <button
-              onClick={() => { stopScanner(); navigate(-1); }}
+              onClick={async () => { await stopScanner(); navigate(-1); }}
               className="mt-2 px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-bold text-sm">
               Go Back
             </button>
