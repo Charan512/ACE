@@ -67,8 +67,15 @@ const formatDate = (dateStr) => {
 const formatForInput = (dateStr) => {
   if (!dateStr) return '';
   const d = new Date(dateStr);
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 16);
+  if (isNaN(d.getTime())) return '';
+  // Build the datetime-local string from LOCAL time components.
+  // Avoids the timezone-offset mutation bug where setMinutes + toISOString
+  // could push the date across a midnight boundary (e.g. IST +5:30).
+  const pad = (n) => String(n).padStart(2, '0');
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    `T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  );
 };
 
 // ── Field Type Config ─────────────────────────────────────────

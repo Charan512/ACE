@@ -11,13 +11,22 @@ const GuestPortal = () => {
   const [isInterceptModalOpen, setIsInterceptModalOpen] = useState(false);
 
   useEffect(() => {
-    // Fetch the latest upcoming event to feature on the hero
+    // Fetch active events sorted by eventDate ascending.
+    // Auto-deactivation (BullMQ) handles removing past events,
+    // so we just pick the nearest isActive=true event.
     const fetchLatestEvent = async () => {
       try {
-        const res = await api.get('/events?status=upcoming&sort=eventDate&limit=1');
+        const res = await api.get('/events?sort=eventDate&limit=10');
         const events = res.data.data || [];
         if (events.length > 0) {
-          setUpcomingEvent(events[0]);
+          // Pick the event with the eventDate closest to today
+          const now = Date.now();
+          const closest = events.reduce((prev, curr) => {
+            const prevDiff = Math.abs(new Date(prev.eventDate).getTime() - now);
+            const currDiff = Math.abs(new Date(curr.eventDate).getTime() - now);
+            return currDiff < prevDiff ? curr : prev;
+          });
+          setUpcomingEvent(closest);
         }
       } catch (err) {
         console.error('Failed to fetch latest event:', err);

@@ -1,6 +1,35 @@
 import Event from '../models/Event.js';
 import AppError from '../utils/appError.js';
 import catchAsync from '../utils/catchAsync.js';
+import { eventDeactivateQueue } from '../queues/index.js';
+
+// ── Helper: Schedule BullMQ auto-deactivation job at eventDate ──
+// Cancels any existing deactivation job for this event first (idempotent).
+const scheduleAutoDeactivation = async (eventId, eventDate) => {
+  const jobId = `auto-deactivate-${eventId}`;
+
+  // Remove any previously scheduled job for this event (e.g., date changed)
+  const existing = await eventDeactivateQueue.getJob(jobId);
+  if (existing) await existing.remove();
+
+  const delay = new Date(eventDate).getTime() - Date.now();
+  if (delay <= 0) {
+    // Event date is already in the past — deactivate immediately
+    await eventDeactivateQueue.add('autoDeactivateEvent', { eventId: eventId.toString() }, {
+      jobId,
+      delay: 0,
+    });
+  } else {
+    await eventDeactivateQueue.add('autoDeactivateEvent', { eventId: eventId.toString() }, {
+      jobId,
+      delay,
+    });
+    console.log(
+      `[AutoDeactivate] Scheduled deactivation for event ${eventId} ` +
+      `in ${Math.round(delay / 1000 / 60)} minutes (at ${new Date(eventDate).toISOString()})`
+    );
+  }
+};
 
 // ─────────────────────────────────────────────────────────────
 // PRIVATE HELPERS
@@ -214,6 +243,9 @@ export const createEvent = catchAsync(async (req, res, next) => {
     createdBy: req.user._id, // injected by `protect` middleware
   });
 
+  // Schedule BullMQ job to auto-deactivate this event when its date arrives
+  await scheduleAutoDeactivation(newEvent._id, newEvent.eventDate);
+
   res.status(201).json({
     success: true,
     data: newEvent.toObject({ virtuals: true }),
@@ -278,6 +310,11 @@ export const updateEvent = catchAsync(async (req, res, next) => {
     { new: true, runValidators: true }
   ).populate('createdBy', 'name aceId role');
 
+  // If eventDate changed, reschedule the auto-deactivation job for the new date
+  if (updates.eventDate) {
+    await scheduleAutoDeactivation(id, updates.eventDate);
+  }
+
   res.status(200).json({
     success: true,
     data: updatedEvent.toObject({ virtuals: true }),
@@ -317,6 +354,11 @@ export const toggleRegistration = catchAsync(async (req, res, next) => {
     `[EventController] Registration ${newState} for "${updatedEvent.title}" (id: ${id}) ` +
     `by ${req.user.email}`  // Admin accounts have no aceId; use email for audit log
   );
+
+  // If re-activated, re-schedule the auto-deactivation job
+  if (updatedEvent.isActive) {
+    await scheduleAutoDeactivation(id, updatedEvent.eventDate);
+  }
 
   res.status(200).json({
     success: true,
