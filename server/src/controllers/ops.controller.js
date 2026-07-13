@@ -18,7 +18,7 @@ const ACE_ID_REGEX = /^26ACE\d{4}$/;
  */
 export const getOpsEvents = catchAsync(async (req, res, _next) => {
   const events = await Event.find({ isActive: true })
-    .select('title description eventDate venue registeredCount maxCapacity')
+    .select('title description eventDate venue registeredCount maxCapacity memberFee standardFee customFormFields')
     .sort({ eventDate: 1 });
 
   res.status(200).json({

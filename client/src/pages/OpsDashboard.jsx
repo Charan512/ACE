@@ -14,18 +14,25 @@ const fmtDate = (d) => new Date(d).toLocaleDateString('en-IN', {
 // ── Cash Registration Modal ───────────────────────────────────
 const CashRegModal = ({ event, onClose }) => {
   const [tab, setTab] = useState('member'); // 'member' | 'guest'
-  
+
   // Guest Form State
   const [guestForm, setGuestForm] = useState({ name: '', email: '', phone: '', year: '' });
-  
+
   // Member Form State
   const [memberForm, setMemberForm] = useState({ identifier: '' }); // aceId or phone
+
+  // Custom question answers — keyed by fieldName
+  const [customResponses, setCustomResponses] = useState({});
 
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState(null);
 
+  const customFields = event.customFormFields || [];
+
   const setGuestField = (k) => (e) => setGuestForm((p) => ({ ...p, [k]: e.target.value }));
+  const setCustomField = (fieldName) => (e) =>
+    setCustomResponses((p) => ({ ...p, [fieldName]: e.target.value }));
 
   const handleSubmit = async (ev) => {
     ev.preventDefault();
@@ -34,18 +41,22 @@ const CashRegModal = ({ event, onClose }) => {
     try {
       if (tab === 'member') {
         const idVal = memberForm.identifier.trim();
-        const payload = idVal.toLowerCase().startsWith('26ace') 
-          ? { aceId: idVal } 
+        const payload = idVal.toLowerCase().startsWith('26ace')
+          ? { aceId: idVal }
           : { phone: idVal };
-          
-        await api.post(`/ops/events/${event._id}/cash-register/member`, payload);
+
+        await api.post(`/ops/events/${event._id}/cash-register/member`, {
+          ...payload,
+          customResponses,
+        });
       } else {
         await api.post(`/ops/events/${event._id}/cash-register/guest`, {
-          name:          guestForm.name.trim(),
-          email:         guestForm.email.trim().toLowerCase(),
-          phone:         guestForm.phone.trim() || undefined,
-          year:          guestForm.year,
-          paymentMethod: 'cash',
+          name:            guestForm.name.trim(),
+          email:           guestForm.email.trim().toLowerCase(),
+          phone:           guestForm.phone.trim() || undefined,
+          year:            guestForm.year,
+          paymentMethod:   'cash',
+          customResponses,
         });
       }
       setDone(true);
@@ -60,11 +71,86 @@ const CashRegModal = ({ event, onClose }) => {
     setDone(false);
     setGuestForm({ name: '', email: '', phone: '', year: '' });
     setMemberForm({ identifier: '' });
+    setCustomResponses({});
+  };
+
+  // ── Input style ──────────────────────────────────────────────
+  const inCls = 'w-full bg-[#151515] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-white/30 transition-all';
+
+  // ── Renders a single custom field ───────────────────────────
+  const renderCustomField = (field, idx) => {
+    const val = customResponses[field.fieldName] || '';
+    const label = (
+      <label className="block text-xs font-bold text-neutral-400 mb-1.5">
+        {field.fieldName}
+        {field.required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+    );
+
+    if (field.fieldType === 'select') {
+      return (
+        <div key={idx}>
+          {label}
+          <select
+            required={field.required}
+            value={val}
+            onChange={setCustomField(field.fieldName)}
+            className={inCls + ' appearance-none'}
+          >
+            <option value="" disabled>Select…</option>
+            {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+          </select>
+        </div>
+      );
+    }
+
+    if (field.fieldType === 'radio') {
+      return (
+        <div key={idx}>
+          {label}
+          <div className="flex flex-wrap gap-2">
+            {field.options.map(opt => (
+              <label key={opt} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold cursor-pointer transition-all ${
+                val === opt
+                  ? 'bg-white text-black border-white'
+                  : 'border-white/10 text-neutral-400 hover:border-white/30'
+              }`}>
+                <input
+                  type="radio"
+                  name={`custom_${field.fieldName}_${event._id}`}
+                  value={opt}
+                  checked={val === opt}
+                  onChange={setCustomField(field.fieldName)}
+                  required={field.required && !val}
+                  className="hidden"
+                />
+                {opt}
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // text | number
+    return (
+      <div key={idx}>
+        {label}
+        <input
+          required={field.required}
+          type={field.fieldType}
+          value={val}
+          onChange={setCustomField(field.fieldName)}
+          placeholder={field.fieldName}
+          className={inCls}
+        />
+      </div>
+    );
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-      <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+      <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl p-6 w-full max-w-sm shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <div>
             <h2 className="text-base font-black text-white">Cash Registration</h2>
@@ -122,7 +208,7 @@ const CashRegModal = ({ event, onClose }) => {
                   <p className="text-xs font-semibold text-red-400">{error}</p>
                 </div>
               )}
-              
+
               {tab === 'member' ? (
                 <div>
                   <label className="block text-xs font-bold text-neutral-400 mb-1.5">Member Identifier <span className="text-red-500">*</span></label>
@@ -171,12 +257,28 @@ const CashRegModal = ({ event, onClose }) => {
                 </>
               )}
 
+              {/* ── Custom Questions (both tabs) ──────────────────── */}
+              {customFields.length > 0 && (
+                <>
+                  <div className="flex items-center gap-3 pt-1">
+                    <div className="flex-1 h-px bg-white/10" />
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-neutral-500">
+                      Event Questions
+                    </span>
+                    <div className="flex-1 h-px bg-white/10" />
+                  </div>
+                  {customFields.map((field, idx) => renderCustomField(field, idx))}
+                </>
+              )}
+
               <div className="flex items-center gap-2 p-2.5 bg-white/5 border border-white/10 rounded-xl mt-1">
                 <DollarSign className="w-4 h-4 text-neutral-300" />
                 <span className="text-xs font-bold text-neutral-300">Payment Method: Cash</span>
-                <span className="ml-auto text-xs font-mono font-black text-white">{String.fromCodePoint(0x20B9)}{tab === 'member' ? event.memberFee : event.standardFee}</span>
+                <span className="ml-auto text-xs font-mono font-black text-white">
+                  {String.fromCodePoint(0x20B9)}{tab === 'member' ? (event.memberFee ?? '—') : (event.standardFee ?? '—')}
+                </span>
               </div>
-              
+
               <div className="flex gap-2 pt-1">
                 <button type="button" onClick={onClose}
                   className="flex-1 py-2.5 text-sm font-bold text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-transparent">
@@ -204,12 +306,12 @@ const CashMembershipModal = ({ onClose }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch current membership fee from DB — never use a hardcoded fallback
-    fetch(`${import.meta.env.VITE_API_URL || ''}/api/settings/membership-fee`)
-      .then(r => r.json())
-      .then(d => {
-        if (d.success && typeof d.data?.membershipFee === 'number') {
-          setMembershipFee(d.data.membershipFee);
+    // Use the api axios instance (uses VITE_API_URL directly — no proxy needed)
+    api.get('/settings/membership-fee')
+      .then(res => {
+        const fee = res.data?.data?.membershipFee;
+        if (typeof fee === 'number') {
+          setMembershipFee(fee);
         } else {
           setError('Could not load membership fee. Please close and try again.');
         }

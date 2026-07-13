@@ -32,7 +32,7 @@ const createCashNotification = async (payload) => {
  */
 export const cashRegisterMember = catchAsync(async (req, res, next) => {
   const { eventId } = req.params;
-  const { aceId, phone } = req.body;
+  const { aceId, phone, customResponses } = req.body;
 
   if (!aceId && !phone) {
     return next(new AppError('Provide aceId or phone to identify the member.', 400));
@@ -99,7 +99,7 @@ export const cashRegisterMember = catchAsync(async (req, res, next) => {
         paymentMethod:    'cash',
         amount:           event.memberFee,
         cashRegisteredBy: req.user._id,
-        customResponses:  {},
+        customResponses:  customResponses || {},
       }],
       { session }
     );

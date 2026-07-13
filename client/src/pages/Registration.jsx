@@ -19,13 +19,13 @@ const Registration = () => {
   const [membershipFee, setMembershipFee] = useState(null); // null = loading
 
   // Fetch current membership fee from DB (never hardcoded)
-  // If the fetch fails, we surface an error rather than silently showing a wrong price.
+  // Uses the api axios instance so VITE_API_URL is used directly — no proxy needed.
   useEffect(() => {
-    fetch('/api/settings/membership-fee')
-      .then(r => r.json())
-      .then(d => {
-        if (d.success && typeof d.data?.membershipFee === 'number') {
-          setMembershipFee(d.data.membershipFee);
+    api.get('/settings/membership-fee')
+      .then(res => {
+        const fee = res.data?.data?.membershipFee;
+        if (typeof fee === 'number') {
+          setMembershipFee(fee);
         } else {
           setError('Could not load the current membership fee. Please refresh and try again.');
         }
