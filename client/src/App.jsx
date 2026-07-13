@@ -40,6 +40,7 @@ import OpsLayout          from './components/OpsLayout';
 import OpsDashboard       from './pages/OpsDashboard';
 import EventControlRoom   from './pages/EventControlRoom';
 import OpsScanner         from './pages/OpsScanner';
+import OpsProfile         from './pages/OpsProfile';
 
 // ── Layout with Navbar + Footer ───────────────────────────────
 import { Outlet } from 'react-router-dom';
@@ -70,9 +71,15 @@ const RootRoute = () => {
   }
   
   if (user) {
-    if (['admin', 'ebm', 'sbm'].includes(user.role)) {
+    // Admins go to Admin Portal
+    if (user.role === 'admin') {
       return <Navigate to="/admin" replace />;
     }
+    // EBMs and SBMs go to Ops Hub
+    if (['ebm', 'sbm'].includes(user.role)) {
+      return <Navigate to="/ops" replace />;
+    }
+    // General Members go to Member Portal
     return <Navigate to="/member/dashboard" replace />;
   }
   
@@ -165,7 +172,7 @@ function App() {
         >
           <Route element={<OpsLayout />}>
             <Route path="/ops"                        element={<OpsDashboard />} />
-            <Route path="/ops/profile"                element={<MemberProfile />} />
+            <Route path="/ops/profile"                element={<OpsProfile />} />
             <Route path="/ops/events/:eventId"        element={<EventControlRoom />} />
           </Route>
           {/* Scanner is full-screen (no OpsLayout chrome) */}

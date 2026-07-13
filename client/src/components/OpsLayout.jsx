@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, ScanLine, LogOut, Zap, Menu, X, BarChart2 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
-import PortalBackground from './ui/PortalBackground';
+import AgentFlowBackground from './ui/AgentFlowBackground';
 
 // ── Nav Items ─────────────────────────────────────────────────
 const NAV_ITEMS = [
@@ -54,8 +54,8 @@ const OpsLayout = () => {
   }
 
   return (
-    <div className="min-h-screen text-slate-700 flex flex-col bg-slate-50 selection:bg-orange-100">
-      <PortalBackground />
+    <div className="min-h-screen text-neutral-300 flex flex-col bg-[#0A0A0A] selection:bg-white/20">
+      <AgentFlowBackground />
 
       {/* ──────────────────────────────────────────────────────
           PREMIUM FLOATING ISLAND HEADER
@@ -65,11 +65,11 @@ const OpsLayout = () => {
           ${scrolled ? 'md:top-3' : 'md:top-6'}
           top-0 h-16 md:h-auto px-4 md:px-5 py-0 md:py-3 md:mx-auto md:max-w-4xl md:rounded-[24px]`}
         style={{
-          background: 'rgba(255, 255, 255, 0.75)',
-          border: '1px solid rgba(226, 232, 240, 0.8)',
+          background: 'rgba(15, 15, 15, 0.8)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
-          boxShadow: '0 10px 40px -10px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)',
+          boxShadow: '0 10px 40px -10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)',
         }}
       >
         <div className="flex items-center gap-6">
@@ -77,18 +77,18 @@ const OpsLayout = () => {
           <div className="flex items-center gap-3 shrink-0">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner"
-              style={{ background: 'linear-gradient(135deg, rgba(234,88,12,0.12), rgba(249,115,22,0.08))', border: '1px solid rgba(234,88,12,0.2)' }}
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
             >
-              <Zap className="w-5 h-5" style={{ color: '#ea580c' }} />
+              <Zap className="w-5 h-5 text-white" />
             </div>
             <div className="hidden sm:flex flex-col leading-tight">
-              <span className="text-sm font-black text-slate-900 tracking-tight">Ops Hub</span>
-              <span className="text-[9px] font-mono font-bold uppercase tracking-widest" style={{ color: '#ea580c' }}>ops.access</span>
+              <span className="text-sm font-black text-white tracking-tight">Ops Hub</span>
+              <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-neutral-500">ops.access</span>
             </div>
           </div>
 
           {/* Desktop Segmented Nav */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-100/50 p-1 rounded-2xl border border-slate-200/60 shadow-inner">
+          <nav className="hidden md:flex items-center gap-1 bg-black/50 p-1 rounded-2xl border border-white/10 shadow-inner">
             {visibleNavItems.map(({ label, to, icon: Icon, end }) => (
               <NavLink
                 key={to}
@@ -97,15 +97,14 @@ const OpsLayout = () => {
                 className={({ isActive }) =>
                   `relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm transition-all duration-300
                   ${isActive
-                    ? 'text-orange-700 font-bold bg-white shadow-sm ring-1 ring-slate-200/80'
-                    : 'text-slate-500 font-medium hover:text-slate-800 hover:bg-slate-50'
+                    ? 'text-black font-bold bg-white shadow-sm ring-1 ring-white/20'
+                    : 'text-neutral-400 font-medium hover:text-white hover:bg-white/5'
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
-                    <Icon className={`w-4 h-4 shrink-0 transition-all duration-300 ${isActive ? 'scale-110' : ''}`}
-                      style={{ color: isActive ? '#ea580c' : undefined }} />
+                    <Icon className={`w-4 h-4 shrink-0 transition-all duration-300 ${isActive ? 'scale-110 text-black' : 'text-neutral-400'}`} />
                     <span>{label}</span>
                   </>
                 )}
@@ -120,26 +119,25 @@ const OpsLayout = () => {
             {/* Unified Profile Button */}
             <NavLink
               to="/ops/profile"
-              className="group flex items-center gap-3 px-3 py-1.5 rounded-[18px] transition-all duration-300 border border-transparent hover:bg-slate-100/60 hover:border-slate-200/50 hover:shadow-sm cursor-pointer"
+              className="group flex items-center gap-3 px-3 py-1.5 rounded-[18px] transition-all duration-300 border border-transparent hover:bg-white/5 hover:border-white/10 hover:shadow-sm cursor-pointer"
             >
               <div className="flex flex-col items-end">
-                <span className="text-sm font-bold text-slate-900 tracking-tight group-hover:text-orange-700 transition-colors">{firstName}</span>
-                <span className="text-[10px] font-mono font-bold tracking-widest text-orange-500 uppercase">{roleLabel}</span>
+                <span className="text-sm font-bold text-white tracking-tight group-hover:text-neutral-300 transition-colors">{firstName}</span>
+                <span className="text-[10px] font-mono font-bold tracking-widest text-neutral-500 uppercase">{roleLabel}</span>
               </div>
               <div
-                className="relative flex items-center justify-center w-10 h-10 rounded-xl font-mono font-black text-white shrink-0 shadow-inner group-hover:scale-[1.05] transition-transform duration-300"
-                style={{ background: 'linear-gradient(135deg, #ea580c, #f97316)' }}
+                className="relative flex items-center justify-center w-10 h-10 rounded-xl font-mono font-black text-white shrink-0 shadow-inner group-hover:scale-[1.05] transition-transform duration-300 bg-[#1A1A1A] border border-white/10"
               >
                 {initials}
-                <div className="absolute inset-0 rounded-xl ring-2 ring-orange-400 ring-offset-2 ring-offset-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 rounded-xl ring-2 ring-white/20 ring-offset-2 ring-offset-[#0A0A0A] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
             </NavLink>
 
-            <div className="w-px h-8 bg-slate-200/80 mx-1" />
+            <div className="w-px h-8 bg-white/10 mx-1" />
 
             <button
               onClick={handleLogout}
-              className="p-2.5 rounded-xl transition-all duration-200 cursor-pointer text-slate-400 hover:text-rose-500 hover:bg-rose-50 hover:shadow-sm"
+              className="p-2.5 rounded-xl transition-all duration-200 cursor-pointer text-neutral-400 hover:text-white hover:bg-white/10 hover:shadow-sm"
               title="Log out"
             >
               <LogOut className="w-5 h-5" />
@@ -148,7 +146,7 @@ const OpsLayout = () => {
 
           {/* Mobile Hamburger */}
           <button
-            className="md:hidden p-2 rounded-xl bg-slate-100/80 text-slate-600 hover:bg-slate-200 transition-colors"
+            className="md:hidden p-2 rounded-xl bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
             onClick={() => setIsMobileMenuOpen(true)}
           >
             <Menu className="w-5 h-5" />
@@ -163,28 +161,27 @@ const OpsLayout = () => {
 
       {/* ── Mobile Menu Drawer ───────────────────────────────── */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex flex-col bg-slate-50/95 backdrop-blur-xl">
-          <div className="flex items-center justify-between px-4 h-16 border-b border-slate-200 bg-white/50">
+        <div className="md:hidden fixed inset-0 z-50 flex flex-col bg-[#0A0A0A]/95 backdrop-blur-xl">
+          <div className="flex items-center justify-between px-4 h-16 border-b border-white/10 bg-[#151515]/50">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-orange-50 border border-orange-100">
-                <Zap className="w-4 h-4 text-orange-500" />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border border-white/10">
+                <Zap className="w-4 h-4 text-white" />
               </div>
-              <span className="text-xs font-bold text-slate-900 tracking-wide">Ops Menu</span>
+              <span className="text-xs font-bold text-white tracking-wide">Ops Menu</span>
             </div>
-            <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200">
+            <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-lg bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white">
               <X className="w-5 h-5" />
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-8">
             {/* Profile */}
-            <NavLink to="/ops/profile" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center text-center p-6 bg-white rounded-3xl border border-slate-200 shadow-sm hover:border-orange-300 transition-colors cursor-pointer">
-              <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-mono font-bold text-white mb-4 shadow-md"
-                style={{ background: 'linear-gradient(135deg, #ea580c, #f97316)' }}>
+            <NavLink to="/ops/profile" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center text-center p-6 bg-[#151515] rounded-3xl border border-white/10 shadow-sm hover:border-white/20 transition-colors cursor-pointer">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-mono font-bold text-black mb-4 shadow-md bg-white border border-white/10">
                 {initials}
               </div>
-              <h2 className="text-lg font-bold text-slate-900 mb-1">{user?.name || 'Coordinator'}</h2>
-              <span className="px-3 py-1 bg-orange-50 text-orange-700 border border-orange-100 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider">
+              <h2 className="text-lg font-bold text-white mb-1">{user?.name || 'Coordinator'}</h2>
+              <span className="px-3 py-1 bg-white/10 text-white border border-white/20 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider">
                 {roleLabel}
               </span>
             </NavLink>
@@ -197,8 +194,8 @@ const OpsLayout = () => {
                   className={({ isActive }) =>
                     `flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${
                       isActive
-                        ? 'bg-orange-50 border border-orange-100 text-orange-700 font-bold'
-                        : 'bg-white border border-slate-100 text-slate-600 font-medium hover:bg-slate-50'
+                        ? 'bg-white text-black font-bold'
+                        : 'bg-white/5 border border-white/10 text-neutral-400 font-medium hover:bg-white/10 hover:text-white'
                     }`
                   }
                 >
@@ -209,9 +206,9 @@ const OpsLayout = () => {
             </nav>
           </div>
 
-          <div className="p-4 border-t border-slate-200 bg-white/50 pb-8">
+          <div className="p-4 border-t border-white/10 bg-[#151515]/50 pb-8">
             <button onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-4 rounded-xl text-red-600 bg-red-50 border border-red-100 font-bold text-sm">
+              className="w-full flex items-center justify-center gap-2 py-4 rounded-xl text-white bg-white/10 border border-white/20 font-bold text-sm hover:bg-white/20 transition-colors">
               <LogOut className="w-4 h-4" />
               Log Out
             </button>

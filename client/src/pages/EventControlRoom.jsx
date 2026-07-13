@@ -27,7 +27,7 @@ const StatCard = ({ label, value, icon: Icon, color, bg, border }) => (
         {label}
       </span>
     </div>
-    <span className="text-3xl font-black" style={{ color: '#0f172a' }}>{value}</span>
+    <span className="text-3xl font-black text-white">{value}</span>
   </div>
 );
 
@@ -132,7 +132,7 @@ const EventControlRoom = () => {
   if (error) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-3 p-5 rounded-2xl bg-red-50 border border-red-100 text-red-600">
+        <div className="flex items-center gap-3 p-5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400">
           <AlertTriangle className="w-5 h-5 shrink-0" />
           <p className="text-sm font-medium">{error}</p>
         </div>
@@ -148,22 +148,22 @@ const EventControlRoom = () => {
       <div>
         <button
           onClick={() => navigate('/ops')}
-          className="flex items-center gap-2 text-sm text-slate-500 font-medium mb-4 hover:text-orange-600 transition-colors"
+          className="flex items-center gap-2 text-sm text-neutral-400 font-medium mb-4 hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Hub
         </button>
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
           {event?.title}
         </h1>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mt-2">
           {event?.eventDate && (
-            <span className="flex items-center gap-1.5 text-xs font-mono text-slate-500">
+            <span className="flex items-center gap-1.5 text-xs font-mono text-neutral-400">
               <CalendarDays className="w-3.5 h-3.5" />
               {fmtDate(event.eventDate)}
             </span>
           )}
           {event?.venue && (
-            <span className="flex items-center gap-1.5 text-xs font-mono text-slate-500">
+            <span className="flex items-center gap-1.5 text-xs font-mono text-neutral-400">
               <MapPin className="w-3.5 h-3.5" />
               {event.venue}
             </span>
@@ -177,48 +177,45 @@ const EventControlRoom = () => {
           label="Total"
           value={stats.total}
           icon={Users}
-          color="#4f46e5"
-          bg="rgba(238,242,255,0.8)"
-          border="rgba(199,210,254,0.6)"
+          color="#818cf8"
+          bg="rgba(255,255,255,0.05)"
+          border="rgba(255,255,255,0.1)"
         />
         <StatCard
           label="Checked In"
           value={stats.checkedIn}
           icon={CheckCheck}
-          color="#16a34a"
-          bg="rgba(240,253,244,0.8)"
-          border="rgba(187,247,208,0.6)"
+          color="#34d399"
+          bg="rgba(255,255,255,0.05)"
+          border="rgba(255,255,255,0.1)"
         />
         <StatCard
           label="Pending"
           value={stats.pending}
           icon={Clock}
-          color="#d97706"
-          bg="rgba(255,251,235,0.8)"
-          border="rgba(253,230,138,0.6)"
+          color="#fb923c"
+          bg="rgba(255,255,255,0.05)"
+          border="rgba(255,255,255,0.1)"
         />
       </div>
 
       {/* ── Launch Scanner CTA ────────────────────────────── */}
       <button
         onClick={() => navigate('/ops/scan', { state: { mode: 'checkin', eventId, eventTitle: event?.title } })}
-        className="group w-full flex items-center justify-between p-5 rounded-2xl transition-all duration-300 hover:scale-[1.005] hover:shadow-lg active:scale-[0.99]"
-        style={{
-          background: 'linear-gradient(135deg, #ea580c, #f97316)',
-          boxShadow: '0 8px 32px -4px rgba(234,88,12,0.3)',
-        }}
+        className="group w-full flex items-center justify-between p-5 rounded-2xl transition-all duration-300 hover:scale-[1.005] hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] active:scale-[0.99] border border-white/20"
+        style={{ background: '#ffffff' }}
       >
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-inner">
-            <ScanLine className="w-6 h-6 text-white" />
+          <div className="w-12 h-12 rounded-xl bg-black/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-inner">
+            <ScanLine className="w-6 h-6 text-black" />
           </div>
           <div className="text-left">
-            <p className="text-lg font-black text-white">Launch QR Scanner</p>
-            <p className="text-sm text-orange-100">Scan member QR codes to check them in</p>
+            <p className="text-lg font-black text-black">Launch QR Scanner</p>
+            <p className="text-sm text-neutral-600">Scan member QR codes to check them in</p>
           </div>
         </div>
-        <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform">
-          <ScanLine className="w-4 h-4 text-white" />
+        <div className="w-8 h-8 rounded-xl bg-black/5 flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform">
+          <ScanLine className="w-4 h-4 text-black" />
         </div>
       </button>
 
@@ -226,29 +223,29 @@ const EventControlRoom = () => {
       <div
         className="rounded-2xl overflow-hidden"
         style={{
-          background: 'rgba(255,255,255,0.8)',
-          border: '1px solid rgba(226,232,240,0.8)',
+          background: '#151515',
+          border: '1px solid rgba(255,255,255,0.1)',
           backdropFilter: 'blur(12px)',
         }}
       >
         {/* Sticky Search */}
-        <div className="p-4 border-b border-slate-100 sticky top-0 bg-white/90 backdrop-blur-sm z-10">
+        <div className="p-4 border-b border-white/10 sticky top-0 bg-[#151515]/90 backdrop-blur-sm z-10">
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
             <input
               type="text"
               placeholder="Search by name, roll number, or ACE ID…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-10 pr-10 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition-all font-mono placeholder:font-sans"
+              className="w-full pl-10 pr-10 py-2.5 text-sm bg-white/5 border border-white/10 text-white rounded-xl outline-none focus:border-white/30 transition-all font-mono placeholder:font-sans placeholder:text-neutral-500"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
+              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white">
                 <X className="w-4 h-4" />
               </button>
             )}
           </div>
-          <p className="text-[10px] font-mono text-slate-400 mt-2">
+          <p className="text-[10px] font-mono text-neutral-500 mt-2">
             Showing {filtered.length} of {roster.length} registrants
           </p>
         </div>
@@ -257,25 +254,25 @@ const EventControlRoom = () => {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[600px]">
             <thead>
-              <tr className="bg-slate-50/80">
-                <th className="px-5 py-3.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                <th className="px-5 py-3.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Name</th>
-                <th className="px-5 py-3.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Roll No.</th>
-                <th className="px-5 py-3.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">ACE ID</th>
-                <th className="px-5 py-3.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tier</th>
-                <th className="px-5 py-3.5 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">Action</th>
+              <tr className="bg-white/5 border-b border-white/10">
+                <th className="px-5 py-3.5 text-left text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Status</th>
+                <th className="px-5 py-3.5 text-left text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Name</th>
+                <th className="px-5 py-3.5 text-left text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Roll No.</th>
+                <th className="px-5 py-3.5 text-left text-[10px] font-bold text-neutral-400 uppercase tracking-wider">ACE ID</th>
+                <th className="px-5 py-3.5 text-left text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Tier</th>
+                <th className="px-5 py-3.5 text-right text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-white/5">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-sm text-slate-400 font-mono">
+                  <td colSpan={6} className="px-5 py-10 text-center text-sm text-neutral-500 font-mono">
                     No results for "{search}"
                   </td>
                 </tr>
               ) : (
                 filtered.map((reg) => (
-                  <tr key={reg._id} className={`transition-colors ${reg.checkedIn ? 'bg-emerald-50/30' : 'hover:bg-slate-50/50'}`}>
+                  <tr key={reg._id} className={`transition-colors ${reg.checkedIn ? 'bg-white/5' : 'hover:bg-white/[0.02]'}`}>
                     {/* Status Badge */}
                     <td className="px-5 py-4">
                       {reg.checkedIn ? (
@@ -297,31 +294,31 @@ const EventControlRoom = () => {
                     </td>
                     {/* Name */}
                     <td className="px-5 py-4">
-                      <p className="text-sm font-semibold text-slate-800">{reg.name}</p>
-                      <p className="text-[11px] text-slate-400 font-mono">{reg.email}</p>
+                      <p className="text-sm font-semibold text-white">{reg.name}</p>
+                      <p className="text-[11px] text-neutral-400 font-mono">{reg.email}</p>
                     </td>
                     {/* Roll Number */}
                     <td className="px-5 py-4">
-                      <span className="text-[12px] font-mono text-slate-600">
+                      <span className="text-[12px] font-mono text-neutral-300">
                         {reg.userId?.registrationNumber || '—'}
                       </span>
                     </td>
                     {/* ACE ID */}
                     <td className="px-5 py-4">
                       {reg.userId?.aceId ? (
-                        <span className="text-[11px] font-mono font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md">
+                        <span className="text-[11px] font-mono font-bold text-white bg-white/10 border border-white/20 px-2 py-0.5 rounded-md">
                           {reg.userId.aceId}
                         </span>
                       ) : (
-                        <span className="text-[11px] text-slate-300 font-mono">Guest</span>
+                        <span className="text-[11px] text-neutral-600 font-mono">Guest</span>
                       )}
                     </td>
                     {/* Tier */}
                     <td className="px-5 py-4">
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide ${
                         reg.tier === 'member'
-                          ? 'text-emerald-700 bg-emerald-50 border border-emerald-100'
-                          : 'text-slate-600 bg-slate-100 border border-slate-200'
+                          ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'
+                          : 'text-neutral-300 bg-white/5 border border-white/10'
                       }`}>
                         {reg.tier === 'member' ? 'Member' : 'Standard'}
                       </span>
@@ -332,12 +329,7 @@ const EventControlRoom = () => {
                         <button
                           onClick={() => handleManualCheckIn(reg)}
                           disabled={!!manualingId}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ml-auto hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                          style={{
-                            background: 'rgba(234,88,12,0.08)',
-                            border: '1px solid rgba(234,88,12,0.2)',
-                            color: '#ea580c',
-                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ml-auto hover:bg-white hover:text-black disabled:opacity-50 disabled:cursor-not-allowed border border-white/20 text-white"
                         >
                           {manualingId === reg._id
                             ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -346,7 +338,7 @@ const EventControlRoom = () => {
                           Check In
                         </button>
                       ) : (
-                        <span className="text-[11px] font-mono text-slate-300">Done</span>
+                        <span className="text-[11px] font-mono text-neutral-500">Done</span>
                       )}
                     </td>
                   </tr>

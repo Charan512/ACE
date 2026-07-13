@@ -63,30 +63,30 @@ const CashRegModal = ({ event, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="clay-card clay-green p-6 w-full max-w-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+      <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl p-6 w-full max-w-sm shadow-2xl">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-base font-black text-slate-900">Cash Registration</h2>
-            <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[200px]">{event.title}</p>
+            <h2 className="text-base font-black text-white">Cash Registration</h2>
+            <p className="text-xs text-neutral-400 mt-0.5 truncate max-w-[200px]">{event.title}</p>
           </div>
-          <button onClick={onClose} className="clay-btn clay-btn-ghost p-1.5 cursor-pointer"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"><X className="w-4 h-4" /></button>
         </div>
 
         {done ? (
           <div className="flex flex-col items-center justify-center py-6 gap-3">
-            <div className="clay-icon-box w-14 h-14" style={{ background: '#d1fae5' }}>
-              <CheckCircle2 className="w-7 h-7 text-emerald-500" />
+            <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+              <CheckCircle2 className="w-7 h-7 text-white" />
             </div>
-            <p className="text-sm font-bold text-slate-800 text-center">Registered successfully!</p>
-            <p className="text-xs text-slate-400 text-center">Admin has been notified. Entry recorded as Cash.</p>
+            <p className="text-sm font-bold text-white text-center">Registered successfully!</p>
+            <p className="text-xs text-neutral-400 text-center">Admin has been notified. Entry recorded as Cash.</p>
             <div className="flex gap-2 w-full mt-2">
               <button onClick={resetForm}
-                className="clay-btn clay-btn-ghost flex-1 py-2.5 text-sm">
+                className="flex-1 py-2.5 text-sm font-bold text-white bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl transition-colors">
                 Register Another
               </button>
               <button onClick={onClose}
-                className="clay-btn clay-btn-dark flex-1 py-2.5 text-sm">
+                className="flex-1 py-2.5 text-sm font-bold bg-white text-black hover:bg-neutral-200 rounded-xl transition-colors">
                 Done
               </button>
             </div>
@@ -94,12 +94,12 @@ const CashRegModal = ({ event, onClose }) => {
         ) : (
           <>
             {/* Tabs */}
-            <div className="flex p-1 bg-slate-100 rounded-xl mb-4">
+            <div className="flex p-1 bg-[#151515] border border-white/5 rounded-xl mb-4">
               <button
                 type="button"
                 onClick={() => { setTab('member'); setError(null); }}
                 className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                  tab === 'member' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                  tab === 'member' ? 'bg-white text-black shadow-sm' : 'text-neutral-500 hover:text-white'
                 }`}
               >
                 ACE Member
@@ -108,7 +108,7 @@ const CashRegModal = ({ event, onClose }) => {
                 type="button"
                 onClick={() => { setTab('guest'); setError(null); }}
                 className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                  tab === 'guest' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                  tab === 'guest' ? 'bg-white text-black shadow-sm' : 'text-neutral-500 hover:text-white'
                 }`}
               >
                 Guest
@@ -117,49 +117,49 @@ const CashRegModal = ({ event, onClose }) => {
 
             <form onSubmit={handleSubmit} className="space-y-3">
               {error && (
-                <div className="flex items-start gap-2 p-3 clay-card clay-rose">
+                <div className="flex items-start gap-2 p-3 bg-red-900/20 border border-red-500/30 rounded-xl">
                   <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs font-semibold text-red-700">{error}</p>
+                  <p className="text-xs font-semibold text-red-400">{error}</p>
                 </div>
               )}
               
               {tab === 'member' ? (
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Member Identifier <span className="text-red-500">*</span></label>
+                  <label className="block text-xs font-bold text-neutral-400 mb-1.5">Member Identifier <span className="text-red-500">*</span></label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
                     <input required type="text" value={memberForm.identifier} onChange={(e) => setMemberForm({ identifier: e.target.value })}
-                      placeholder="ACE ID or Phone Number" className="clay-input w-full pl-9 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400" />
+                      placeholder="ACE ID or Phone Number" className="w-full bg-[#151515] border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-white/30" />
                   </div>
                 </div>
               ) : (
                 <>
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 mb-1.5">Full Name <span className="text-red-500">*</span></label>
+                    <label className="block text-xs font-bold text-neutral-400 mb-1.5">Full Name <span className="text-red-500">*</span></label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
                       <input required type="text" value={guestForm.name} onChange={setGuestField('name')}
-                        placeholder="Attendee name" className="clay-input w-full pl-9 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400" />
+                        placeholder="Attendee name" className="w-full bg-[#151515] border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-white/30" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 mb-1.5">Email <span className="text-red-500">*</span></label>
+                    <label className="block text-xs font-bold text-neutral-400 mb-1.5">Email <span className="text-red-500">*</span></label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
                       <input required type="email" value={guestForm.email} onChange={setGuestField('email')}
-                        placeholder="email@example.com" className="clay-input w-full pl-9 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400" />
+                        placeholder="email@example.com" className="w-full bg-[#151515] border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-white/30" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1.5">Phone</label>
+                      <label className="block text-xs font-bold text-neutral-400 mb-1.5">Phone</label>
                       <input type="tel" value={guestForm.phone} onChange={setGuestField('phone')}
-                        placeholder="Optional" className="clay-input w-full px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400" />
+                        placeholder="Optional" className="w-full bg-[#151515] border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-white/30" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1.5">Year <span className="text-red-500">*</span></label>
+                      <label className="block text-xs font-bold text-neutral-400 mb-1.5">Year <span className="text-red-500">*</span></label>
                       <select required value={guestForm.year} onChange={setGuestField('year')}
-                        className="clay-input w-full px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none bg-white">
+                        className="w-full bg-[#151515] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30 appearance-none">
                         <option value="" disabled>Select</option>
                         <option value="1">1st Year</option>
                         <option value="2">2nd Year</option>
@@ -171,19 +171,19 @@ const CashRegModal = ({ event, onClose }) => {
                 </>
               )}
 
-              <div className="flex items-center gap-2 p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl mt-1">
-                <DollarSign className="w-4 h-4 text-emerald-600" />
-                <span className="text-xs font-bold text-emerald-700">Payment Method: Cash</span>
-                <span className="ml-auto text-xs font-mono font-black text-emerald-700">{String.fromCodePoint(0x20B9)}{tab === 'member' ? event.memberFee : event.standardFee}</span>
+              <div className="flex items-center gap-2 p-2.5 bg-white/5 border border-white/10 rounded-xl mt-1">
+                <DollarSign className="w-4 h-4 text-neutral-300" />
+                <span className="text-xs font-bold text-neutral-300">Payment Method: Cash</span>
+                <span className="ml-auto text-xs font-mono font-black text-white">{String.fromCodePoint(0x20B9)}{tab === 'member' ? event.memberFee : event.standardFee}</span>
               </div>
               
               <div className="flex gap-2 pt-1">
                 <button type="button" onClick={onClose}
-                  className="clay-btn clay-btn-ghost flex-1 py-2.5 text-sm">
+                  className="flex-1 py-2.5 text-sm font-bold text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-transparent">
                   Cancel
                 </button>
                 <button type="submit" disabled={loading}
-                  className="clay-btn clay-btn-green flex-1 py-2.5 text-sm gap-2">
+                  className="flex-1 py-2.5 text-sm font-bold text-black bg-white hover:bg-neutral-200 rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Register'}
                 </button>
               </div>
@@ -204,11 +204,17 @@ const CashMembershipModal = ({ onClose }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch current membership fee
+    // Fetch current membership fee from DB — never use a hardcoded fallback
     fetch(`${import.meta.env.VITE_API_URL || ''}/api/settings/membership-fee`)
       .then(r => r.json())
-      .then(d => setMembershipFee(d.data?.membershipFee ?? 500))
-      .catch(() => setMembershipFee(500));
+      .then(d => {
+        if (d.success && typeof d.data?.membershipFee === 'number') {
+          setMembershipFee(d.data.membershipFee);
+        } else {
+          setError('Could not load membership fee. Please close and try again.');
+        }
+      })
+      .catch(() => setError('Could not load membership fee. Please close and try again.'));
   }, []);
 
   const setField = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
@@ -235,40 +241,40 @@ const CashMembershipModal = ({ onClose }) => {
     }
   };
 
-  const inCls = 'w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all';
+  const inCls = 'w-full bg-[#151515] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-white/30 transition-all';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md my-auto">
-        <div className="flex items-center justify-between p-5 border-b border-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
+      <div className="bg-[#0A0A0A] rounded-3xl shadow-2xl border border-white/10 w-full max-w-md my-auto">
+        <div className="flex items-center justify-between p-5 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
-              <UserPlus className="w-4 h-4 text-blue-600" />
+            <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+              <UserPlus className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-black text-slate-900">New ACE Member</h2>
-              <p className="text-[11px] text-slate-400 font-mono">
-                Cash payment — Fee: {membershipFee !== null ? `₹${membershipFee}` : '...'}
+              <h2 className="text-sm font-black text-white">New ACE Member</h2>
+              <p className="text-[11px] text-neutral-500 font-mono">
+                Cash payment — Fee: {membershipFee !== null ? `₹${membershipFee}` : 'Loading...'}
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100">✕</button>
+          <button onClick={onClose} className="text-neutral-400 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors">✕</button>
         </div>
 
         <div className="p-5">
           {done ? (
             <div className="text-center py-4 space-y-3">
-              <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-7 h-7 text-emerald-500" />
+              <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-7 h-7 text-white" />
               </div>
-              <p className="text-base font-black text-slate-900">{done.name} registered!</p>
-              <p className="text-2xl font-mono font-black text-blue-600">{done.aceId}</p>
-              <p className="text-xs text-slate-400">Credentials and confirmation email sent to {done.email}</p>
-              <button onClick={onClose} className="w-full mt-2 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors">Done</button>
+              <p className="text-base font-black text-white">{done.name} registered!</p>
+              <p className="text-2xl font-mono font-black text-white">{done.aceId}</p>
+              <p className="text-xs text-neutral-400">Credentials and confirmation email sent to {done.email}</p>
+              <button onClick={onClose} className="w-full mt-2 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-neutral-200 transition-colors">Done</button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
-              {error && <div className="bg-red-50 border border-red-100 text-red-600 text-xs font-semibold px-3 py-2 rounded-xl">{error}</div>}
+              {error && <div className="bg-red-900/20 border border-red-500/30 text-red-400 text-xs font-semibold px-3 py-2 rounded-xl">{error}</div>}
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
                   <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Full Name *</label>
@@ -320,10 +326,15 @@ const CashMembershipModal = ({ onClose }) => {
                   <input type="text" placeholder="22B91A0501" value={form.collegeId} onChange={setField('collegeId')} className={inCls} />
                 </div>
               </div>
-              <button type="submit" disabled={loading}
-                className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+              <button type="submit" disabled={loading || membershipFee === null}
+                className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-neutral-200 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-                {loading ? 'Registering...' : `Register as Member — ₹${membershipFee ?? '...'} Cash`}
+                {loading
+                  ? 'Registering...'
+                  : membershipFee === null
+                    ? 'Loading fee...'
+                    : `Register as Member — ₹${membershipFee} Cash`
+                }
               </button>
             </form>
           )}
@@ -370,84 +381,80 @@ const OpsDashboard = () => {
 
       {/* ── Hero / Verify CTA ─────────────────────────────── */}
       <section>
-        <p className="text-xs font-mono font-bold uppercase tracking-widest text-orange-500 mb-2">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-neutral-500 mb-2">
           Operations Hub
         </p>
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-6">
+        <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-6 bg-gradient-to-b from-white to-neutral-400 text-transparent bg-clip-text">
           What are you doing today?
         </h1>
 
         {/* Primary action — Verify Member */}
         <button
           onClick={() => navigate('/ops/scan', { state: { mode: 'verify' } })}
-          className="group w-full flex items-center justify-between p-6 rounded-2xl transition-all duration-300 hover:scale-[1.01] hover:shadow-lg active:scale-[0.99] mb-3"
-          style={{
-            background: 'linear-gradient(135deg, #ea580c, #f97316)',
-            boxShadow: '0 8px 32px -4px rgba(234,88,12,0.35)',
-          }}
+          className="group w-full flex items-center justify-between p-6 rounded-2xl transition-all duration-300 hover:scale-[1.01] bg-[#151515] border border-white/10 hover:border-white/20 hover:bg-[#222] mb-3"
         >
           <div className="flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform duration-300">
+            <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5 group-hover:scale-110 transition-transform duration-300">
               <ScanLine className="w-7 h-7 text-white" />
             </div>
             <div className="text-left">
               <p className="text-xl font-black text-white tracking-tight">Verify Member ID</p>
-              <p className="text-sm text-orange-100 mt-0.5">Scan QR to confirm ACE membership</p>
+              <p className="text-sm text-neutral-400 mt-0.5">Scan QR to confirm ACE membership</p>
             </div>
           </div>
-          <ChevronRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
+          <ChevronRight className="w-6 h-6 text-neutral-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
         </button>
 
         {/* Secondary action — Register New Member (cash) */}
         <button
           onClick={() => setShowMemberModal(true)}
-          className="group w-full flex items-center justify-between p-5 rounded-2xl border border-blue-200 bg-blue-50 hover:bg-blue-100 transition-all duration-200 hover:shadow-md active:scale-[0.99]"
+          className="group w-full flex items-center justify-between p-5 rounded-2xl transition-all duration-200 bg-[#151515] border border-white/10 hover:border-white/20 hover:bg-[#222]"
         >
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <UserPlus className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5 group-hover:scale-105 transition-transform">
+              <UserPlus className="w-6 h-6 text-white" />
             </div>
             <div className="text-left">
-              <p className="text-base font-black text-blue-900">Register New Member</p>
-              <p className="text-xs text-blue-500 mt-0.5 font-mono">Walk-in · Cash payment</p>
+              <p className="text-base font-black text-white">Register New Member</p>
+              <p className="text-xs text-neutral-400 mt-0.5 font-mono">Walk-in · Cash payment</p>
             </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-blue-400 group-hover:translate-x-0.5 transition-transform" />
+          <ChevronRight className="w-5 h-5 text-neutral-500 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
         </button>
       </section>
 
       {/* ── Divider ───────────────────────────────────────── */}
       <div className="flex items-center gap-4">
-        <div className="flex-1 h-px bg-slate-200" />
-        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-400">
+        <div className="flex-1 h-px bg-white/10" />
+        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-neutral-500">
           or pick an event
         </span>
-        <div className="flex-1 h-px bg-slate-200" />
+        <div className="flex-1 h-px bg-white/10" />
       </div>
 
       {/* ── Active Events Feed ────────────────────────────── */}
       <section>
         <div className="flex items-center gap-3 mb-5">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-slate-500">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-neutral-500">
             Active Events
           </p>
-          <div className="flex-1 h-px bg-slate-200" />
+          <div className="flex-1 h-px bg-white/10" />
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-orange-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-white" />
           </div>
         ) : error ? (
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm">
+          <div className="flex items-center gap-3 p-4 rounded-xl bg-red-900/20 border border-red-500/30 text-red-400 text-sm">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             {error}
           </div>
         ) : events.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
-            <CalendarDays className="w-8 h-8 text-slate-300 mb-1" />
-            <p className="text-sm text-slate-400">No active events right now.</p>
-            <p className="text-xs text-slate-300 font-mono">Check back later or create one in Admin.</p>
+            <CalendarDays className="w-8 h-8 text-neutral-600 mb-1" />
+            <p className="text-sm text-neutral-400">No active events right now.</p>
+            <p className="text-xs text-neutral-500 font-mono">Check back later or create one in Admin.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -455,45 +462,45 @@ const OpsDashboard = () => {
               <div
                 key={ev._id}
                 onClick={() => navigate(`/ops/events/${ev._id}`)}
-                className="clay-card clay-orange group w-full text-left flex items-center justify-between p-5 active:scale-[0.99] cursor-pointer"
+                className="bg-[#151515] border border-white/10 rounded-2xl group w-full text-left flex items-center justify-between p-5 hover:border-white/20 hover:bg-[#222] transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-4 min-w-0">
-                  <div className="clay-icon-box w-11 h-11" style={{ background: '#ffedd5' }}>
-                    <Zap className="w-5 h-5 text-orange-500" />
+                  <div className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-white" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-bold text-slate-900 text-sm truncate group-hover:text-orange-700 transition-colors">
+                    <p className="font-bold text-white text-sm truncate">
                       {ev.title}
                     </p>
                     <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-1">
-                      <span className="flex items-center gap-1 text-[11px] text-slate-400 font-mono">
+                      <span className="flex items-center gap-1 text-[11px] text-neutral-400 font-mono">
                         <CalendarDays className="w-3 h-3" /> {fmtDate(ev.eventDate)}
                       </span>
                       {ev.venue && (
-                        <span className="flex items-center gap-1 text-[11px] text-slate-400 font-mono">
+                        <span className="flex items-center gap-1 text-[11px] text-neutral-400 font-mono">
                           <MapPin className="w-3 h-3" /> {ev.venue}
                         </span>
                       )}
-                      <span className="flex items-center gap-1 text-[11px] text-slate-400 font-mono">
+                      <span className="flex items-center gap-1 text-[11px] text-neutral-400 font-mono">
                         <Users className="w-3 h-3" /> {ev.registeredCount || 0} registered
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0 ml-3">
+                <div className="flex items-center gap-3 shrink-0 ml-3">
                     <button
                       onClick={(e) => { e.stopPropagation(); setCashRegEvent(ev); }}
-                      className="clay-btn clay-btn-green hidden sm:flex items-center gap-1 text-[10px] font-mono font-bold px-2.5 py-1.5"
+                      className="hidden sm:flex items-center gap-1 text-[10px] font-mono font-bold px-2.5 py-1.5 bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors"
                       title="Cash Registration"
                     >
                       <DollarSign className="w-3 h-3" />
                       Cash Reg
                     </button>
-                    <span className="clay-badge hidden sm:inline-flex" style={{ background: '#fff7ed', color: '#c2410c', borderColor: '#fed7aa' }}>
+                    <span className="hidden sm:inline-flex bg-white/10 text-white border border-white/20 rounded-lg px-2 py-1.5 text-[10px] font-mono font-bold">
                       Open Control Room
                     </span>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all" />
+                    <ChevronRight className="w-4 h-4 text-neutral-500 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
                 </div>
               </div>
             ))}

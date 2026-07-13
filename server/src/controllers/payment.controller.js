@@ -411,6 +411,8 @@ export const createMembershipOrder = catchAsync(async (req, res, next) => {
       success: true,
       data: {
         merchantTransactionId,
+        // feeAmount in INR — frontend must validate this matches what it displayed
+        feeAmount:   totalAmount / 100,
         redirectUrl: `${process.env.CLIENT_URL}/payment/callback?txnId=${merchantTransactionId}&mode=dev&purpose=membership&guestEmail=${encodeURIComponent(email)}&guestName=${encodeURIComponent(name)}`,
       },
     });
@@ -459,6 +461,8 @@ export const createMembershipOrder = catchAsync(async (req, res, next) => {
     success: true,
     data: {
       merchantTransactionId,
+      // feeAmount in INR — frontend must validate this matches what it displayed
+      feeAmount:   totalAmount / 100,
       redirectUrl: phonePeData.data.instrumentResponse.redirectInfo.url,
     },
   });

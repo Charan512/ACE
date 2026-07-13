@@ -19,11 +19,18 @@ const Registration = () => {
   const [membershipFee, setMembershipFee] = useState(null); // null = loading
 
   // Fetch current membership fee from DB (never hardcoded)
+  // If the fetch fails, we surface an error rather than silently showing a wrong price.
   useEffect(() => {
     fetch('/api/settings/membership-fee')
       .then(r => r.json())
-      .then(d => setMembershipFee(d.data?.membershipFee ?? 500))
-      .catch(() => setMembershipFee(500));
+      .then(d => {
+        if (d.success && typeof d.data?.membershipFee === 'number') {
+          setMembershipFee(d.data.membershipFee);
+        } else {
+          setError('Could not load the current membership fee. Please refresh and try again.');
+        }
+      })
+      .catch(() => setError('Could not load the current membership fee. Please refresh and try again.'));
   }, []);
 
   const navigate = useNavigate();
@@ -34,12 +41,26 @@ const Registration = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (membershipFee === null) return; // Fee not yet loaded
     setIsLoading(true);
     setError(null);
 
     try {
       const response = await api.post('/payments/membership-order', formData);
-      const { merchantTransactionId, redirectUrl } = response.data.data;
+      const { merchantTransactionId, redirectUrl, feeAmount } = response.data.data;
+
+      // Security: confirm the gateway charged what we displayed
+      if (feeAmount !== undefined && feeAmount !== membershipFee) {
+        // Fee was changed by admin between page load and submit
+        // Update the display and ask the user to re-confirm
+        setMembershipFee(feeAmount);
+        setIsLoading(false);
+        setError(
+          `The membership fee has been updated to ₹${feeAmount}. ` +
+          `Please review and click “Proceed” again to confirm.`
+        );
+        return;
+      }
 
       sessionStorage.setItem('ace_pending_txn', merchantTransactionId);
       window.location.href = redirectUrl;
@@ -258,14 +279,16 @@ const Registration = () => {
           <div className="pt-6 mt-4 border-t border-slate-100">
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || membershipFee === null}
               className="w-full bg-primary text-white font-bold text-lg py-4 px-4 rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:bg-primary-hover hover:-translate-y-1 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : membershipFee === null ? (
+                <span className="opacity-60">Loading fee…</span>
               ) : (
                 <>
-                  <ShieldCheck className="w-5 h-5" /> Proceed to Secure Payment {membershipFee !== null ? `(₹${membershipFee})` : '...'}
+                  <ShieldCheck className="w-5 h-5" /> Proceed to Secure Payment (₹{membershipFee})
                 </>
               )}
             </button>

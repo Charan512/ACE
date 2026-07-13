@@ -103,7 +103,9 @@ app.get('/api/settings/membership-fee', async (_req, res) => {
     const settings = await AppSettings.getSingleton();
     res.status(200).json({ success: true, data: { membershipFee: settings.membershipFee } });
   } catch {
-    res.status(200).json({ success: true, data: { membershipFee: 500 } }); // Safe fallback
+    // Do NOT silently return a hardcoded fee — that would lie to the user about price.
+    // Return a 503 so the client can surface a "could not load fee" state.
+    res.status(503).json({ success: false, message: 'Could not retrieve membership fee. Please try again.' });
   }
 });
 

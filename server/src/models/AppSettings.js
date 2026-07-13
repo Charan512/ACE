@@ -52,7 +52,7 @@ const appSettingsSchema = new mongoose.Schema(
      */
     membershipFee: {
       type:    Number,
-      default: 500,
+      default: 400,
       min:     [0, 'Membership fee cannot be negative.'],
     },
 
