@@ -25,7 +25,7 @@ export const getMyVault = catchAsync(async (req, res, next) => {
     path: 'history.attendedEvents.event',
     // Include certificateTemplate and certificatesReleased so the frontend can derive hasCertificate
     // without an extra round-trip — used for the "Certificate not released" state.
-    select: 'title description eventDate venue certificateTemplate certificatesReleased',
+    select: 'title description eventDate venue certificateTemplate certificatesReleased resources',
   });
 
   if (!user) {
@@ -47,7 +47,9 @@ export const getMyVault = catchAsync(async (req, res, next) => {
         ? `/api/certificates/download/${entry.event._id}`
         : null,
       hasCertificate,
-      attendedAt: entry.attendedAt,
+      resources:     (entry.event.resources || []),
+      hasResources:  !!(entry.event.certificatesReleased && entry.event.resources?.length > 0),
+      attendedAt:    entry.attendedAt,
       transactionId: entry.transaction,
     };
   });

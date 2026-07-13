@@ -59,6 +59,7 @@ const sanitizeEventUpdate = (body) => {
     'customFormFields',
     'tags',
     'isActive',
+    'resources',
     // NOTE: 'status' is intentionally EXCLUDED.
     // Use PATCH /api/admin/events/:id/publish to transition draft → published.
     // NOTE: 'certificatesReleased' is intentionally EXCLUDED.
@@ -193,6 +194,7 @@ export const createEvent = catchAsync(async (req, res, next) => {
     certificateTemplate,
     customFormFields,
     tags,
+    resources,
   } = req.body;
 
   // ── Required field validation ─────────────────────────────
@@ -239,6 +241,7 @@ export const createEvent = catchAsync(async (req, res, next) => {
     maxCapacity: maxCapacity ? Number(maxCapacity) : null,
     certificateTemplate: certificateTemplate || null,
     customFormFields: Array.isArray(customFormFields) ? customFormFields : [],
+    resources:        Array.isArray(resources) ? resources : [],
     tags: Array.isArray(tags) ? tags : [],
     createdBy: req.user._id, // injected by `protect` middleware
   });

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Download, Loader2, AlertTriangle, Calendar, Award,
-  History, CheckCircle, XCircle, Clock,
+  History, CheckCircle, XCircle, Clock, ExternalLink, BookOpen, X,
 } from 'lucide-react';
 import api from '../lib/api';
 import BlurText from '../components/react-bits/BlurText';
@@ -57,16 +57,58 @@ const CertCell = ({ ev, downloadingId, onDownload, mobile = false }) => {
   );
 };
 
+// ── Resources Modal ────────────────────────────────────────────
+const ResourcesModal = ({ event, onClose }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
+    <div className="bg-[#0B0F19]/95 border border-white/10 rounded-3xl shadow-2xl w-full max-w-md">
+      <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+            <BookOpen className="w-4 h-4 text-indigo-400" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-slate-100 leading-tight">{event.title}</p>
+            <p className="text-[10px] font-mono text-slate-500 mt-0.5">Event Resources</p>
+          </div>
+        </div>
+        <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+      <div className="p-6 space-y-2 max-h-[55vh] overflow-y-auto">
+        {event.resources.map((res, i) => (
+          <a key={i} href={res.url} target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-between gap-3 p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-500/30 rounded-2xl transition-all group">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+              </div>
+              <span className="text-sm font-semibold text-slate-200 truncate group-hover:text-indigo-300 transition-colors">{res.name}</span>
+            </div>
+            <ExternalLink className="w-4 h-4 text-slate-500 group-hover:text-indigo-400 transition-colors shrink-0" />
+          </a>
+        ))}
+      </div>
+      <div className="px-6 pb-5">
+        <button onClick={onClose} className="w-full py-2.5 text-sm font-bold text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 // ─────────────────────────────────────────────────────────────
 // MEMBER HISTORY — Event Vault & Certificate Locker
 // ─────────────────────────────────────────────────────────────
 const MemberHistory = () => {
-  const [vault, setVault]                 = useState([]);
-  const [filter, setFilter]               = useState('all');
-  const [loading, setLoading]             = useState(true);
-  const [error, setError]                 = useState(null);
-  const [downloadingId, setDownloadingId] = useState(null);
-  const [toast, setToast]                 = useState(null);
+  const [vault, setVault]                       = useState([]);
+  const [filter, setFilter]                     = useState('all');
+  const [loading, setLoading]                   = useState(true);
+  const [error, setError]                       = useState(null);
+  const [downloadingId, setDownloadingId]       = useState(null);
+  const [toast, setToast]                       = useState(null);
+  const [resourcesModalEvent, setResourcesModalEvent] = useState(null);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -244,10 +286,10 @@ const MemberHistory = () => {
                 <table className="w-full min-w-[580px] text-left border-collapse">
                   <thead>
                     <tr className="bg-white/5 border-b border-white/10">
-                      {['#', 'Event', 'Date', 'Venue', 'Certificate'].map((h, i) => (
+                      {['#', 'Event', 'Date', 'Venue', 'Resources', 'Certificate'].map((h, i) => (
                         <th
                           key={h}
-                          className={`px-5 py-4 text-[10px] font-mono font-bold uppercase tracking-[0.15em] whitespace-nowrap text-slate-500 ${i === 4 ? 'text-right' : ''}`}
+                          className={`px-5 py-4 text-[10px] font-mono font-bold uppercase tracking-[0.15em] whitespace-nowrap text-slate-500 ${i === 5 ? 'text-right' : ''}`}
                         >
                           {h}
                         </th>
@@ -279,6 +321,20 @@ const MemberHistory = () => {
                             {ev.venue || '—'}
                           </span>
                         </td>
+                        <td className="px-5 py-4">
+                          {ev.hasResources ? (
+                            <button
+                              id={`resources-btn-${ev._id}`}
+                              onClick={() => setResourcesModalEvent(ev)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-mono font-bold uppercase tracking-wide bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20 transition-colors whitespace-nowrap"
+                            >
+                              <BookOpen className="w-3 h-3" />
+                              {ev.resources.length} {ev.resources.length === 1 ? 'Resource' : 'Resources'}
+                            </button>
+                          ) : (
+                            <span className="text-[10px] font-mono text-slate-600">—</span>
+                          )}
+                        </td>
                         <td className="px-5 py-4 text-right">
                           <CertCell
                             ev={ev}
@@ -309,6 +365,16 @@ const MemberHistory = () => {
                       </div>
                     </div>
                   </div>
+                  {ev.hasResources && (
+                    <button
+                      id={`resources-mobile-btn-${ev._id}`}
+                      onClick={() => setResourcesModalEvent(ev)}
+                      className="w-full flex items-center justify-center gap-2 mb-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wide bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20 transition-colors"
+                    >
+                      <BookOpen className="w-3.5 h-3.5" />
+                      View {ev.resources.length} {ev.resources.length === 1 ? 'Resource' : 'Resources'}
+                    </button>
+                  )}
                   <CertCell
                     ev={ev}
                     downloadingId={downloadingId}
@@ -321,6 +387,14 @@ const MemberHistory = () => {
           </>
         )}
       </div>
+
+      {/* ── Resources Modal ──────────────────────────────────────── */}
+      {resourcesModalEvent && (
+        <ResourcesModal
+          event={resourcesModalEvent}
+          onClose={() => setResourcesModalEvent(null)}
+        />
+      )}
     </div>
   );
 };

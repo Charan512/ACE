@@ -40,7 +40,7 @@ const certificateWorker = new Worker(
     const { eventId } = data;
 
     // ── 1. Load event with certificate template ────────────────
-    const event = await Event.findById(eventId).lean();
+    const event = await Event.findById(eventId).select('title eventDate certificateTemplate resources').lean();
 
     if (!event) {
       throw new Error(`[CertWorker] Event ${eventId} not found. Aborting job.`);
@@ -113,6 +113,7 @@ const certificateWorker = new Worker(
           recipientEmail,
           eventId,
           certBuffer: pngBuffer.toString('base64'),
+          resources:  event.resources || [],
         });
 
         console.log(`[CertWorker] ✓ Certificate email job enqueued for ${recipientEmail}`);

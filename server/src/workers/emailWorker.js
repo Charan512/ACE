@@ -261,7 +261,7 @@ const emailWorker = new Worker(
       // ── Post-event certificate email — cert PNG + admin body ──
       // Sent to a single registrant (called in batch from certificateWorker).
       case 'postEventCertificateEmail': {
-        const { recipientName, recipientEmail, eventId, certBuffer: certBufferBase64 } = data;
+        const { recipientName, recipientEmail, eventId, certBuffer: certBufferBase64, resources = [] } = data;
 
         const event = await Event.findById(eventId).select('title eventDate postEventCertificateEmail').lean();
         if (!event) {
@@ -275,15 +275,35 @@ const emailWorker = new Worker(
         const tpl = event.postEventCertificateEmail;
         let subject, htmlBody;
 
+        // Build the resources HTML block (appended to both custom and fallback emails)
+        const resourcesHtml = resources.length > 0
+          ? `
+            <div style="margin-top:28px;padding-top:20px;border-top:1px solid #1e293b;">
+              <p style="color:#64748b;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;margin:0 0 12px;font-weight:600;">EVENT RESOURCES</p>
+              <ul style="list-style:none;padding:0;margin:0;">
+                ${resources.map(r => `
+                  <li style="margin-bottom:10px;">
+                    <a href="${r.url}" target="_blank" rel="noopener noreferrer"
+                       style="display:inline-flex;align-items:center;gap:8px;background:#0f172a;
+                              border:1px solid #1e3a5f;border-radius:6px;padding:8px 14px;
+                              color:#38bdf8;font-size:13px;text-decoration:none;font-weight:500;">
+                      &#8599;&nbsp;${r.name}
+                    </a>
+                  </li>`).join('')}
+              </ul>
+            </div>`
+          : '';
+
         if (tpl?.subject && tpl?.body) {
           const vars = { name: recipientName, event_name: event.title, event_date: dateStr };
           subject  = renderAdminTemplate(tpl.subject, vars);
-          htmlBody = tpl.isHtml === false
+          const renderedBody = tpl.isHtml === false
             ? `<pre style="font-family:sans-serif;">${renderAdminTemplate(tpl.body, vars)}</pre>`
             : renderAdminTemplate(tpl.body, vars);
+          htmlBody = renderedBody + resourcesHtml;
         } else {
           subject  = `Your Certificate — ${event.title} | ACE`;
-          htmlBody = buildDefaultCertEmailHtml({ name: recipientName, eventTitle: event.title, eventDate: dateStr });
+          htmlBody = buildDefaultCertEmailHtml({ name: recipientName, eventTitle: event.title, eventDate: dateStr, resourcesHtml });
         }
 
         // certBuffer is passed as base64 string (BullMQ serialises via JSON)
@@ -372,7 +392,7 @@ function buildDefaultMemberConfirmHtml({ name, eventTitle, dateStr }) {
   `;
 }
 
-function buildDefaultCertEmailHtml({ name, eventTitle, eventDate }) {
+function buildDefaultCertEmailHtml({ name, eventTitle, eventDate, resourcesHtml = '' }) {
   return `
     <div style="font-family:sans-serif;background:#0B0F19;padding:32px;color:#f1f5f9;">
       <div style="max-width:600px;margin:32px auto;background:#111827;border:1px solid #1e293b;border-radius:4px;overflow:hidden;">
@@ -388,6 +408,7 @@ function buildDefaultCertEmailHtml({ name, eventTitle, eventDate }) {
             Your personalized certificate is attached to this email.
           </p>
           <p style="color:#475569;font-size:13px;margin:0;">Please save it for your records.</p>
+          ${resourcesHtml}
         </div>
         <div style="padding:16px 32px;border-top:1px solid #1e293b;font-size:12px;color:#475569;text-align:center;">
           This is an automated message from ACE ERP. Do not reply to this email.

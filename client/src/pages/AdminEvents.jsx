@@ -237,6 +237,8 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
           customFormFields: initialData.customFormFields?.length
             ? initialData.customFormFields.map(f => ({ ...f, _tmpOption: '' }))
             : [],
+          resources: initialData.resources?.length ? initialData.resources : [],
+          certificatesReleased: !!initialData.certificatesReleased,
         }
       : {
           title: '',
@@ -251,6 +253,8 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
           coordinators: [{ name: '', phone: '' }],
           allowedYears: [1, 2, 3, 4],
           customFormFields: [],
+          resources: [],
+          certificatesReleased: false,
         }
   );
 
@@ -312,6 +316,28 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
     }));
   };
 
+  // ── Resources Handlers ────────────────────────────────────
+  const addResource = () => {
+    setForm((prev) => ({
+      ...prev,
+      resources: [...prev.resources, { name: '', url: '' }],
+    }));
+  };
+
+  const updateResource = (idx, key, value) => {
+    setForm((prev) => ({
+      ...prev,
+      resources: prev.resources.map((r, i) => i === idx ? { ...r, [key]: value } : r),
+    }));
+  };
+
+  const removeResource = (idx) => {
+    setForm((prev) => ({
+      ...prev,
+      resources: prev.resources.filter((_, i) => i !== idx),
+    }));
+  };
+
   // Direct Cloudinary Upload Logic via Backend
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -353,6 +379,7 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
       maxCapacity: form.maxCapacity ? Number(form.maxCapacity) : null,
       coordinators: form.coordinators.filter((c) => c.name.trim() && c.phone.trim()),
       customFormFields: cleanedFields,
+      resources: form.resources.filter(r => r.name.trim() && r.url.trim()),
     };
 
     try {
@@ -576,6 +603,89 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
               {form.customFormFields.length > 0 && (
                 <p className="text-[10px] text-slate-400 mt-3 text-center">
                   ⚡ Members bypass this form automatically (Fast-Pass).
+                </p>
+              )}
+            </div>
+
+            {/* ── Event Resources ───────────────────────────── */}
+            <div className={`border rounded-xl p-4 ${
+              form.certificatesReleased
+                ? 'border-amber-200 bg-amber-50/40'
+                : 'border-slate-200 bg-slate-50/40'
+            }`}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Link className="w-4 h-4 text-slate-500" />
+                  <label className="text-xs font-black text-slate-700 uppercase tracking-widest">Event Resources</label>
+                  {form.resources.length > 0 && (
+                    <span className="text-[10px] font-bold bg-slate-600 text-white px-2 py-0.5 rounded-full">
+                      {form.resources.length}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={addResource}
+                  disabled={form.certificatesReleased}
+                  className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 hover:border-slate-400 px-3 py-1.5 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add Resource
+                </button>
+              </div>
+
+              {form.certificatesReleased && (
+                <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-amber-100 border border-amber-200 rounded-lg">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <p className="text-[10px] font-bold text-amber-700">
+                    Resources are locked — certificates have already been released.
+                  </p>
+                </div>
+              )}
+
+              {form.resources.length === 0 ? (
+                <div className="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl">
+                  <Link className="w-6 h-6 text-slate-300 mx-auto mb-2" />
+                  <p className="text-xs font-semibold text-slate-400">No resources yet.</p>
+                  <p className="text-[10px] text-slate-300 mt-0.5">
+                    Add Drive links, slides, or recordings for attendees.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {form.resources.map((res, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Resource name (e.g. Slides, Recording)"
+                        value={res.name}
+                        onChange={(e) => updateResource(idx, 'name', e.target.value)}
+                        disabled={form.certificatesReleased}
+                        className="flex-1 min-w-0 bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:bg-slate-100"
+                      />
+                      <input
+                        type="url"
+                        placeholder="https://drive.google.com/..."
+                        value={res.url}
+                        onChange={(e) => updateResource(idx, 'url', e.target.value)}
+                        disabled={form.certificatesReleased}
+                        className="flex-[2] min-w-0 bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:bg-slate-100"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeResource(idx)}
+                        disabled={form.certificatesReleased}
+                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!form.certificatesReleased && form.resources.length > 0 && (
+                <p className="text-[10px] text-slate-400 mt-3 text-center">
+                  🔒 Resources will be locked once you release certificates.
                 </p>
               )}
             </div>

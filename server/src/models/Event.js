@@ -261,6 +261,34 @@ const eventSchema = new mongoose.Schema(
       default: [],
     },
 
+    // ── Event Resources ────────────────────────────────────────
+    /**
+     * Admin-attached external resources (slides, recordings, drive links, etc.)
+     * Exposed to attendees via the Member Vault after certificatesReleased = true.
+     * Also appended to the certificate email sent to guests.
+     * Locked (read-only) once certificates have been released.
+     */
+    resources: {
+      type: [
+        new mongoose.Schema(
+          {
+            name: {
+              type:     String,
+              required: [true, 'Resource name is required.'],
+              trim:     true,
+            },
+            url: {
+              type:     String,
+              required: [true, 'Resource URL is required.'],
+              trim:     true,
+            },
+          },
+          { _id: false }
+        ),
+      ],
+      default: [],
+    },
+
     // ── Per-Event Email Templates ──────────────────────────
     /**
      * Admin-configured email sent to EVERY registrant (member + guest)
