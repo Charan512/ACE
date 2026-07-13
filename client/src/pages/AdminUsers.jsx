@@ -14,7 +14,7 @@ const TABS = [
 
 const ROLE_OPTIONS = [
   { value: 'member', label: 'Member' },
-  { value: 'sbm',    label: 'SBM — Student Body Member' },
+  { value: 'sbm',    label: 'SBM — Senior Body Member' },
   { value: 'ebm',    label: 'EBM — Executive Body Member' },
   { value: 'admin',  label: 'Admin' },
 ];
@@ -284,8 +284,8 @@ const AdminUsers = () => {
                       </td>
                     )}
 
-                    {/* Designation (EBM only) */}
-                    {activeTab === 'ebm' && (
+                    {/* Designation (SBM only) */}
+                    {activeTab === 'sbm' && (
                       <td className="px-5 py-4">
                         {user.designation ? (
                           <span className="text-sm font-semibold text-purple-600">{user.designation}</span>

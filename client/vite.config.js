@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
       const url = new URL(env.VITE_API_URL);
       targetUrl = `${url.protocol}//${url.host}`;
     } catch (e) {
-      console.warn('⚠️ Invalid VITE_API_URL found in .env');
+      console.warn('WARNING: Invalid VITE_API_URL found in .env');
     }
   }
 

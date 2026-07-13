@@ -183,7 +183,7 @@ const emailWorker = new Worker(
         });
 
         const dateStr  = eventDate ? new Date(eventDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-        const payBadge = paymentMethod === 'cash' ? '💵 Cash' : '💳 Online';
+        const payBadge = paymentMethod === 'cash' ? '(Cash)' : '(Online)';
 
         // Check for admin-configured email body
         let subject, htmlBody;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { MapPin, Calendar, X, Shield, Phone, AlertTriangle } from 'lucide-react';
+import { MapPin, Calendar, X, Shield, Phone, AlertTriangle, ArrowLeft } from 'lucide-react';
 import api from '../lib/api';
 import useAuthStore from '../store/useAuthStore';
 
@@ -68,7 +68,7 @@ const EventDetailPage = () => {
         <div className="text-center">
           <h2 className="text-3xl font-extrabold text-slate-900 mb-2">Event Not Found</h2>
           <p className="text-slate-500 mb-6">The operation you are looking for does not exist or has been removed.</p>
-          <Link to="/events" className="text-blue-600 font-bold hover:underline">← Back to Events</Link>
+          <Link to="/events" className="flex items-center text-blue-600 font-bold hover:underline"><ArrowLeft className="w-4 h-4 mr-1" /> Back to Events</Link>
         </div>
       </div>
     );

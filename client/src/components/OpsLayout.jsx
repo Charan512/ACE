@@ -14,7 +14,8 @@ const NAV_ITEMS = [
 const ROLE_LABELS = {
   admin: 'System Admin',
   ebm:   'Exec. Body Member',
-  sbm:   'Body Member',
+  sbm:   'Senior Body Member',
+  member:'Member',
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -36,7 +37,7 @@ const OpsLayout = () => {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  const roleLabel = ROLE_LABELS[user?.role] || 'Body Member';
+  const roleLabel = ROLE_LABELS[user?.role] || 'Senior Body Member';
   const initials  = user?.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '—';

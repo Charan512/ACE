@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Settings, DollarSign, Mail, Award, Save, Loader2,
   CheckCircle2, AlertTriangle, Eye, EyeOff, ChevronDown, ChevronUp,
-  Info, Hash, AtSign, CreditCard, User,
+  Info, Hash, AtSign, CreditCard, User, ArrowRight,
 } from 'lucide-react';
 import api from '../lib/api';
 
@@ -54,7 +54,7 @@ const Section = ({ icon: Icon, title, subtitle, defaultOpen = true, children }) 
 const VarChip = ({ variable, description }) => (
   <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs">
     <code className="font-mono font-bold text-blue-600">{`{{${variable}}}`}</code>
-    <span className="text-slate-400">→</span>
+    <ArrowRight className="w-4 h-4 text-slate-400" />
     <span className="text-slate-600">{description}</span>
   </div>
 );

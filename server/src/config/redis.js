@@ -53,9 +53,9 @@ const REDIS_OPTIONS = {
  */
 const redis = new Redis(REDIS_URL, REDIS_OPTIONS);
 
-redis.on('connect',     () => console.log('[Redis] ✓ Connected.'));
-redis.on('ready',       () => console.log('[Redis] ✓ Ready.'));
-redis.on('error',       (err) => console.error('[Redis] ✗ Error:', err.message));
+redis.on('connect',     () => console.log('[Redis] SUCCESS: Connected.'));
+redis.on('ready',       () => console.log('[Redis] SUCCESS: Ready.'));
+redis.on('error',       (err) => console.error('[Redis] ERROR:', err.message));
 redis.on('reconnecting', ()  => console.warn('[Redis] Reconnecting…'));
 
 /**

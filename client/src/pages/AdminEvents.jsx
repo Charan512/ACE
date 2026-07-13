@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   CalendarDays, Plus, ToggleLeft, ToggleRight, Loader2,
   AlertTriangle, CheckCircle2, Edit3, Tag, Clock, MapPin,
   RefreshCw, UploadCloud, X, Users, Link2, FormInput,
-  ChevronDown, Trash2, GripVertical, Zap, Globe, FileText, Mail, Eye, EyeOff, Save,
+  ChevronDown, Trash2, GripVertical, Zap, Globe, FileText, Mail, Eye, EyeOff, Save, Link, ArrowRight, Lock,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
@@ -398,8 +399,8 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-slate-200 my-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 sticky top-0 bg-white z-10 rounded-t-2xl">
@@ -409,7 +410,9 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
             </div>
             <h2 className="text-lg font-black text-slate-900">{isEditing ? 'Edit Event' : 'Create New Event'}</h2>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-xl font-bold cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100">✕</button>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 font-bold cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100">
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Form */}
@@ -602,7 +605,7 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
 
               {form.customFormFields.length > 0 && (
                 <p className="text-[10px] text-slate-400 mt-3 text-center">
-                  ⚡ Members bypass this form automatically (Fast-Pass).
+                  <Zap className="w-3.5 h-3.5 inline mr-1" /> Members bypass this form automatically (Fast-Pass).
                 </p>
               )}
             </div>
@@ -685,7 +688,7 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
 
               {!form.certificatesReleased && form.resources.length > 0 && (
                 <p className="text-[10px] text-slate-400 mt-3 text-center">
-                  🔒 Resources will be locked once you release certificates.
+                  <Lock className="w-3 h-3 inline mr-1" /> Resources will be locked once you release certificates.
                 </p>
               )}
             </div>
@@ -711,7 +714,7 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
                       {[{v:'name',d:"Registrant's name"},{v:'event_name',d:'Event title'},{v:'event_date',d:'Date'}].map(vr => (
                         <span key={vr.v} className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-violet-100 rounded-lg text-[10px]">
                           <code className="font-mono font-bold text-violet-600">{`{{${vr.v}}}`}</code>
-                          <span className="text-slate-400">→ {vr.d}</span>
+                          <span className="text-slate-400"><ArrowRight className="w-3 h-3 inline mr-0.5" /> {vr.d}</span>
                         </span>
                       ))}
                     </div>
@@ -761,7 +764,7 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
                       {[{v:'name',d:"Registrant's name"},{v:'event_name',d:'Event title'},{v:'event_date',d:'Date'}].map(vr => (
                         <span key={vr.v} className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-emerald-100 rounded-lg text-[10px]">
                           <code className="font-mono font-bold text-emerald-600">{`{{${vr.v}}}`}</code>
-                          <span className="text-slate-400">→ {vr.d}</span>
+                          <span className="text-slate-400"><ArrowRight className="w-3 h-3 inline mr-0.5" /> {vr.d}</span>
                         </span>
                       ))}
                     </div>
@@ -821,7 +824,8 @@ const EventModal = ({ onClose, onSaved, initialData }) => {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -947,8 +951,8 @@ const AdminEvents = () => {
       )}
 
       {/* Delete Confirm Modal */}
-      {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      {confirmDelete && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm p-6">
             <div className="w-12 h-12 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-4">
               <Trash2 className="w-5 h-5 text-red-500" />
@@ -970,7 +974,8 @@ const AdminEvents = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── Header ──────────────────────────────────── */}

@@ -116,11 +116,11 @@ const certificateWorker = new Worker(
           resources:  event.resources || [],
         });
 
-        console.log(`[CertWorker] ✓ Certificate email job enqueued for ${recipientEmail}`);
+        console.log(`[CertWorker] SUCCESS: Certificate email job enqueued for ${recipientEmail}`);
         successCount++;
       } catch (err) {
         // Log the individual failure but continue with the rest of the batch.
-        console.error(`[CertWorker] ✗ Failed for registration ${reg._id}: ${err.message}`);
+        console.error(`[CertWorker] ERROR: Failed for registration ${reg._id}: ${err.message}`);
         failCount++;
       }
     }

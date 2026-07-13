@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Phone, GraduationCap, BookOpen, ShieldCheck, Zap, Code } from 'lucide-react';
+import { User, Mail, Phone, GraduationCap, BookOpen, ShieldCheck, Zap, Code, CheckCircle2 } from 'lucide-react';
 import api from '../lib/api';
 
 const Registration = () => {
@@ -83,7 +83,9 @@ const Registration = () => {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">
         <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-100 p-10 text-center">
-          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">✓</div>
+          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-10 h-10" />
+          </div>
           <h2 className="text-3xl font-heading font-black text-slate-950 mb-4">Welcome to ACE!</h2>
           <p className="text-slate-600 mb-8 text-lg">
             Your registration was successful. Please check your email for your official ACE ID and temporary password.

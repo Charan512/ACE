@@ -360,7 +360,9 @@ const CashMembershipModal = ({ onClose }) => {
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-neutral-400 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors">✕</button>
+          <button onClick={onClose} className="text-neutral-400 hover:text-white flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors p-2">
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         <div className="p-5">

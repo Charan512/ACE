@@ -4,8 +4,8 @@ import { ShieldCheck, BookOpen, GraduationCap, Sparkles } from 'lucide-react';
 // ── Role accent labels ───────────────────────────────────────
 const ROLE_CONFIG = {
   admin:  { label: 'System Admin', gradient: 'from-pink-400 to-rose-400' },
-  ebm:    { label: 'Body Member', gradient: 'from-purple-400 to-fuchsia-400' },
-  sbm:    { label: 'Body Member', gradient: 'from-cyan-400 to-blue-400' },
+  ebm:    { label: 'Exec. Body Member', gradient: 'from-purple-400 to-fuchsia-400' },
+  sbm:    { label: 'Senior Body Member', gradient: 'from-cyan-400 to-blue-400' },
   member: { label: 'Member', gradient: 'from-indigo-400 to-purple-400' },
 };
 

@@ -22,7 +22,7 @@ const NAV_ITEMS = [
 const ROLE_LABELS = {
   admin: 'System Admin',
   ebm: 'Exec. Body Member',
-  sbm: 'Body Member',
+  sbm: 'Senior Body Member',
   member: 'Member',
 };
 

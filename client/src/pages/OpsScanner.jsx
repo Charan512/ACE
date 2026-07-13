@@ -36,7 +36,7 @@ const VerifyOverlay = ({ result, onDismiss }) => {
   const roleColors = {
     member: { bg: 'rgba(16,185,129,0.15)', border: 'rgba(52,211,153,0.3)', text: '#34d399', label: 'MEMBER' },
     ebm:    { bg: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.3)', text: '#a78bfa', label: 'EXEC. BODY MEMBER' },
-    sbm:    { bg: 'rgba(129,140,248,0.15)', border: 'rgba(129,140,248,0.3)', text: '#818cf8', label: 'BODY MEMBER' },
+    sbm:    { bg: 'rgba(129,140,248,0.15)', border: 'rgba(129,140,248,0.3)', text: '#818cf8', label: 'SENIOR BODY MEMBER' },
     admin:  { bg: 'rgba(244,63,94,0.15)',   border: 'rgba(244,63,94,0.3)',   text: '#f87171', label: 'ADMIN' },
   };
   const rc = roleColors[u.role] || roleColors.member;
@@ -51,7 +51,7 @@ const VerifyOverlay = ({ result, onDismiss }) => {
       </div>
 
       <span className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400 mb-1">
-        ✓ VERIFIED
+        <span className="flex items-center gap-1.5 justify-center"><CheckCircle2 className="w-4 h-4" /> VERIFIED</span>
       </span>
       <h2 className="text-2xl font-black text-white mb-1 text-center">{u.name}</h2>
 

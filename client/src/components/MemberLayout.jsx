@@ -13,8 +13,8 @@ const NAV_ITEMS = [
 
 // ── Role display map ──────────────────────────────────────────
 const ROLE_LABEL = {
-  ebm:    'Body Member',
-  sbm:    'Body Member',
+  ebm:    'Exec. Body Member',
+  sbm:    'Senior Body Member',
   member: 'Member',
 };
 

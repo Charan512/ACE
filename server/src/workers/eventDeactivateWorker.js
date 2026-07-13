@@ -29,7 +29,7 @@ const eventDeactivateWorker = new Worker(
     await Event.findByIdAndUpdate(eventId, { $set: { isActive: false } });
 
     console.log(
-      `[AutoDeactivate] ✅ Event "${event.title}" (${eventId}) has been automatically deactivated ` +
+      `[AutoDeactivate] SUCCESS: Event "${event.title}" (${eventId}) has been automatically deactivated ` +
       `— eventDate ${event.eventDate.toISOString()} has passed.`
     );
   },
@@ -40,7 +40,7 @@ const eventDeactivateWorker = new Worker(
 );
 
 eventDeactivateWorker.on('failed', (job, err) => {
-  console.error(`[AutoDeactivate] ❌ Job ${job?.id} failed for event ${job?.data?.eventId}:`, err.message);
+  console.error(`[AutoDeactivate] ERROR: Job ${job?.id} failed for event ${job?.data?.eventId}:`, err.message);
 });
 
 export default eventDeactivateWorker;

@@ -129,7 +129,7 @@ const AdminCertificates = () => {
       });
 
       setTemplateUrl(data.data.url);
-      showToast('Template uploaded to Cloudinary ✓', 'success');
+      showToast('Template uploaded to Cloudinary', 'success');
     } catch (error) {
       console.error('Upload error:', error);
       showToast('Failed to upload template.', 'error');
@@ -347,7 +347,7 @@ const AdminCertificates = () => {
                   className="absolute top-1.5 right-1.5 bg-black/60 text-white rounded-full p-1 hover:bg-red-500 transition-colors">
                   <X className="w-3 h-3" />
                 </button>
-                <span className="absolute bottom-1.5 left-2 text-[10px] font-mono font-bold text-white bg-black/50 px-1.5 py-0.5 rounded">Template set ✓</span>
+                <span className="absolute bottom-1.5 left-2 text-[10px] font-mono font-bold text-white bg-black/50 px-1.5 py-0.5 rounded flex items-center gap-1"><Check className="w-3 h-3" /> Template set</span>
               </div>
             )}
 
