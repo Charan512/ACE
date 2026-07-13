@@ -18,14 +18,14 @@ const LinkedinIcon = ({ className }) => (
 );
 
 // ── Form Field Wrapper with Floating Labels & Micro-Animations 
-const Field = ({ label, icon: Icon, children, focused, hasValue }) => {
+const Field = ({ label, icon: Icon, children, focused, hasValue, isEbm }) => {
   return (
     <div className="relative pt-4">
       {/* Floating Label */}
       <label
         className={`absolute left-10 transition-all duration-200 pointer-events-none z-10 ${
           focused || hasValue
-            ? '-top-1 text-[10px] font-bold text-white uppercase tracking-wider bg-[#151515] px-1 rounded'
+            ? (isEbm ? '-top-1 text-[10px] font-bold text-amber-950 uppercase tracking-wider bg-gradient-to-r from-amber-400 to-amber-500 px-1 rounded' : '-top-1 text-[10px] font-bold text-white uppercase tracking-wider bg-[#151515] px-1 rounded')
             : 'top-[26px] text-[13px] text-neutral-500 font-mono'
         }`}
       >
@@ -36,7 +36,7 @@ const Field = ({ label, icon: Icon, children, focused, hasValue }) => {
         {Icon && (
           <Icon
             className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-all duration-300 ${
-              focused ? 'text-white scale-110' : 'text-neutral-500'
+              focused ? (isEbm ? 'text-amber-500 scale-110' : 'text-white scale-110') : 'text-neutral-500'
             }`}
           />
         )}
@@ -47,11 +47,11 @@ const Field = ({ label, icon: Icon, children, focused, hasValue }) => {
 };
 
 // ── Shared input style ────────────────────────────────────────
-const inputStyle = (focused, disabled) => ({
+const inputStyle = (focused, disabled, isEbm) => ({
   width: '100%',
   background: disabled ? 'rgba(255,255,255,0.02)' : (focused ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'),
-  border: disabled ? '1px solid rgba(255,255,255,0.05)' : (focused ? '1px solid rgba(255,255,255,0.3)' : '1px solid rgba(255,255,255,0.1)'),
-  boxShadow: (!disabled && focused) ? '0 0 0 3px rgba(255,255,255,0.05)' : 'none',
+  border: disabled ? '1px solid rgba(255,255,255,0.05)' : (focused ? (isEbm ? '1px solid rgba(245,158,11,0.5)' : '1px solid rgba(255,255,255,0.3)') : '1px solid rgba(255,255,255,0.1)'),
+  boxShadow: (!disabled && focused) ? (isEbm ? '0 0 0 3px rgba(245,158,11,0.2)' : '0 0 0 3px rgba(255,255,255,0.05)') : 'none',
   borderRadius: '12px',
   padding: '11px 16px 11px 40px',
   fontSize: '13px',
@@ -67,6 +67,7 @@ const inputStyle = (focused, disabled) => ({
 // ─────────────────────────────────────────────────────────────
 const OpsProfile = () => {
   const { user, updateProfile } = useAuthStore();
+  const isEbm = user?.role === 'ebm';
 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -245,7 +246,7 @@ const OpsProfile = () => {
               <UserCog className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex bg-gradient-to-b from-white to-neutral-400 text-transparent bg-clip-text">
+              <h1 className={`text-xl sm:text-2xl font-bold tracking-tight flex bg-clip-text text-transparent ${isEbm ? 'bg-gradient-to-b from-amber-200 to-amber-500' : 'bg-gradient-to-b from-white to-neutral-400'}`}>
                 <BlurText text="My Profile" delay={50} animateBy="letters" direction="bottom" />
               </h1>
               <p className="text-xs font-mono mt-0.5 text-neutral-400">
@@ -257,7 +258,7 @@ const OpsProfile = () => {
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
-              className="bg-white text-black hover:bg-neutral-200 transition-colors flex items-center justify-center gap-2 font-mono font-bold px-5 py-2.5 rounded-xl text-xs self-start sm:self-auto"
+              className={`transition-colors flex items-center justify-center gap-2 font-mono font-bold px-5 py-2.5 rounded-xl text-xs self-start sm:self-auto ${isEbm ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 hover:opacity-90' : 'bg-white text-black hover:bg-neutral-200'}`}
             >
               <Edit3 className="w-3.5 h-3.5" /> Edit Profile
             </button>
@@ -287,7 +288,7 @@ const OpsProfile = () => {
                   )}
                 </div>
                 {/* Always-visible badge indicator */}
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#1A1A1A] border border-white/20 shadow-md flex items-center justify-center text-white hover:bg-white/10 group-hover:scale-110 transition-all z-20">
+                <div className={`absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#1A1A1A] border border-white/20 shadow-md flex items-center justify-center text-white group-hover:scale-110 transition-all z-20 ${isEbm ? 'hover:bg-amber-500/20' : 'hover:bg-white/10'}`}>
                   {avatarUploading ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
                   ) : localAvatar ? (
@@ -361,7 +362,7 @@ const OpsProfile = () => {
             </div>
             <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-3">
               {/* Full Name */}
-              <Field 
+              <Field isEbm={isEbm}
                 label="Full Name" 
                 icon={User} 
                 focused={focusState.name} 
@@ -373,14 +374,14 @@ const OpsProfile = () => {
                   value={formData.name}
                   onChange={setField('name')}
                   disabled={!isEditing}
-                  style={inputStyle(focusState.name, !isEditing)}
+                  style={inputStyle(focusState.name, !isEditing, isEbm)}
                   onFocus={() => setFocusState(prev => ({ ...prev, name: true }))}
                   onBlur={() => setFocusState(prev => ({ ...prev, name: false }))}
                 />
               </Field>
 
               {/* Phone */}
-              <Field 
+              <Field isEbm={isEbm}
                 label="Phone Number" 
                 icon={Phone} 
                 focused={focusState.phone} 
@@ -392,14 +393,14 @@ const OpsProfile = () => {
                   value={formData.phone}
                   onChange={setField('phone')}
                   disabled={!isEditing}
-                  style={inputStyle(focusState.phone, !isEditing)}
+                  style={inputStyle(focusState.phone, !isEditing, isEbm)}
                   onFocus={() => setFocusState(prev => ({ ...prev, phone: true }))}
                   onBlur={() => setFocusState(prev => ({ ...prev, phone: false }))}
                 />
               </Field>
 
               {/* Gender (Dropdown) */}
-              <Field 
+              <Field isEbm={isEbm}
                 label="Gender" 
                 icon={Users} 
                 focused={focusState.gender} 
@@ -437,7 +438,7 @@ const OpsProfile = () => {
             <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-3">
 
               {/* Branch (Dropdown) */}
-              <Field 
+              <Field isEbm={isEbm}
                 label="Branch / Department" 
                 icon={Building} 
                 focused={focusState.branch} 
@@ -474,7 +475,7 @@ const OpsProfile = () => {
               </Field>
 
               {/* Section (Dropdown) */}
-              <Field 
+              <Field isEbm={isEbm}
                 label="Section" 
                 icon={BookOpen} 
                 focused={focusState.section} 
@@ -506,7 +507,7 @@ const OpsProfile = () => {
               </Field>
 
               {/* Year of Study (Dropdown) */}
-              <Field 
+              <Field isEbm={isEbm}
                 label="Year of Study" 
                 icon={GraduationCap} 
                 focused={focusState.year} 
@@ -535,7 +536,7 @@ const OpsProfile = () => {
               </Field>
 
               {/* Roll Number */}
-              <Field 
+              <Field isEbm={isEbm}
                 label="Roll Number" 
                 icon={Hash} 
                 focused={focusState.registrationNumber} 
@@ -547,7 +548,7 @@ const OpsProfile = () => {
                   value={formData.registrationNumber}
                   onChange={setField('registrationNumber')}
                   disabled={!isEditing}
-                  style={inputStyle(focusState.registrationNumber, !isEditing)}
+                  style={inputStyle(focusState.registrationNumber, !isEditing, isEbm)}
                   onFocus={() => setFocusState(prev => ({ ...prev, registrationNumber: true }))}
                   onBlur={() => setFocusState(prev => ({ ...prev, registrationNumber: false }))}
                 />
@@ -563,7 +564,7 @@ const OpsProfile = () => {
               </p>
             </div>
             <div className="p-5 sm:p-6 grid grid-cols-1 gap-x-5 gap-y-3">
-              <Field 
+              <Field isEbm={isEbm}
                 label="LinkedIn URL" 
                 icon={LinkedinIcon} 
                 focused={focusState.linkedin} 
@@ -575,7 +576,7 @@ const OpsProfile = () => {
                   value={formData.linkedin}
                   onChange={setField('linkedin')}
                   disabled={!isEditing}
-                  style={inputStyle(focusState.linkedin, !isEditing)}
+                  style={inputStyle(focusState.linkedin, !isEditing, isEbm)}
                   onFocus={() => setFocusState(prev => ({ ...prev, linkedin: true }))}
                   onBlur={() => setFocusState(prev => ({ ...prev, linkedin: false }))}
                 />
@@ -589,14 +590,14 @@ const OpsProfile = () => {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10 border border-white/10 rounded-xl transition-colors flex-1 sm:flex-none px-6 py-3.5 text-sm font-bold font-mono flex items-center justify-center gap-2 min-h-[44px]"
+                className={`bg-white/5 text-neutral-400 border border-white/10 rounded-xl transition-colors flex-1 sm:flex-none px-6 py-3.5 text-sm font-bold font-mono flex items-center justify-center gap-2 min-h-[44px] ${isEbm ? 'hover:text-amber-400 hover:bg-amber-500/10' : 'hover:text-white hover:bg-white/10'}`}
               >
                 <X className="w-4 h-4" /> Discard
               </button>
               <button
                 type="submit"
                 disabled={saving || !hasChanges}
-                className="bg-white text-black hover:bg-neutral-200 rounded-xl transition-colors flex-1 sm:w-auto gap-2.5 font-mono font-bold px-8 py-3.5 text-sm min-h-[44px] group flex items-center justify-center"
+                className={`rounded-xl transition-colors flex-1 sm:w-auto gap-2.5 font-mono font-bold px-8 py-3.5 text-sm min-h-[44px] group flex items-center justify-center ${isEbm ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 hover:opacity-90' : 'bg-white text-black hover:bg-neutral-200'}`}
               >
                 {saving
                   ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>

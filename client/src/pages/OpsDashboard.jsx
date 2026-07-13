@@ -5,6 +5,7 @@ import {
   Loader2, Zap, AlertTriangle, DollarSign, X, User, Mail, Phone, CheckCircle2, UserPlus,
 } from 'lucide-react';
 import api from '../lib/api';
+import useAuthStore from '../store/useAuthStore';
 
 // ── Helpers ──────────────────────────────────────────────────
 const fmtDate = (d) => new Date(d).toLocaleDateString('en-IN', {
@@ -12,7 +13,7 @@ const fmtDate = (d) => new Date(d).toLocaleDateString('en-IN', {
 });
 
 // ── Cash Registration Modal ───────────────────────────────────
-const CashRegModal = ({ event, onClose }) => {
+const CashRegModal = ({ event, onClose, isEbm }) => {
   const [tab, setTab] = useState('member'); // 'member' | 'guest'
 
   // Guest Form State
@@ -112,7 +113,7 @@ const CashRegModal = ({ event, onClose }) => {
             {field.options.map(opt => (
               <label key={opt} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold cursor-pointer transition-all ${
                 val === opt
-                  ? 'bg-white text-black border-white'
+                  ? (isEbm ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 border-amber-500' : 'bg-white text-black border-white')
                   : 'border-white/10 text-neutral-400 hover:border-white/30'
               }`}>
                 <input
@@ -168,11 +169,11 @@ const CashRegModal = ({ event, onClose }) => {
             <p className="text-xs text-neutral-400 text-center">Admin has been notified. Entry recorded as Cash.</p>
             <div className="flex gap-2 w-full mt-2">
               <button onClick={resetForm}
-                className="flex-1 py-2.5 text-sm font-bold text-white bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl transition-colors">
+                className={`flex-1 py-2.5 text-sm font-bold text-white bg-white/5 border transition-colors ${isEbm ? 'border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-400' : 'border-white/10 hover:bg-white/10 rounded-xl'}`}>
                 Register Another
               </button>
               <button onClick={onClose}
-                className="flex-1 py-2.5 text-sm font-bold bg-white text-black hover:bg-neutral-200 rounded-xl transition-colors">
+                className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-colors ${isEbm ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 hover:opacity-90' : 'bg-white text-black hover:bg-neutral-200'}`}>
                 Done
               </button>
             </div>
@@ -185,7 +186,7 @@ const CashRegModal = ({ event, onClose }) => {
                 type="button"
                 onClick={() => { setTab('member'); setError(null); }}
                 className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                  tab === 'member' ? 'bg-white text-black shadow-sm' : 'text-neutral-500 hover:text-white'
+                  tab === 'member' ? (isEbm ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 shadow-sm' : 'bg-white text-black shadow-sm') : (isEbm ? 'text-neutral-500 hover:text-amber-400' : 'text-neutral-500 hover:text-white')
                 }`}
               >
                 ACE Member
@@ -194,7 +195,7 @@ const CashRegModal = ({ event, onClose }) => {
                 type="button"
                 onClick={() => { setTab('guest'); setError(null); }}
                 className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                  tab === 'guest' ? 'bg-white text-black shadow-sm' : 'text-neutral-500 hover:text-white'
+                  tab === 'guest' ? (isEbm ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 shadow-sm' : 'bg-white text-black shadow-sm') : (isEbm ? 'text-neutral-500 hover:text-amber-400' : 'text-neutral-500 hover:text-white')
                 }`}
               >
                 Guest
@@ -281,11 +282,11 @@ const CashRegModal = ({ event, onClose }) => {
 
               <div className="flex gap-2 pt-1">
                 <button type="button" onClick={onClose}
-                  className="flex-1 py-2.5 text-sm font-bold text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-transparent">
+                  className={`flex-1 py-2.5 text-sm font-bold transition-colors border border-transparent rounded-xl ${isEbm ? 'text-neutral-400 hover:text-amber-400 bg-white/5 hover:bg-amber-500/10' : 'text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10'}`}>
                   Cancel
                 </button>
                 <button type="submit" disabled={loading}
-                  className="flex-1 py-2.5 text-sm font-bold text-black bg-white hover:bg-neutral-200 rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                  className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${isEbm ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 hover:opacity-90' : 'bg-white text-black hover:bg-neutral-200'}`}>
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Register'}
                 </button>
               </div>
@@ -298,7 +299,7 @@ const CashRegModal = ({ event, onClose }) => {
 };
 
 // ── Cash Membership Modal ─────────────────────────────────────
-const CashMembershipModal = ({ onClose }) => {
+const CashMembershipModal = ({ onClose, isEbm }) => {
   const [form, setForm] = useState({ name: '', email: '', phone: '', branch: '', year: '', gender: '', collegeId: '' });
   const [membershipFee, setMembershipFee] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -374,7 +375,7 @@ const CashMembershipModal = ({ onClose }) => {
               <p className="text-base font-black text-white">{done.name} registered!</p>
               <p className="text-2xl font-mono font-black text-white">{done.aceId}</p>
               <p className="text-xs text-neutral-400">Credentials and confirmation email sent to {done.email}</p>
-              <button onClick={onClose} className="w-full mt-2 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-neutral-200 transition-colors">Done</button>
+              <button onClick={onClose} className={`w-full mt-2 py-2.5 rounded-xl text-sm font-bold transition-colors ${isEbm ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 hover:opacity-90' : 'bg-white text-black hover:bg-neutral-200'}`}>Done</button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
@@ -431,7 +432,7 @@ const CashMembershipModal = ({ onClose }) => {
                 </div>
               </div>
               <button type="submit" disabled={loading || membershipFee === null}
-                className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-neutral-200 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                className={`w-full py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${isEbm ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 hover:opacity-90' : 'bg-white text-black hover:bg-neutral-200'}`}>
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
                 {loading
                   ? 'Registering...'
@@ -449,6 +450,8 @@ const CashMembershipModal = ({ onClose }) => {
 };
 
 const OpsDashboard = () => {
+  const { user } = useAuthStore();
+  const isEbm = user?.role === 'ebm';
   const navigate = useNavigate();
   const [events, setEvents]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -474,14 +477,8 @@ const OpsDashboard = () => {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-10">
 
       {/* Cash Reg Modal */}
-      {cashRegEvent && (
-        <CashRegModal event={cashRegEvent} onClose={() => setCashRegEvent(null)} />
-      )}
-
-      {/* Cash Membership Modal */}
-      {showMemberModal && (
-        <CashMembershipModal onClose={() => setShowMemberModal(false)} />
-      )}
+      {cashRegEvent && <CashRegModal event={cashRegEvent} onClose={() => setCashRegEvent(null)} isEbm={isEbm} />}
+      {showMemberModal && <CashMembershipModal onClose={() => setShowMemberModal(false)} isEbm={isEbm} />}
 
       {/* ── Hero / Verify CTA ─────────────────────────────── */}
       <section>
@@ -506,7 +503,7 @@ const OpsDashboard = () => {
               <p className="text-sm text-neutral-400 mt-0.5">Scan QR to confirm ACE membership</p>
             </div>
           </div>
-          <ChevronRight className="w-6 h-6 text-neutral-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
+          <ChevronRight className={`w-6 h-6 text-neutral-500 group-hover:translate-x-1 transition-all ${isEbm ? 'group-hover:text-amber-400' : 'group-hover:text-white'}`} />
         </button>
 
         {/* Secondary action — Register New Member (cash) */}
@@ -523,7 +520,7 @@ const OpsDashboard = () => {
               <p className="text-xs text-neutral-400 mt-0.5 font-mono">Walk-in · Cash payment</p>
             </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-neutral-500 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+          <ChevronRight className={`w-5 h-5 text-neutral-500 group-hover:translate-x-0.5 transition-all ${isEbm ? 'group-hover:text-amber-400' : 'group-hover:text-white'}`} />
         </button>
       </section>
 
@@ -604,7 +601,7 @@ const OpsDashboard = () => {
                     <span className="hidden sm:inline-flex bg-white/10 text-white border border-white/20 rounded-lg px-2 py-1.5 text-[10px] font-mono font-bold">
                       Open Control Room
                     </span>
-                    <ChevronRight className="w-4 h-4 text-neutral-500 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                    <ChevronRight className={`w-4 h-4 text-neutral-500 group-hover:translate-x-0.5 transition-all ${isEbm ? 'group-hover:text-amber-400' : 'group-hover:text-white'}`} />
                 </div>
               </div>
             ))}

@@ -42,6 +42,7 @@ const OpsLayout = () => {
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '—';
   const firstName = user?.name?.split(' ')[0] || 'Coordinator';
+  const isEbm = user?.role === 'ebm';
 
   // Inject Treasurer Analytics link for the designated Treasurer
   let visibleNavItems = [...NAV_ITEMS];
@@ -67,7 +68,7 @@ const OpsLayout = () => {
           top-0 h-16 md:h-auto px-4 md:px-5 py-0 md:py-3 md:mx-auto md:max-w-4xl md:rounded-[24px]`}
         style={{
           background: 'rgba(15, 15, 15, 0.8)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          border: isEbm ? '1px solid rgba(245,158,11,0.2)' : '1px solid rgba(255, 255, 255, 0.1)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
           boxShadow: '0 10px 40px -10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)',
@@ -80,7 +81,7 @@ const OpsLayout = () => {
               className="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner"
               style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
             >
-              <Zap className="w-5 h-5 text-white" />
+              <Zap className={`w-5 h-5 ${isEbm ? 'text-amber-500' : 'text-white'}`} />
             </div>
             <div className="hidden sm:flex flex-col leading-tight">
               <span className="text-sm font-black text-white tracking-tight">Ops Hub</span>
@@ -98,14 +99,14 @@ const OpsLayout = () => {
                 className={({ isActive }) =>
                   `relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm transition-all duration-300
                   ${isActive
-                    ? 'text-black font-bold bg-white shadow-sm ring-1 ring-white/20'
-                    : 'text-neutral-400 font-medium hover:text-white hover:bg-white/5'
+                    ? (isEbm ? 'text-amber-950 font-bold bg-gradient-to-r from-amber-400 to-amber-500 shadow-sm ring-1 ring-amber-500/30' : 'text-black font-bold bg-white shadow-sm ring-1 ring-white/20')
+                    : (isEbm ? 'text-neutral-400 font-medium hover:text-amber-400 hover:bg-amber-500/10' : 'text-neutral-400 font-medium hover:text-white hover:bg-white/5')
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
-                    <Icon className={`w-4 h-4 shrink-0 transition-all duration-300 ${isActive ? 'scale-110 text-black' : 'text-neutral-400'}`} />
+                    <Icon className={`w-4 h-4 shrink-0 transition-all duration-300 ${isActive ? (isEbm ? 'scale-110 text-amber-950' : 'scale-110 text-black') : 'text-neutral-400'}`} />
                     <span>{label}</span>
                   </>
                 )}
@@ -120,7 +121,7 @@ const OpsLayout = () => {
             {/* Unified Profile Button */}
             <NavLink
               to="/ops/profile"
-              className="group flex items-center gap-3 px-3 py-1.5 rounded-[18px] transition-all duration-300 border border-transparent hover:bg-white/5 hover:border-white/10 hover:shadow-sm cursor-pointer"
+              className={`group flex items-center gap-3 px-3 py-1.5 rounded-[18px] transition-all duration-300 border border-transparent cursor-pointer ${isEbm ? 'hover:bg-amber-500/10 hover:border-amber-500/20' : 'hover:bg-white/5 hover:border-white/10 hover:shadow-sm'}`}
             >
               <div className="flex flex-col items-end">
                 <span className="text-sm font-bold text-white tracking-tight group-hover:text-neutral-300 transition-colors">{firstName}</span>
@@ -130,7 +131,7 @@ const OpsLayout = () => {
                 className="relative flex items-center justify-center w-10 h-10 rounded-xl font-mono font-black text-white shrink-0 shadow-inner group-hover:scale-[1.05] transition-transform duration-300 bg-[#1A1A1A] border border-white/10"
               >
                 {initials}
-                <div className="absolute inset-0 rounded-xl ring-2 ring-white/20 ring-offset-2 ring-offset-[#0A0A0A] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className={`absolute inset-0 rounded-xl ring-2 ring-offset-2 ring-offset-[#0A0A0A] opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${isEbm ? 'ring-amber-500/40' : 'ring-white/20'}`} />
               </div>
             </NavLink>
 
@@ -138,7 +139,7 @@ const OpsLayout = () => {
 
             <button
               onClick={handleLogout}
-              className="p-2.5 rounded-xl transition-all duration-200 cursor-pointer text-neutral-400 hover:text-white hover:bg-white/10 hover:shadow-sm"
+              className={`p-2.5 rounded-xl transition-all duration-200 cursor-pointer text-neutral-400 hover:shadow-sm ${isEbm ? 'hover:text-amber-400 hover:bg-amber-500/10' : 'hover:text-white hover:bg-white/10'}`}
               title="Log out"
             >
               <LogOut className="w-5 h-5" />
@@ -147,7 +148,7 @@ const OpsLayout = () => {
 
           {/* Mobile Hamburger */}
           <button
-            className="md:hidden p-2 rounded-xl bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
+            className={`md:hidden p-2 rounded-xl bg-white/5 text-neutral-400 transition-colors ${isEbm ? 'hover:bg-amber-500/10 hover:text-amber-400' : 'hover:bg-white/10 hover:text-white'}`}
             onClick={() => setIsMobileMenuOpen(true)}
           >
             <Menu className="w-5 h-5" />
@@ -166,7 +167,7 @@ const OpsLayout = () => {
           <div className="flex items-center justify-between px-4 h-16 border-b border-white/10 bg-[#151515]/50">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border border-white/10">
-                <Zap className="w-4 h-4 text-white" />
+                <Zap className={`w-4 h-4 ${isEbm ? 'text-amber-500' : 'text-white'}`} />
               </div>
               <span className="text-xs font-bold text-white tracking-wide">Ops Menu</span>
             </div>
@@ -178,7 +179,7 @@ const OpsLayout = () => {
           <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-8">
             {/* Profile */}
             <NavLink to="/ops/profile" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center text-center p-6 bg-[#151515] rounded-3xl border border-white/10 shadow-sm hover:border-white/20 transition-colors cursor-pointer">
-              <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-mono font-bold text-black mb-4 shadow-md bg-white border border-white/10">
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-mono font-bold mb-4 shadow-md border ${isEbm ? 'text-amber-950 bg-gradient-to-br from-amber-300 to-amber-500 border-amber-400/30' : 'text-black bg-white border-white/10'}`}>
                 {initials}
               </div>
               <h2 className="text-lg font-bold text-white mb-1">{user?.name || 'Coordinator'}</h2>
@@ -195,8 +196,8 @@ const OpsLayout = () => {
                   className={({ isActive }) =>
                     `flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${
                       isActive
-                        ? 'bg-white text-black font-bold'
-                        : 'bg-white/5 border border-white/10 text-neutral-400 font-medium hover:bg-white/10 hover:text-white'
+                        ? (isEbm ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-bold' : 'bg-white text-black font-bold')
+                        : (isEbm ? 'bg-white/5 border border-white/10 text-neutral-400 font-medium hover:bg-amber-500/10 hover:text-amber-400' : 'bg-white/5 border border-white/10 text-neutral-400 font-medium hover:bg-white/10 hover:text-white')
                     }`
                   }
                 >
@@ -209,7 +210,7 @@ const OpsLayout = () => {
 
           <div className="p-4 border-t border-white/10 bg-[#151515]/50 pb-8">
             <button onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-4 rounded-xl text-white bg-white/10 border border-white/20 font-bold text-sm hover:bg-white/20 transition-colors">
+              className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl text-white bg-white/10 border font-bold text-sm transition-colors ${isEbm ? 'border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-400' : 'border-white/20 hover:bg-white/20'}`}>
               <LogOut className="w-4 h-4" />
               Log Out
             </button>
