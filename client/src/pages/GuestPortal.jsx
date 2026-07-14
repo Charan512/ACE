@@ -37,7 +37,8 @@ const GuestPortal = () => {
 
   const handleRegistrationClick = (event) => {
     if (isAuthenticated) {
-      navigate('/member/dashboard');
+      // Navigate to member dashboard; eventId in state lets it highlight/pre-scroll to the event
+      navigate('/member/dashboard', { state: { highlightEventId: event?._id } });
     } else {
       setIsInterceptModalOpen(true);
     }

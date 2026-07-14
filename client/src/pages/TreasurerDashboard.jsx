@@ -125,12 +125,15 @@ const TreasurerDashboard = () => {
   const [eventsLoading, setEventsLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Fetch all events for the selector dropdown
+  // Fetch all events for the selector dropdown, sorted newest first
   useEffect(() => {
     api.get('/admin/events')
       .then(({ data }) => {
-        setEvents(data.data || []);
-        if (data.data?.length) setSelectedId(data.data[0]._id);
+        const sorted = (data.data || []).sort(
+          (a, b) => new Date(b.eventDate) - new Date(a.eventDate)
+        );
+        setEvents(sorted);
+        if (sorted.length) setSelectedId(sorted[0]._id);
       })
       .catch(() => setError('Failed to load events.'))
       .finally(() => setEventsLoading(false));

@@ -110,6 +110,24 @@ const MemberProfile = () => {
 
   const hasChanges = Object.keys(formData).some(k => formData[k] !== (user[k] || ''));
 
+  // M7: Sync formData from the store whenever user object changes (e.g., after avatar upload)
+  // Only sync when not actively editing so in-progress edits are never wiped out.
+  useEffect(() => {
+    if (!isEditing) {
+      setFormData({
+        name:               user?.name               || '',
+        phone:              user?.phone              || '',
+        branch:             user?.branch             || '',
+        section:            user?.section            || '',
+        year:               user?.year               || '',
+        registrationNumber: user?.registrationNumber || '',
+        gender:             user?.gender             || '',
+        linkedin:           user?.linkedin           || '',
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
   // Warn on unsaved changes navigation
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -123,9 +141,7 @@ const MemberProfile = () => {
   }, [isEditing, hasChanges]);
 
   const handleCancel = () => {
-    if (hasChanges) {
-      if (!window.confirm('You have unsaved changes. Are you sure you want to discard them?')) return;
-    }
+    // M6: reset form directly — no browser dialog needed since beforeunload guards navigation
     setFormData({
       name:               user?.name               || '',
       phone:              user?.phone              || '',
@@ -421,6 +437,8 @@ const MemberProfile = () => {
                   <option value="" disabled></option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
                 </select>
                 <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-transform duration-300 ${focusState.gender ? 'rotate-180 text-indigo-500' : 'text-slate-400'}`} />
               </Field>

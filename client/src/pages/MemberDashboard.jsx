@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import DigitalIdCard from '../components/DigitalIdCard';
 import EventCard from '../components/EventCard';
@@ -314,8 +315,8 @@ const MemberDashboard = () => {
             </div>
           </div>
 
-          {/* Profile incomplete warning */}
-          {!user?.registrationNumber && (
+          {/* Profile incomplete warning — shows if ANY required field is missing */}
+          {!isProfileComplete() && (
             <div className="bg-[#0B0F19]/80 backdrop-blur-xl border border-amber-500/30 rounded-3xl mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 p-5 sm:p-6 shadow-xl relative overflow-hidden">
               {/* Amber glow */}
               <div className="absolute inset-0 bg-amber-500/5 pointer-events-none" />
@@ -324,15 +325,15 @@ const MemberDashboard = () => {
                   <AlertTriangle className="w-6 h-6 shrink-0 text-amber-400" />
                 </div>
                 <p className="text-sm font-bold text-amber-100 uppercase tracking-widest leading-snug">
-                  Roll number missing<br/><span className="text-xs font-medium text-amber-300">Required for certificates</span>
+                  Profile incomplete<br/><span className="text-xs font-medium text-amber-300">Required for event registration &amp; certificates</span>
                 </p>
               </div>
-              <a
-                href="/member/profile"
+              <Link
+                to="/member/profile"
                 className="glass-btn bg-amber-500/20 border-amber-500/30 hover:bg-amber-500/30 text-amber-200 rounded-xl font-bold px-6 py-3 w-full sm:w-auto text-center uppercase tracking-widest shrink-0 transition-colors"
               >
                 Complete profile
-              </a>
+              </Link>
             </div>
           )}
         </section>
@@ -377,13 +378,13 @@ const MemberDashboard = () => {
 
       <Toast toast={toast} />
 
-      {/* ── Smart Fast-Pass Modal ──────────────────────────── */}
+      {/* ── Smart Fast-Pass Modal ──────────────────── */}
       {fastPassEvent && (
         <SmartFastPassModal
           event={fastPassEvent}
           onSubmit={handleModalSubmit}
           onCancel={handleModalCancel}
-          isSubmitting={false}
+          isSubmitting={!!registeringId}
         />
       )}
 

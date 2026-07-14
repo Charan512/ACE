@@ -111,6 +111,24 @@ const OpsProfile = () => {
 
   const hasChanges = Object.keys(formData).some(k => formData[k] !== (user[k] || ''));
 
+  // O5: Sync formData from the store whenever user object changes (e.g. after avatar upload)
+  // Only sync when not actively editing so in-progress edits are never wiped.
+  useEffect(() => {
+    if (!isEditing) {
+      setFormData({
+        name:               user?.name               || '',
+        phone:              user?.phone              || '',
+        branch:             user?.branch             || '',
+        section:            user?.section            || '',
+        year:               user?.year               || '',
+        registrationNumber: user?.registrationNumber || '',
+        gender:             user?.gender             || '',
+        linkedin:           user?.linkedin           || '',
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
   // Warn on unsaved changes navigation
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -124,9 +142,7 @@ const OpsProfile = () => {
   }, [isEditing, hasChanges]);
 
   const handleCancel = () => {
-    if (hasChanges) {
-      if (!window.confirm('You have unsaved changes. Are you sure you want to discard them?')) return;
-    }
+    // Reset directly — beforeunload already guards navigation if needed
     setFormData({
       name:               user?.name               || '',
       phone:              user?.phone              || '',

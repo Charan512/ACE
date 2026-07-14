@@ -70,6 +70,7 @@ const CashRegModal = ({ event, onClose, isEbm }) => {
 
   const resetForm = () => {
     setDone(false);
+    setError(null);
     setGuestForm({ name: '', email: '', phone: '', year: '' });
     setMemberForm({ identifier: '' });
     setCustomResponses({});

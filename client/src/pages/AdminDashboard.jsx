@@ -32,7 +32,7 @@ const StatCard = ({ label, value, icon: Icon, accent, sublabel, loading, linkTo,
   </div>
 );
 
-const PayBar = ({ label, count, total, color }) => (
+const PayBar = ({ label, count, total, color, totalCount }) => (
   <div className="flex items-center gap-3">
     <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm" style={{ background: color }} />
     <div className="flex-1">
@@ -43,7 +43,8 @@ const PayBar = ({ label, count, total, color }) => (
         </span>
       </div>
       <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min(100, (count || 0) * 10)}%`, background: color }} />
+        <div className="h-full rounded-full transition-all duration-700"
+          style={{ width: `${totalCount > 0 ? Math.round((count / totalCount) * 100) : 0}%`, background: color }} />
       </div>
     </div>
   </div>
@@ -100,8 +101,8 @@ const PayStatsPanel = () => {
             <span className="text-sm text-slate-500 font-semibold">Total Revenue</span>
             <span className="text-3xl font-black font-mono text-slate-900">{String.fromCodePoint(0x20B9)}{total.toLocaleString()}</span>
           </div>
-          <PayBar label="Online (PhonePe)" count={stats.online?.count || 0} total={stats.online?.totalAmountINR || 0} color="#3b82f6" />
-          <PayBar label="Cash (Walk-in)" count={stats.cash?.count || 0} total={stats.cash?.totalAmountINR || 0} color="#10b981" />
+          <PayBar label="Online (PhonePe)" count={stats.online?.count || 0} total={stats.online?.totalAmountINR || 0} color="#3b82f6" totalCount={(stats.online?.count || 0) + (stats.cash?.count || 0)} />
+          <PayBar label="Cash (Walk-in)" count={stats.cash?.count || 0} total={stats.cash?.totalAmountINR || 0} color="#10b981" totalCount={(stats.online?.count || 0) + (stats.cash?.count || 0)} />
           <div className="flex gap-4 mt-6">
             <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl p-4 text-center">
               <CreditCard className="w-5 h-5 text-blue-500 mx-auto mb-2" />

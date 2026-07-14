@@ -172,6 +172,8 @@ const OpsScanner = () => {
   const isMode1 = mode === 'verify';
 
   const startPromiseRef = useRef(null);
+  // pendingRestart: set to true after overlay clears, triggering a DOM-safe restart via useEffect
+  const [pendingRestart, setPendingRestart] = useState(false);
 
   // ── Start Scanner ────────────────────────────────────────
   const startScanner = useCallback(async () => {
@@ -231,6 +233,17 @@ const OpsScanner = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── DOM-safe restart after flash overlay clears ───────────
+  // Runs AFTER React commits, guaranteeing #qr-reader is visible
+  useEffect(() => {
+    if (!pendingRestart) return;
+    setPendingRestart(false);
+    startScanner().catch(() => {
+      setInitError('Camera failed to restart. Please close and reopen the scanner.');
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingRestart]);
+
   // ── On Scan Success ───────────────────────────────────────
   const onScanSuccess = async (decodedText) => {
     if (!scannerRef.current) return;
@@ -256,7 +269,6 @@ const OpsScanner = () => {
   // ── Mode 2: Check-In ─────────────────────────────────────
   const handleCheckIn = async (scannedId) => {
     try {
-      // scannedId is aceId or userId
       const payload = /^26ACE\d{4}$/.test(scannedId) ? { aceId: scannedId } : { userId: scannedId };
       const res = await api.put(`/ops/events/${eventId}/checkin`, payload);
       const reg = res.data.data;
@@ -265,13 +277,15 @@ const OpsScanner = () => {
         name:  reg.name,
         aceId: reg.userId?.aceId || null,
       });
-      // Auto-resume after 2s
-      setTimeout(() => { setCheckinState(null); startScanner(); }, 2000);
+      // Clear overlay after 2s, then trigger DOM-safe restart via useEffect
+      setTimeout(() => setCheckinState(null), 2000);
+      setTimeout(() => setPendingRestart(true), 2000);
     } catch (err) {
       const msg = err.response?.data?.message;
       if (msg === 'ALREADY_SCANNED') {
         setCheckinState({ type: 'already', name: 'This person', message: null });
-        setTimeout(() => { setCheckinState(null); startScanner(); }, 1500);
+        setTimeout(() => setCheckinState(null), 1500);
+        setTimeout(() => setPendingRestart(true), 1500);
       } else {
         setCheckinState({ type: 'error', message: msg || 'Check-in failed.' });
       }

@@ -29,8 +29,9 @@ const TeamDirectory = () => {
         const fetchedEbms = team.filter(member => member.role === 'ebm');
         const fetchedSbms = team.filter(member => member.role === 'sbm');
 
-        // Pad to 25 items each
-        const paddedEbms = Array.from({ length: 25 }).map((_, i) => {
+        // Pad to at least 25 items each (but allow more if fetched)
+        const ebmLength = Math.max(25, fetchedEbms.length);
+        const paddedEbms = Array.from({ length: ebmLength }).map((_, i) => {
           if (fetchedEbms[i]) return fetchedEbms[i];
           return {
             _id: `placeholder-ebm-${i}`,
@@ -43,7 +44,8 @@ const TeamDirectory = () => {
           };
         });
 
-        const paddedSbms = Array.from({ length: 25 }).map((_, i) => {
+        const sbmLength = Math.max(25, fetchedSbms.length);
+        const paddedSbms = Array.from({ length: sbmLength }).map((_, i) => {
           if (fetchedSbms[i]) return fetchedSbms[i];
           return {
             _id: `placeholder-sbm-${i}`,

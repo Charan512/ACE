@@ -17,6 +17,7 @@ const EventDetailPage = () => {
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null); // 'notfound' | 'network' | null
   
   // Registration Modal State
   const [isInterceptModalOpen, setIsInterceptModalOpen] = useState(false);
@@ -29,6 +30,12 @@ const EventDetailPage = () => {
         const response = await api.get(`/events/${eventId}`);
         setEvent(response.data.data);
       } catch (error) {
+        // G6: differentiate 404 from network failures
+        if (error.response?.status === 404) {
+          setFetchError('notfound');
+        } else {
+          setFetchError('network');
+        }
         console.error('Failed to fetch event:', error);
       } finally {
         setLoading(false);
@@ -47,7 +54,8 @@ const EventDetailPage = () => {
       if (!isProfileComplete()) {
         setShowIncompleteModal(true);
       } else {
-        navigate('/member/dashboard');
+        // G4: pass the specific event ID so member dashboard can direct to that event
+        navigate('/member/dashboard', { state: { highlightEventId: event._id } });
       }
     } else {
       setIsInterceptModalOpen(true);
@@ -66,9 +74,17 @@ const EventDetailPage = () => {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center pt-24">
         <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-slate-900 mb-2">Event Not Found</h2>
-          <p className="text-slate-500 mb-6">The operation you are looking for does not exist or has been removed.</p>
-          <Link to="/events" className="flex items-center text-blue-600 font-bold hover:underline"><ArrowLeft className="w-4 h-4 mr-1" /> Back to Events</Link>
+          <h2 className="text-3xl font-extrabold text-slate-900 mb-2">
+            {fetchError === 'network' ? 'Connection Error' : 'Event Not Found'}
+          </h2>
+          <p className="text-slate-500 mb-6">
+            {fetchError === 'network'
+              ? 'Could not load the event. Please check your connection and try again.'
+              : 'The event you are looking for does not exist or has been removed.'}
+          </p>
+          <Link to="/events" className="flex items-center justify-center text-blue-600 font-bold hover:underline">
+            <ArrowLeft className="w-4 h-4 mr-1" /> Back to Events
+          </Link>
         </div>
       </div>
     );
