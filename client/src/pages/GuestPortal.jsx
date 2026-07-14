@@ -270,9 +270,9 @@ const GuestPortal = () => {
             {/* Coordinator Profile 1 */}
             <div className="flex flex-col items-center text-center group h-full">
               <div className="w-56 aspect-square rounded-2xl mb-6 overflow-hidden brutal-card brutal-cyan p-0 group-hover:rotate-3 transition-transform duration-200 shrink-0">
-                <img src="https://media.licdn.com/dms/image/v2/D5603AQFrj6FLnXzMVw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1731385903614?e=1784160000&v=beta&t=AXXXjNVEmhVfv1EOQ2bzdFQIV6sOPz8VGNaUw-AFfwk" alt="Dr. V. Chandrasekhar" className="w-full h-full object-cover border-b-[3px] border-slate-900" />
+                <img src="" alt="HemaLatha" className="w-full h-full object-cover border-b-[3px] border-slate-900" />
               </div>
-              <h4 className="text-3xl font-black text-slate-900 tracking-tight mb-4 uppercase">Dr. V. Chandrasekhar</h4>
+              <h4 className="text-3xl font-black text-slate-900 tracking-tight mb-4 uppercase">Smt. D.Hema Latha</h4>
               <div className="mt-auto flex flex-col items-center gap-1.5">
                 <p className="brutal-badge brutal-white px-3 py-1 text-slate-900 text-sm">Assistant Professor</p>
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Dept. of CSE</p>
@@ -282,9 +282,9 @@ const GuestPortal = () => {
             {/* Coordinator Profile 2 */}
             <div className="flex flex-col items-center text-center group h-full">
               <div className="w-56 aspect-square rounded-2xl mb-6 overflow-hidden brutal-card brutal-lime p-0 group-hover:-rotate-3 transition-transform duration-200 shrink-0">
-                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop" alt="Hemalatha" className="w-full h-full object-cover border-b-[3px] border-slate-900" />
+                <img src="" alt="HariKrishna" className="w-full h-full object-cover border-b-[3px] border-slate-900" />
               </div>
-              <h4 className="text-3xl font-black text-slate-900 tracking-tight mb-4 uppercase">Smt. Hemalatha</h4>
+              <h4 className="text-3xl font-black text-slate-900 tracking-tight mb-4 uppercase">Sri. K.Hari Krishna</h4>
               <div className="mt-auto flex flex-col items-center gap-1.5">
                 <p className="brutal-badge brutal-white px-3 py-1 text-slate-900 text-sm">Assistant Professor</p>
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Dept. of CSE</p>
@@ -294,12 +294,9 @@ const GuestPortal = () => {
             {/* Coordinator Profile 3 */}
             <div className="flex flex-col items-center text-center group h-full">
               <div className="w-56 aspect-square rounded-2xl mb-6 overflow-hidden brutal-card brutal-purple p-0 flex items-center justify-center bg-purple-100 group-hover:scale-105 transition-transform duration-200 shrink-0">
-                {/* Empty spot / placeholder avatar */}
-                <div className="w-full h-full bg-gradient-to-br from-purple-200 to-fuchsia-200 flex items-center justify-center border-b-[3px] border-slate-900">
-                  <span className="text-6xl font-black text-purple-900/40">HK</span>
-                </div>
+                <img src="" alt="Saroja" className="w-full h-full object-cover border-b-[3px] border-slate-900" />
               </div>
-              <h4 className="text-3xl font-black text-slate-900 tracking-tight mb-4 uppercase">Hari Krishna</h4>
+              <h4 className="text-3xl font-black text-slate-900 tracking-tight mb-4 uppercase">Smt. P.Saroja</h4>
               <div className="mt-auto flex flex-col items-center gap-1.5">
                 <p className="brutal-badge brutal-white px-3 py-1 text-slate-900 text-sm">Assistant Professor</p>
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Dept. of CSE</p>

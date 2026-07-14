@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import aceLogo from '../assets/ACE-Logo.svg';
 
 const NAV_LINKS = [
   { name: 'About', path: '/#about' },
@@ -51,21 +52,21 @@ const Navbar = () => {
 
   return (
     <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
-      <nav 
+      <nav
         className="clay-card clay-slate px-6 py-3 flex items-center justify-between w-full max-w-5xl"
         onMouseLeave={() => setHoveredPath(null)}
       >
-        
+
         {/* Brand */}
-        <Link to="/" className="text-2xl font-black tracking-tighter text-slate-950 flex items-center gap-1">
-          SRKR <span className="text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-lg shadow-sm border border-indigo-200">ACE</span>
+        <Link to="/" className="flex items-center">
+          <img src={aceLogo} alt="ACE Logo" className="h-8 w-auto object-contain scale-[1.75] origin-left ml-2" />
         </Link>
 
         {/* Links (Desktop) - True Magnetic Pill Nav */}
         <div className="hidden md:flex items-center gap-1">
           {NAV_LINKS.map((link) => {
             const isActive = hoveredPath === link.path || (hoveredPath === null && activePath === link.path);
-            
+
             return (
               <a
                 key={link.name}
