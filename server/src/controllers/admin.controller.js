@@ -534,7 +534,7 @@ export const getTreasurerEventStats = catchAsync(async (req, res, next) => {
     .lean();
   if (!event) return next(new AppError('Event not found.', 404));
 
-  const confirmedFilter = { eventId, status: 'confirmed' };
+  const confirmedFilter = { eventId: new mongoose.Types.ObjectId(eventId), status: 'confirmed' };
 
   const [
     totalConfirmed,

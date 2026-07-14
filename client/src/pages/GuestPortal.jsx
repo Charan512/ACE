@@ -60,7 +60,7 @@ const GuestPortal = () => {
             alt=""
             aria-hidden="true"
             className="absolute inset-0 w-full h-full object-cover object-top"
-            style={{ transform: 'scaleX(-1)' }}
+
           />
         </div>
 
@@ -345,32 +345,32 @@ const GuestPortal = () => {
       {isInterceptModalOpen && upcomingEvent && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full p-8 relative animate-in fade-in zoom-in duration-200">
-            <button 
+            <button
               onClick={() => setIsInterceptModalOpen(false)}
               className="absolute top-6 right-6 text-slate-400 hover:text-slate-900 transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
-            
+
             <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
               <Shield className="w-8 h-8 text-indigo-600" />
             </div>
-            
+
             <h3 className="text-2xl font-black text-slate-950 tracking-tight mb-2 uppercase">Registration Options</h3>
             <p className="text-slate-500 mb-8 font-medium">
               You are currently not logged in. ACE Members receive exclusive discounts on all operations.
             </p>
-            
+
             <div className="flex flex-col gap-4">
-              <Link 
-                to="/login" 
+              <Link
+                to="/login"
                 className="w-full brutal-btn brutal-blue py-4 flex justify-center items-center gap-2"
               >
                 <span>Login as ACE Member</span>
                 <span className="opacity-90 font-mono text-sm">(₹{upcomingEvent.memberFee})</span>
               </Link>
-              
-              <button 
+
+              <button
                 onClick={() => {
                   setIsInterceptModalOpen(false);
                   navigate(`/events/checkout/${upcomingEvent._id}?type=guest`);

@@ -15,9 +15,9 @@ const Toast = ({ toast }) => {
   if (!toast) return null;
   const ok = toast.type === 'success';
   return (
-    <div className={`fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 z-50 flex items-center gap-3 p-4 rounded-2xl glass-panel ${ok ? 'bg-indigo-500/20 border-indigo-400/50' : 'bg-rose-500/20 border-rose-400/50'}`}>
-      {ok ? <CheckCircle className="w-5 h-5 shrink-0 text-indigo-600" /> : <XCircle className="w-5 h-5 shrink-0 text-rose-600" />}
-      <p className={`text-sm font-bold uppercase tracking-widest leading-snug ${ok ? 'text-indigo-900' : 'text-rose-900'}`}>
+    <div className={`fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 z-50 flex items-center gap-3 p-4 rounded-2xl glass-panel ${ok ? 'bg-orange-500/20 border-orange-400/50' : 'bg-rose-500/20 border-rose-400/50'}`}>
+      {ok ? <CheckCircle className="w-5 h-5 shrink-0 text-orange-600" /> : <XCircle className="w-5 h-5 shrink-0 text-rose-600" />}
+      <p className={`text-sm font-bold uppercase tracking-widest leading-snug ${ok ? 'text-orange-200' : 'text-rose-900'}`}>
         {toast.message}
       </p>
     </div>
@@ -27,7 +27,7 @@ const Toast = ({ toast }) => {
 // ── Section Label ─────────────────────────────────────────────
 const SectionLabel = ({ children }) => (
   <div className="flex items-center gap-4 mb-6">
-    <p className="text-xs font-bold uppercase tracking-widest text-indigo-300 glass-badge px-4 py-2 rounded-full border border-indigo-500/20 bg-indigo-900/20">
+    <p className="text-xs font-bold uppercase tracking-widest text-amber-200 glass-badge px-4 py-2 rounded-full border border-orange-500/20 bg-orange-900/20">
       {children}
     </p>
     <div className="flex-1 h-[1px] bg-white/20" />
@@ -54,17 +54,17 @@ const SmartFastPassModal = ({ event, onSubmit, onCancel, isSubmitting }) => {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-      style={{ backgroundColor: 'rgba(15, 23, 42, 0.4)' }}
+      style={{ backgroundColor: 'rgba(15, 15, 15, 0.6)' }}
     >
-      <div className="bg-[#0B0F19]/90 backdrop-blur-xl border border-white/10 shadow-2xl w-full max-w-md p-0 overflow-hidden rounded-3xl">
+      <div className="bg-[#111214]/95 backdrop-blur-xl border border-white/10 shadow-2xl w-full max-w-md p-0 overflow-hidden rounded-3xl">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-white/10 bg-white/5">
           <div className="flex items-center gap-3">
-            <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-2">
-              <Zap className="w-4 h-4 text-indigo-400" />
+            <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-2">
+              <Zap className="w-4 h-4 text-orange-400" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest">Smart Fast-Pass</p>
+              <p className="text-[10px] font-bold text-amber-200 uppercase tracking-widest">Smart Fast-Pass</p>
               <p className="text-sm font-bold text-slate-100 leading-tight truncate max-w-[220px]">{event.title}</p>
             </div>
           </div>
@@ -75,7 +75,7 @@ const SmartFastPassModal = ({ event, onSubmit, onCancel, isSubmitting }) => {
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <p className="text-xs text-indigo-300 glass-badge bg-indigo-500/10 border-indigo-500/20 rounded-xl px-3 py-2 font-bold uppercase tracking-wider text-center">
+          <p className="text-xs text-amber-200 glass-badge bg-orange-500/10 border-orange-500/20 rounded-xl px-3 py-2 font-bold uppercase tracking-wider text-center">
             Required details missing from profile.
           </p>
 
@@ -91,7 +91,7 @@ const SmartFastPassModal = ({ event, onSubmit, onCancel, isSubmitting }) => {
                   value={responses[field.fieldName]}
                   onChange={e => handleChange(field.fieldName, e.target.value)}
                   required={field.required}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
                 >
                   <option value="">Select an option...</option>
                   {field.options?.map(opt => (
@@ -105,7 +105,7 @@ const SmartFastPassModal = ({ event, onSubmit, onCancel, isSubmitting }) => {
                       key={opt}
                       className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium cursor-pointer transition-all ${
                         responses[field.fieldName] === opt
-                          ? 'glass-btn bg-indigo-500/20 text-indigo-200 border-indigo-500/30 shadow-md'
+                          ? 'glass-btn bg-orange-500/20 text-orange-200 border-orange-500/30 shadow-md'
                           : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10'
                       }`}
                     >
@@ -128,7 +128,7 @@ const SmartFastPassModal = ({ event, onSubmit, onCancel, isSubmitting }) => {
                   onChange={e => handleChange(field.fieldName, e.target.value)}
                   required={field.required}
                   placeholder={`Enter ${field.fieldName}…`}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
                 />
               )}
             </div>
@@ -145,7 +145,7 @@ const SmartFastPassModal = ({ event, onSubmit, onCancel, isSubmitting }) => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 glass-btn bg-indigo-500/20 border-indigo-500/30 rounded-xl py-3 text-sm font-bold uppercase tracking-widest text-indigo-200 flex items-center justify-center gap-2 hover:bg-indigo-500/30"
+              className="flex-1 glass-btn bg-orange-500/20 border-orange-500/30 rounded-xl py-3 text-sm font-bold uppercase tracking-widest text-orange-200 flex items-center justify-center gap-2 hover:bg-orange-500/30"
             >
               {isSubmitting
                 ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -292,14 +292,22 @@ const MemberDashboard = () => {
   const certsAvailable = vaultEvents.filter(v => v.hasCertificate).length;
 
   return (
-    <div className="min-h-screen pb-10">
+    <div 
+      className="min-h-screen pb-10"
+      style={{
+        backgroundColor: '#111214',
+        backgroundImage: 'radial-gradient(rgba(200, 117, 51, 0.08) 1.5px, transparent 1.5px), radial-gradient(rgba(200, 117, 51, 0.05) 1.5px, transparent 1.5px)',
+        backgroundSize: '40px 40px',
+        backgroundPosition: '0 0, 20px 20px'
+      }}
+    >
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-12">
 
         {/* ── Welcome Hero ──────────────────────────────────── */}
         <section>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 bg-[#0B0F19]/80 backdrop-blur-xl border border-white/10 shadow-2xl p-6 sm:p-8 rounded-3xl relative overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 bg-[#111214]/80 backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(200,117,51,0.05)] p-6 sm:p-8 rounded-3xl relative overflow-hidden">
             <div className="relative z-10">
-              <div className="inline-block glass-badge bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-4">
+              <div className="inline-block glass-badge bg-orange-500/10 border border-orange-500/20 text-amber-200 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-4">
                 {greeting}
               </div>
               <h1 className="text-5xl sm:text-6xl md:text-7xl font-heading font-bold text-slate-100 tracking-tight leading-none flex">
@@ -311,12 +319,12 @@ const MemberDashboard = () => {
             {!loading && (
               <div className="flex sm:flex-col items-start sm:items-end gap-3 relative z-10 mt-6 sm:mt-0">
                 <span className="glass-badge bg-white/5 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest px-4 py-2 text-slate-200 inline-flex items-center shadow-sm">
-                  <CalendarDays className="w-4 h-4 mr-2 text-indigo-400" />
+                  <CalendarDays className="w-4 h-4 mr-2 text-orange-400" />
                   {vaultEvents.length} event{vaultEvents.length !== 1 ? 's' : ''}
                 </span>
                 {certsAvailable > 0 && (
-                  <span className="glass-badge bg-indigo-500/10 border border-indigo-400/30 rounded-full text-[10px] font-bold uppercase tracking-widest px-4 py-2 text-indigo-200 inline-flex items-center shadow-sm">
-                    <Award className="w-4 h-4 mr-2 text-indigo-400" />
+                  <span className="glass-badge bg-orange-500/10 border border-orange-400/30 rounded-full text-[10px] font-bold uppercase tracking-widest px-4 py-2 text-orange-200 inline-flex items-center shadow-sm">
+                    <Award className="w-4 h-4 mr-2 text-orange-400" />
                     {certsAvailable} cert{certsAvailable !== 1 ? 's' : ''}
                   </span>
                 )}
@@ -329,9 +337,9 @@ const MemberDashboard = () => {
             </div>
           </div>
 
-          {/* Profile incomplete warning — shows if ANY required field is missing */}
+          {/* Profile incomplete warning */}
           {!isProfileComplete() && (
-            <div className="bg-[#0B0F19]/80 backdrop-blur-xl border border-amber-500/30 rounded-3xl mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 p-5 sm:p-6 shadow-xl relative overflow-hidden">
+            <div className="bg-[#111214]/80 backdrop-blur-xl border border-amber-500/30 rounded-3xl mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 p-5 sm:p-6 shadow-[0_0_30px_rgba(245,158,11,0.05)] relative overflow-hidden">
               {/* Amber glow */}
               <div className="absolute inset-0 bg-amber-500/5 pointer-events-none" />
               <div className="flex items-center gap-4 relative z-10">
@@ -363,12 +371,12 @@ const MemberDashboard = () => {
           <SectionLabel>Available Events</SectionLabel>
           <div className="flex flex-col gap-6">
             {loading ? (
-              <div className="w-full flex items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
               </div>
             ) : upcomingEvents.length === 0 ? (
-              <div className="bg-[#0B0F19]/80 backdrop-blur-xl border border-white/10 rounded-3xl w-full flex flex-col items-center justify-center py-16 gap-4 text-slate-300">
-                <CalendarDays className="w-12 h-12 mb-2 text-indigo-400/80" />
+              <div className="bg-[#111214]/80 backdrop-blur-xl border border-white/10 rounded-3xl w-full flex flex-col items-center justify-center py-16 gap-4 text-slate-300">
+                <CalendarDays className="w-12 h-12 mb-2 text-orange-400/80" />
                 <p className="text-sm font-bold uppercase tracking-widest text-slate-400">No events available right now.</p>
               </div>
             ) : (
@@ -404,8 +412,8 @@ const MemberDashboard = () => {
 
       {/* ── Incomplete Profile Modal ───────────────────────── */}
       {showIncompleteModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md" style={{ backgroundColor: 'rgba(15,23,42,0.6)' }}>
-          <div className="bg-[#0B0F19]/90 backdrop-blur-xl border border-amber-500/30 max-w-sm w-full p-8 relative rounded-3xl shadow-2xl text-center">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md" style={{ backgroundColor: 'rgba(15,15,15,0.6)' }}>
+          <div className="bg-[#111214]/95 backdrop-blur-xl border border-amber-500/30 max-w-sm w-full p-8 relative rounded-3xl shadow-2xl text-center">
             <button 
               onClick={() => setShowIncompleteModal(false)}
               className="absolute top-4 right-4 glass-btn border-white/10 bg-white/5 p-2 rounded-xl text-slate-300 hover:text-white"

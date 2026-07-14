@@ -3,10 +3,10 @@ import { ShieldCheck, BookOpen, GraduationCap, Sparkles } from 'lucide-react';
 
 // ── Role accent labels ───────────────────────────────────────
 const ROLE_CONFIG = {
-  admin:  { label: 'System Admin', gradient: 'from-pink-400 to-rose-400' },
-  ebm:    { label: 'Exec. Body Member', gradient: 'from-purple-400 to-fuchsia-400' },
-  sbm:    { label: 'Senior Body Member', gradient: 'from-cyan-400 to-blue-400' },
-  member: { label: 'Member', gradient: 'from-indigo-400 to-purple-400' },
+  admin:  { label: 'System Admin', gradient: 'from-orange-400 to-amber-600' },
+  ebm:    { label: 'Executive Board', gradient: 'from-rose-400 to-orange-500' },
+  sbm:    { label: 'Senior Body Member', gradient: 'from-orange-400 to-amber-500' },
+  member: { label: 'Member', gradient: 'from-amber-400 to-yellow-500' },
 };
 
 const BRANCH_SHORT = {
@@ -26,8 +26,8 @@ const DigitalIdCard = ({ user }) => {
   const year   = user.year ? `Year ${user.year}` : null;
   
   return (
-    <div className="w-full relative z-10">
-      <div className="bg-[#0B0F19]/80 backdrop-blur-xl border border-white/10 shadow-2xl p-0 overflow-hidden rounded-3xl w-full">
+    <div className="w-full relative group perspective-1000">
+      <div className="bg-[#111214]/80 backdrop-blur-xl border border-white/10 shadow-[0_0_20px_rgba(200,117,51,0.05)] p-0 overflow-hidden rounded-3xl w-full">
         <div className="flex flex-col sm:flex-row relative z-10">
 
           {/* Left: QR Code Block */}
@@ -37,12 +37,12 @@ const DigitalIdCard = ({ user }) => {
                 value={user.aceId || user.email}
                 size={120}
                 bgColor="#ffffff"
-                fgColor="#0f172a" // Slate-900 for high contrast on white QR
+                fgColor="#0f172a"
                 level="H"
               />
             </div>
-            <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest mt-5 glass-badge bg-indigo-900/20 border border-indigo-500/20 px-3 py-1 rounded-full">
-              Scan to verify
+            <p className="text-[10px] font-bold text-amber-200 uppercase tracking-widest mt-5 glass-badge bg-orange-900/20 border border-orange-500/20 px-3 py-1 rounded-full">
+              ID: {user.aceId || 'PENDING'}
             </p>
           </div>
 
@@ -54,28 +54,28 @@ const DigitalIdCard = ({ user }) => {
 
             {/* Header */}
             <div className="flex items-start justify-between gap-3 mb-6 flex-wrap relative z-10">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300 mb-1 flex items-center gap-1.5">
-                  <Sparkles className="w-3 h-3 text-indigo-400" /> ACE
+              <div className="flex-1">
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-200 mb-1 flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3 text-orange-400" /> ACE
                 </p>
                 <h2 className="text-2xl sm:text-3xl font-black text-slate-100 tracking-tight leading-none">
                   {user.name}
                 </h2>
               </div>
-              <div className="glass-badge bg-white/5 border border-white/10 px-3 py-1.5 rounded-full flex items-center gap-1.5 shrink-0">
-                <ShieldCheck className={`w-4 h-4 text-indigo-400`} />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-200">
+              <div className="glass-badge bg-white/5 border border-white/10 px-3 py-1.5 rounded-full flex items-center gap-2 shrink-0">
+                <ShieldCheck className={`w-4 h-4 text-orange-400`} />
+                <span className={`text-[11px] font-black tracking-[0.2em] uppercase bg-gradient-to-r ${cfg.gradient} bg-clip-text text-transparent`}>
                   {cfg.label}
                 </span>
               </div>
             </div>
 
             {/* Data Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-6 pt-6 border-t border-white/40 relative z-10">
-              {/* Member ID */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-6 border-t border-white/10 relative z-10">
+              
               {user.aceId && (
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300/80 mb-1">
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col justify-center">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-amber-200/80 mb-1">
                     Member ID
                   </p>
                   <p className="font-mono font-bold text-lg text-slate-100">
@@ -84,21 +84,19 @@ const DigitalIdCard = ({ user }) => {
                 </div>
               )}
 
-              {/* Branch */}
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300/80 mb-1 flex items-center gap-1">
-                  <BookOpen className="w-3 h-3 text-indigo-400" /> Branch
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col justify-center">
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-200/80 mb-1 flex items-center gap-1">
+                  <BookOpen className="w-3 h-3 text-orange-400" /> Branch
                 </p>
                 <p className="font-black text-lg text-slate-100">
                   {branch}
                 </p>
               </div>
 
-              {/* Year */}
               {year && (
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300/80 mb-1 flex items-center gap-1">
-                    <GraduationCap className="w-3 h-3 text-indigo-400" /> Year
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col justify-center relative overflow-hidden">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-amber-200/80 mb-1 flex items-center gap-1">
+                    <GraduationCap className="w-3 h-3 text-orange-400" /> Year
                   </p>
                   <p className="font-mono font-bold text-lg text-slate-100">
                     {year}
@@ -107,8 +105,8 @@ const DigitalIdCard = ({ user }) => {
               )}
 
               {/* Email */}
-              <div className="col-span-2 sm:col-span-3">
-                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300/80 mb-1">
+              <div className="col-span-2 sm:col-span-3 bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col justify-center">
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-200/80 mb-1">
                   Email
                 </p>
                 <p className="font-mono font-medium text-sm text-slate-200 truncate bg-white/5 border border-white/10 shadow-sm px-3 py-1.5 rounded-xl inline-block max-w-full">

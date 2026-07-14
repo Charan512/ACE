@@ -29,7 +29,7 @@ const EventCard = ({ event, onRegister, isRegistering = false, isRegistered = fa
   const hasDiscount = memberFee < standardFee;
 
   return (
-    <div className="group bg-[#0B0F19]/80 backdrop-blur-xl border border-white/10 shadow-2xl flex flex-col h-full overflow-hidden rounded-3xl relative z-10">
+    <div className="group bg-[#111214]/80 backdrop-blur-xl border border-white/10 shadow-[0_0_20px_rgba(200,117,51,0.05)] flex flex-col h-full overflow-hidden rounded-3xl relative z-10 hover:border-orange-500/30 transition-all duration-300">
       {/* Card body */}
       <div className="flex flex-col flex-1 p-5 sm:p-6 gap-4">
 
@@ -38,10 +38,10 @@ const EventCard = ({ event, onRegister, isRegistering = false, isRegistered = fa
           <div className="flex flex-wrap gap-2">
             {tags.map((tag, idx) => (
               <span
-                key={idx}
-                className="inline-flex items-center gap-1 glass-badge bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-indigo-300"
+                key={tag}
+                className="inline-flex items-center gap-1 glass-badge bg-orange-500/10 border border-orange-500/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-amber-200"
               >
-                <Tag className="w-3 h-3 text-indigo-400" />
+                <Tag className="w-3 h-3 text-orange-400" />
                 {tag}
               </span>
             ))}
@@ -67,8 +67,8 @@ const EventCard = ({ event, onRegister, isRegistering = false, isRegistered = fa
 
         {/* Meta */}
         <div className="flex flex-col gap-2 text-xs font-semibold text-slate-300 pt-4 border-t border-white/10">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-indigo-400" />
+          <div className="flex items-center text-slate-300 text-sm font-bold uppercase tracking-widest">
+            <Calendar className="w-4 h-4 text-orange-400" />
             <span className="font-mono">{formattedDate}</span>
           </div>
           <div className="flex items-center gap-2">
@@ -92,8 +92,8 @@ const EventCard = ({ event, onRegister, isRegistering = false, isRegistered = fa
               </span>
             )}
           </div>
-          {hasDiscount && (
-            <span className="glass-badge bg-indigo-500/10 border border-indigo-500/20 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-300">
+          {event.memberFee !== undefined && (
+            <span className="glass-badge bg-orange-500/10 border border-orange-500/20 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-200">
               Member price
             </span>
           )}
@@ -105,12 +105,12 @@ const EventCard = ({ event, onRegister, isRegistering = false, isRegistered = fa
           disabled={!isRegistrationOpen || isRegistering || isRegistered}
           className={`w-full flex items-center justify-center gap-2 py-3 px-4 text-sm font-bold uppercase tracking-wider min-h-[48px] rounded-2xl ${
             isRegistered
-              ? 'bg-indigo-500/10 border border-indigo-500/20 opacity-80 cursor-not-allowed text-indigo-300'
+              ? 'bg-orange-500/10 border border-orange-500/20 opacity-80 cursor-not-allowed text-orange-300'
               : !isRegistrationOpen
               ? 'bg-white/5 text-slate-400 border border-white/10 opacity-60 cursor-not-allowed'
               : isRegistering
               ? 'glass-btn opacity-80 cursor-not-allowed text-slate-300'
-              : 'glass-btn bg-indigo-500/20 border-indigo-500/40 hover:bg-indigo-500/30 text-indigo-200'
+              : 'glass-btn bg-orange-500/20 border-orange-500/40 hover:bg-orange-500/30 text-orange-200'
           }`}
         >
           {isRegistered ? (

@@ -115,6 +115,8 @@ const handlePaymentSuccess = async (merchantTransactionId, phonePeTransactionId,
             email:           transaction.user.email || '',
             tier:            transaction.tier,
             status:          'confirmed',
+            paymentMethod:   'online',
+            amount:          transaction.amount / 100, // convert paise → INR
             transactionId:   transaction._id,
             // Pull from the Transaction document itself — this survives the PhonePe redirect
             customResponses: transaction.customResponses || {},
