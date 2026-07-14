@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   User, Phone, BookOpen, Hash, GraduationCap, Building,
   CheckCircle2, AlertTriangle, Loader2, ShieldCheck, UserCog,
-  ChevronDown, Camera, X, Edit3, Lock, Users
+  ChevronDown, Camera, X, Edit3, Lock, Users, Trash2
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import BlurText from '../components/react-bits/BlurText';
@@ -220,6 +220,23 @@ const OpsProfile = () => {
     }
   };
 
+  // ── Remove Profile Photo ────────────────────────────────────
+  const handleRemoveAvatar = async () => {
+    if (avatarUploading) return;
+    setAvatarUploading(true);
+    try {
+      const profileRes = await api.patch('/users/me', { profilePhoto: null });
+      updateProfile(profileRes.data.data.user);
+      setLocalAvatar('');
+      showToast('Profile photo removed.', 'success');
+    } catch (err) {
+      showToast('Failed to remove photo. Try again.', 'error');
+      console.error('[Avatar] Remove error:', err.message);
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
 
   // Calculate profile completion
@@ -290,30 +307,46 @@ const OpsProfile = () => {
           
           <div className="flex items-center justify-between relative z-10 gap-4">
             <div className="flex items-center gap-4 min-w-0">
-              {/* ── Clickable Avatar ────────────────────────── */}
-              <div className="relative shrink-0 group cursor-pointer" onClick={() => !avatarUploading && avatarInputRef.current?.click()}>
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shadow-lg border-3 border-white"
-                  style={{ border: '3px solid white' }}>
-                  {localAvatar ? (
-                    <img src={localAvatar} alt="avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-base font-mono font-black text-white"
-                      style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-                      {initials}
-                    </div>
-                  )}
+              {/* ── Avatar + Remove controls ────────────────── */}
+              <div className="flex flex-col items-center gap-2 shrink-0">
+                {/* Clickable avatar */}
+                <div className="relative group cursor-pointer" onClick={() => !avatarUploading && avatarInputRef.current?.click()}>
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shadow-lg"
+                    style={{ border: '3px solid rgba(255,255,255,0.15)' }}>
+                    {localAvatar ? (
+                      <img src={localAvatar} alt="avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-base font-mono font-black text-white"
+                        style={{ background: isEbm ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, #374151, #1f2937)' }}>
+                        {initials}
+                      </div>
+                    )}
+                  </div>
+                  {/* Upload/edit badge */}
+                  <div className={`absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#1A1A1A] border border-white/20 shadow-md flex items-center justify-center text-white group-hover:scale-110 transition-all z-20 ${isEbm ? 'hover:bg-amber-500/20' : 'hover:bg-white/10'}`}>
+                    {avatarUploading ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                    ) : localAvatar ? (
+                      <Edit3 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    ) : (
+                      <Camera className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    )}
+                  </div>
+                  <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                 </div>
-                {/* Always-visible badge indicator */}
-                <div className={`absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#1A1A1A] border border-white/20 shadow-md flex items-center justify-center text-white group-hover:scale-110 transition-all z-20 ${isEbm ? 'hover:bg-amber-500/20' : 'hover:bg-white/10'}`}>
-                  {avatarUploading ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
-                  ) : localAvatar ? (
-                    <Edit3 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  ) : (
-                    <Camera className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  )}
-                </div>
-                <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+
+                {/* Remove photo button — only visible when a photo exists */}
+                {localAvatar && !avatarUploading && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    title="Remove profile photo"
+                    className="flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider text-red-400/70 hover:text-red-400 transition-colors px-1.5 py-0.5 rounded-md hover:bg-red-500/10"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    Remove
+                  </button>
+                )}
               </div>
               <div className="min-w-0">
                 <p className="text-base sm:text-lg font-bold text-white truncate">{user?.name || '—'}</p>

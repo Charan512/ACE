@@ -128,9 +128,13 @@ const OpsLayout = () => {
                 <span className="text-[10px] font-mono font-bold tracking-widest text-neutral-500 uppercase">{roleLabel}</span>
               </div>
               <div
-                className="relative flex items-center justify-center w-10 h-10 rounded-xl font-mono font-black text-white shrink-0 shadow-inner group-hover:scale-[1.05] transition-transform duration-300 bg-[#1A1A1A] border border-white/10"
+                className="relative flex items-center justify-center w-10 h-10 rounded-xl font-mono font-black text-white shrink-0 shadow-inner group-hover:scale-[1.05] transition-transform duration-300 overflow-hidden bg-[#1A1A1A] border border-white/10"
               >
-                {initials}
+                {user?.profilePhoto ? (
+                  <img src={user.profilePhoto} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span>{initials}</span>
+                )}
                 <div className={`absolute inset-0 rounded-xl ring-2 ring-offset-2 ring-offset-[#0A0A0A] opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${isEbm ? 'ring-amber-500/40' : 'ring-white/20'}`} />
               </div>
             </NavLink>
@@ -179,8 +183,14 @@ const OpsLayout = () => {
           <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-8">
             {/* Profile */}
             <NavLink to="/ops/profile" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center text-center p-6 bg-[#151515] rounded-3xl border border-white/10 shadow-sm hover:border-white/20 transition-colors cursor-pointer">
-              <div className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-mono font-bold mb-4 shadow-md border ${isEbm ? 'text-amber-950 bg-gradient-to-br from-amber-300 to-amber-500 border-amber-400/30' : 'text-black bg-white border-white/10'}`}>
-                {initials}
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-mono font-bold mb-4 shadow-md border overflow-hidden ${isEbm ? 'border-amber-400/30' : 'border-white/10'}`}>
+                {user?.profilePhoto ? (
+                  <img src={user.profilePhoto} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <div className={`w-full h-full flex items-center justify-center text-2xl font-mono font-bold ${isEbm ? 'text-amber-950 bg-gradient-to-br from-amber-300 to-amber-500' : 'text-black bg-white'}`}>
+                    {initials}
+                  </div>
+                )}
               </div>
               <h2 className="text-lg font-bold text-white mb-1">{user?.name || 'Coordinator'}</h2>
               <span className="px-3 py-1 bg-white/10 text-white border border-white/20 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider">
