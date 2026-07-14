@@ -171,6 +171,7 @@ const MemberDashboard = () => {
   const [vaultEvents, setVaultEvents]       = useState([]);
   const [loading, setLoading]               = useState(true);
   const [registeringId, setRegisteringId]   = useState(null);
+  const [isSubmitting, setIsSubmitting]     = useState(false);
   const [toast, setToast]                   = useState(null);
 
   const [showIncompleteModal, setShowIncompleteModal] = useState(false);
@@ -199,33 +200,44 @@ const MemberDashboard = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
-  const fetchVault = useCallback(async () => {
+  const fetchVault = useCallback(async (signal) => {
     try {
-      const res = await api.get('/users/me/vault');
+      const res = await api.get('/users/me/vault', { signal });
       setVaultEvents(res.data.data || []);
     } catch (err) {
+      if (err.name === 'AbortError' || err.code === 'ERR_CANCELED' || err.name === 'CanceledError') return;
       console.error('[Dashboard] Vault fetch failed:', err.message);
     }
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const load = async () => {
       if (!user) return;
       try {
         setLoading(true);
-        const [eventsRes] = await Promise.all([api.get('/events'), fetchVault()]);
+        const [eventsRes] = await Promise.all([
+          api.get('/events', { signal: controller.signal }),
+          fetchVault(),
+        ]);
         setUpcomingEvents(eventsRes.data.data || []);
       } catch (err) {
+        // Silently ignore aborted requests (navigation / strict-mode double-mount)
+        if (err.name === 'AbortError' || err.code === 'ERR_CANCELED' || err.name === 'CanceledError') return;
         console.error('[Dashboard] Data fetch failed:', err.message);
         setUpcomingEvents([]);
       } finally {
         setLoading(false);
       }
     };
+
     load();
+    return () => controller.abort();
   }, [user, fetchVault]);
 
   const initiatePayment = async (eventId, customResponses = {}) => {
+    setIsSubmitting(true);
     try {
       const orderRes = await api.post('/payments/order', { eventId, customResponses });
       const { merchantTransactionId, redirectUrl } = orderRes.data.data;
@@ -235,6 +247,7 @@ const MemberDashboard = () => {
       console.error('[Dashboard] Registration error:', err.message);
       showToast(err.response?.data?.message || 'Registration failed. Please try again.', 'error');
       setRegisteringId(null);
+      setIsSubmitting(false);
     }
   };
 
@@ -249,11 +262,12 @@ const MemberDashboard = () => {
     const event = upcomingEvents.find(ev => ev._id === eventId);
     if (!event) return;
 
-    setRegisteringId(eventId);
-
     if (event.customFormFields?.length > 0) {
+      // Open the fast-pass modal first — registeringId is set only on submit
+      setRegisteringId(eventId);
       setFastPassEvent(event);
     } else {
+      setRegisteringId(eventId);
       initiatePayment(eventId, getProfilePayload());
     }
   };
@@ -384,7 +398,7 @@ const MemberDashboard = () => {
           event={fastPassEvent}
           onSubmit={handleModalSubmit}
           onCancel={handleModalCancel}
-          isSubmitting={!!registeringId}
+          isSubmitting={isSubmitting}
         />
       )}
 

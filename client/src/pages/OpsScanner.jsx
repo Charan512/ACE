@@ -159,8 +159,11 @@ const OpsScanner = () => {
   const navigate  = useNavigate();
   const { mode = 'verify', eventId, eventTitle } = location.state || {};
 
-  const scannerRef  = useRef(null);
-  const qrRef       = useRef(null);
+  const scannerRef    = useRef(null);
+  const qrRef         = useRef(null);
+  const startPromiseRef = useRef(null);
+  const isStartingRef   = useRef(false);  // guard against concurrent starts
+  const isMountedRef    = useRef(true);   // guard against setState after unmount
 
   const [scanning,   setScanning]   = useState(false);
   const [initError,  setInitError]  = useState(null);
@@ -171,29 +174,40 @@ const OpsScanner = () => {
 
   const isMode1 = mode === 'verify';
 
-  const startPromiseRef = useRef(null);
   // pendingRestart: set to true after overlay clears, triggering a DOM-safe restart via useEffect
   const [pendingRestart, setPendingRestart] = useState(false);
 
   // ── Start Scanner ────────────────────────────────────────
   const startScanner = useCallback(async () => {
-    if (!qrRef.current) return;
+    // Guard: skip if already starting OR DOM node isn't ready
+    if (!qrRef.current || isStartingRef.current) return;
+    isStartingRef.current = true;
     try {
       const html5QrCode = new Html5Qrcode('qr-reader');
       scannerRef.current = html5QrCode;
 
       startPromiseRef.current = html5QrCode.start(
         { facingMode: 'environment' },
-        { fps: 10 }, // Scanning entire frame, using our custom overlay for UI
+        { fps: 10 },
         onScanSuccess,
         () => {} // ignore decode failures
       );
-      
+
       await startPromiseRef.current;
-      setScanning(true);
+      if (isMountedRef.current) setScanning(true);
     } catch (err) {
-      setInitError('Camera access denied or not available.');
+      // NotAllowedError = camera permission denied by user/browser
+      const isPermissionDenied = err?.name === 'NotAllowedError' || err?.message?.includes('NotAllowedError');
+      if (isMountedRef.current) {
+        setInitError(
+          isPermissionDenied
+            ? 'Camera access was denied. Please allow camera permission in your browser settings and try again.'
+            : 'Camera is not available. Please check your device and try again.'
+        );
+      }
       console.error('[OpsScanner]', err);
+    } finally {
+      isStartingRef.current = false;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -228,8 +242,12 @@ const OpsScanner = () => {
   }, []);
 
   useEffect(() => {
+    isMountedRef.current = true;
     startScanner();
-    return () => { stopScanner(); };
+    return () => {
+      isMountedRef.current = false;
+      stopScanner();
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -238,8 +256,11 @@ const OpsScanner = () => {
   useEffect(() => {
     if (!pendingRestart) return;
     setPendingRestart(false);
+    if (!isMountedRef.current) return; // don't restart on unmounted component
     startScanner().catch(() => {
-      setInitError('Camera failed to restart. Please close and reopen the scanner.');
+      if (isMountedRef.current) {
+        setInitError('Camera failed to restart. Please close and reopen the scanner.');
+      }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingRestart]);

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, Users, Zap, Terminal, Code2, Globe, Shield, Cpu, ArrowRight, Star, X } from 'lucide-react';
 import api from '../lib/api';
 import useAuthStore from '../store/useAuthStore';
+import heroBg from '../assets/background.png';
 
 const GuestPortal = () => {
   const navigate = useNavigate();
@@ -48,20 +49,19 @@ const GuestPortal = () => {
     <div className="bg-[#FFFDF6] overflow-hidden font-sans min-h-screen text-slate-900">
 
       {/* ── 1. Neo-Brutalism Hero Section ── */}
-      <section className="min-h-[95vh] flex flex-col justify-center relative overflow-hidden">
-        {/* Background Grids / Shapes */}
+      <section
+        className="min-h-[95vh] flex flex-col justify-center relative overflow-hidden"
+      >
+        {/* Background layer: mirrored image only */}
         <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-          {/* Graph Paper Grid */}
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'linear-gradient(#0f172a 2px, transparent 2px), linear-gradient(90deg, #0f172a 2px, transparent 2px)',
-            backgroundSize: '48px 48px',
-            opacity: 0.06
-          }} />
-
-          {/* Plus / Cross Accents */}
-          <div className="absolute top-[45%] left-[25%] text-slate-900 opacity-20 font-black text-5xl select-none">+</div>
-          <div className="absolute top-[35%] right-[40%] text-slate-900 opacity-20 font-black text-4xl select-none">+</div>
-          <div className="absolute bottom-[25%] right-[25%] text-slate-900 opacity-10 font-black text-8xl select-none leading-none">*</div>
+          {/* Horizontally mirrored background illustration */}
+          <img
+            src={heroBg}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover object-top"
+            style={{ transform: 'scaleX(-1)' }}
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-7xl mx-auto px-6 w-full relative z-10 pt-32 pb-20">
@@ -88,7 +88,7 @@ const GuestPortal = () => {
 
             <h1 className="text-6xl sm:text-7xl md:text-8xl font-black tracking-tighter leading-[0.95] text-slate-900 mb-8 uppercase">
               Ignite <br className="hidden sm:block lg:hidden" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-indigo-600" style={{ WebkitTextStroke: '3px #0f172a', WebkitTextFillColor: '#fff' }}>Innovation.</span>
+              <span style={{ WebkitTextStroke: '3px #0f172a', WebkitTextFillColor: '#e11d48' }}>Innovation.</span>
             </h1>
 
             <p className="text-lg sm:text-2xl text-slate-800 font-bold max-w-lg leading-relaxed mb-10 border-l-4 border-slate-900 pl-4 ml-2">
