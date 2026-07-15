@@ -77,52 +77,56 @@ const handlePaymentSuccess = async (merchantTransactionId, phonePeTransactionId,
     transaction.webhookPayload     = rawPayload;
     await transaction.save({ session });
 
-    // Increment event registration count
-    await Event.findByIdAndUpdate(
-      transaction.event._id,
-      { $inc: { registeredCount: 1 } },
-      { session }
-    );
+    // Increment event registration count if applicable
+    if (transaction.event) {
+      await Event.findByIdAndUpdate(
+        transaction.event._id,
+        { $inc: { registeredCount: 1 } },
+        { session }
+      );
+    }
 
     // Push to member vault if this is a logged-in member
     if (transaction.user) {
-      await User.findByIdAndUpdate(
-        transaction.user._id,
-        {
-          $push: {
-            'history.attendedEvents': {
-              event:       transaction.event._id,
-              transaction: transaction._id,
-              attendedAt:  new Date(),
+      if (transaction.event) {
+        await User.findByIdAndUpdate(
+          transaction.user._id,
+          {
+            $push: {
+              'history.attendedEvents': {
+                event:       transaction.event._id,
+                transaction: transaction._id,
+                attendedAt:  new Date(),
+              },
             },
           },
-        },
-        { session }
-      );
-
-      // Create confirmed Registration record (idempotent)
-      const existingReg = await Registration.findOne({
-        eventId: transaction.event._id,
-        userId:  transaction.user._id,
-      }).session(session);
-
-      if (!existingReg) {
-        await Registration.create(
-          [{
-            eventId:         transaction.event._id,
-            userId:          transaction.user._id,
-            name:            transaction.user.name || 'ACE Member',
-            email:           transaction.user.email || '',
-            tier:            transaction.tier,
-            status:          'confirmed',
-            paymentMethod:   'online',
-            amount:          transaction.amount / 100, // convert paise → INR
-            transactionId:   transaction._id,
-            // Pull from the Transaction document itself — this survives the PhonePe redirect
-            customResponses: transaction.customResponses || {},
-          }],
           { session }
         );
+
+        // Create confirmed Registration record (idempotent)
+        const existingReg = await Registration.findOne({
+          eventId: transaction.event._id,
+          userId:  transaction.user._id,
+        }).session(session);
+
+        if (!existingReg) {
+          await Registration.create(
+            [{
+              eventId:         transaction.event._id,
+              userId:          transaction.user._id,
+              name:            transaction.user.name || 'ACE Member',
+              email:           transaction.user.email || '',
+              tier:            transaction.tier,
+              status:          'confirmed',
+              paymentMethod:   'online',
+              amount:          transaction.amount / 100, // convert paise → INR
+              transactionId:   transaction._id,
+              // Pull from the Transaction document itself — this survives the PhonePe redirect
+              customResponses: transaction.customResponses || {},
+            }],
+            { session }
+          );
+        }
       }
     } else if (!transaction.user && notes.purpose === 'event_registration') {
       // BUG 4 FIX: Guest event ticket purchase — transaction.user is null.
@@ -187,6 +191,12 @@ const handlePaymentSuccess = async (merchantTransactionId, phonePeTransactionId,
           requiresPasswordChange:  true,
           isEmailVerified:         true,
           membershipPaymentMethod: 'online',
+          phone:                   transaction.customResponses?.phone,
+          gender:                  transaction.customResponses?.gender,
+          branch:                  transaction.customResponses?.branch,
+          year:                    transaction.customResponses?.year,
+          section:                 transaction.customResponses?.section,
+          registrationNumber:      transaction.customResponses?.collegeId,
         });
         await newUser.save({ session });
 
@@ -370,7 +380,13 @@ export const createOrder = catchAsync(async (req, res, next) => {
  * Returns redirectUrl — user is sent to PhonePe's hosted page.
  */
 export const createMembershipOrder = catchAsync(async (req, res, next) => {
-  const { email, name, eventId, phone, customResponses } = req.body;
+  const { email, name, eventId, phone, gender, branch, year, section, collegeId, customResponses } = req.body;
+
+  // Package all extra registration fields into customResponses so they survive the PhonePe redirect
+  const registrationData = {
+    ...customResponses,
+    phone, gender, branch, year, section, collegeId
+  };
 
   if (!email || !name) {
     return next(new AppError('Email and name are required for membership registration.', 400));
@@ -407,6 +423,7 @@ export const createMembershipOrder = catchAsync(async (req, res, next) => {
       amount:      totalAmount,
       tier:        'member',
       status:      'created',
+      customResponses: registrationData,
     });
 
     return res.status(201).json({
@@ -457,6 +474,7 @@ export const createMembershipOrder = catchAsync(async (req, res, next) => {
     amount:      totalAmount,
     tier:        'member',
     status:      'created',
+    customResponses: registrationData,
   });
 
   res.status(201).json({

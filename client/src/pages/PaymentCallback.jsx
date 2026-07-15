@@ -102,14 +102,23 @@ const PaymentCallback = () => {
               <CheckCircle2 className="w-10 h-10 text-green-600" />
             </div>
             <h2 className="text-3xl font-black text-slate-900 mb-2">Payment Successful!</h2>
-            <p className="text-slate-600 mb-8 mt-2">
-              Your transaction was completed successfully. Your account has been updated.
-            </p>
+            
+            {!isAuthenticated ? (
+              <div className="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-xl my-6 text-sm font-medium text-left shadow-sm">
+                <strong className="block text-base mb-1">Important Next Steps:</strong>
+                Please check your email inbox (and spam folder) for your official <strong>ACE ID</strong> and <strong>temporary password</strong>. You will need these to log into the portal.
+              </div>
+            ) : (
+              <p className="text-slate-600 mb-8 mt-2">
+                Your transaction was completed successfully. Your account has been updated.
+              </p>
+            )}
+
             <button 
               onClick={() => navigate(isAuthenticated ? '/member/dashboard' : '/login')}
               className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200"
             >
-              Continue to Portal
+              {isAuthenticated ? 'Continue to Portal' : 'Proceed to Login'}
             </button>
           </div>
         )}

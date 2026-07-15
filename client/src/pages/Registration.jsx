@@ -35,6 +35,18 @@ const Registration = () => {
 
   const navigate = useNavigate();
 
+  // Reset loading state if user navigates "Back" from the payment gateway / callback page
+  // Browsers use bfcache (Back-Forward Cache) which freezes the state (isLoading = true)
+  useEffect(() => {
+    const handlePageShow = (e) => {
+      if (e.persisted) {
+        setIsLoading(false);
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };

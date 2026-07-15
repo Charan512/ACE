@@ -75,9 +75,21 @@ const emailWorker = new Worker(
           fee_paid: feePaid ?? settings.membershipFee,
         };
 
+        const defaultBody = `
+          <div style="font-family: system-ui, -apple-system, sans-serif; padding: 30px; max-width: 600px; margin: 0 auto; background: #0f172a; border-radius: 16px; border: 1px solid #1e293b;">
+            <h2 style="color: #f8fafc; margin-top: 0;">Welcome to the Association of Computer Engineers!</h2>
+            <p style="color: #94a3b8; font-size: 16px; line-height: 1.6;">Dear <strong style="color: #f1f5f9;">{{name}}</strong>,</p>
+            <p style="color: #94a3b8; font-size: 16px; line-height: 1.6;">Your ACE Membership has been officially confirmed and activated. Your unique ACE Member ID is:</p>
+            <div style="background: #1e293b; padding: 16px; border-radius: 8px; text-align: center; margin: 24px 0;">
+              <code style="color: #38bdf8; font-size: 24px; font-weight: bold; letter-spacing: 2px;">{{ace_id}}</code>
+            </div>
+            <p style="color: #94a3b8; font-size: 14px; margin-bottom: 0;">You will receive a separate email shortly with your login credentials for the Member Portal.</p>
+          </div>
+        `;
+
         const subject = renderAdminTemplate(template?.subject || 'Welcome to ACE — {{name}}', vars);
         const body    = renderAdminTemplate(
-          template?.body || '<p>Dear {{name}}, your ACE Membership is confirmed. Your ID is <strong>{{ace_id}}</strong>.</p>',
+          template?.body || defaultBody,
           vars
         );
 

@@ -41,7 +41,9 @@ const sendEmail = async ({ to, subject, html, text, attachments }) => {
   }
 
   // Parse sender from "Name <email@domain.com>" or just "email@domain.com"
-  const fromEnv = process.env.EMAIL_FROM || "noreply@example.com";
+  // Note: Hardcoding this temporarily because nodemon caches .env on restarts
+  // and dotenv doesn't override existing environment variables.
+  const fromEnv = "SRKR ACE <srkraceofficial@gmail.com>";
   const match = fromEnv.match(/(.*?)\s*<(.+)>/);
   if (match) {
     sendSmtpEmail.sender = { name: match[1].replace(/"/g, '').trim(), email: match[2].trim() };
@@ -69,7 +71,8 @@ const sendEmail = async ({ to, subject, html, text, attachments }) => {
   try {
     const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`[Mailer] Email sent to ${to} — MessageID: ${data.messageId}`);
+      const msgId = data?.messageId || data?.body?.messageId || JSON.stringify(data);
+      console.log(`[Mailer] Email sent to ${to} — MessageID: ${msgId}`);
     }
     return data;
   } catch (error) {
