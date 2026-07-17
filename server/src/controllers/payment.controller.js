@@ -209,7 +209,7 @@ const handlePaymentSuccess = async (merchantTransactionId, phonePeTransactionId,
         await emailQueue.add('membershipConfirmationEmail', {
           userId:   newUser._id.toString(),
           aceId,
-          feePaid:  transaction.amount, // Amount in INR (stored as INR in Transaction)
+          feePaid:  transaction.amount / 100, // Convert paise → INR for email display
         });
         await lateConverterQueue.add('migrate', { userId: newUser._id, email: notes.guestEmail });
 
@@ -534,12 +534,30 @@ export const verifyAndConfirm = catchAsync(async (req, res, next) => {
   const phonePeTxnId   = statusData.data?.transactionId;
 
   if (code === 'PAYMENT_SUCCESS') {
+    // BUG-04 FIX: Derive payment purpose from our own Transaction record —
+    // never trust PhonePe's webhook payload for this. Membership purchases
+    // have transaction.user=null and transaction.event=null; guest event
+    // tickets have transaction.user=null but transaction.event is set.
+    const txn = await Transaction.findOne({ merchantTransactionId });
+    let purposeNotes = {};
+    if (txn) {
+      if (txn.guestEmail && !txn.event) {
+        // No event linked — this is a membership purchase
+        purposeNotes = {
+          purpose:    'membership',
+          guestEmail: txn.guestEmail,
+          guestName:  txn.guestName,
+        };
+      } else {
+        purposeNotes = { purpose: 'event_registration' };
+      }
+    }
     // Process if not already done (idempotent)
     await handlePaymentSuccess(
       merchantTransactionId,
       phonePeTxnId,
       statusData,
-      statusData.data?.merchantOrderId ? { purpose: 'event_registration' } : {}
+      purposeNotes
     );
     return res.status(200).json({ success: true, data: { status: 'SUCCESS' } });
   }
@@ -561,19 +579,37 @@ export const verifyAndConfirm = catchAsync(async (req, res, next) => {
  * PhonePe POSTs a JSON body to this URL with an X-VERIFY header.
  * We verify the checksum before any database operations.
  * This is the primary payment confirmation mechanism.
+ *
+ * SEC-02 FIX: express.raw() is mounted for this route in index.js so req.body
+ * is a Buffer containing the exact bytes PhonePe signed. We compute HMAC
+ * against these raw bytes, then parse them separately for business logic.
  */
 export const handleWebhook = async (req, res) => {
-  const xVerify       = req.headers['x-verify'];
-  const rawBodyString = JSON.stringify(req.body); // PhonePe sends regular JSON
+  const xVerify = req.headers['x-verify'];
+
+  // SEC-02 FIX: Use the raw Buffer from express.raw() for checksum verification.
+  // JSON.stringify(req.body) would re-serialize a parsed object and could differ
+  // from PhonePe's original bytes (key order, whitespace, unicode escaping).
+  const rawBodyString = Buffer.isBuffer(req.body)
+    ? req.body.toString('utf8')
+    : JSON.stringify(req.body); // Fallback for environments that don't use express.raw()
 
   // ── Verify X-VERIFY checksum ─────────────────────────────────
-  if (!verifyWebhookChecksum(rawBodyString, xVerify)) {
+  if (!xVerify || !verifyWebhookChecksum(rawBodyString, xVerify)) {
     console.error('[PhonePe Webhook] Invalid X-VERIFY — request rejected.');
     return res.status(400).json({ success: false, message: 'Invalid signature.' });
   }
 
-  const payload = req.body;
-  const code    = payload.code; // PAYMENT_IS_INSTRUMENTED, PAYMENT_ERROR, etc.
+  // Parse body for business logic (may already be parsed by express.json fallback)
+  let payload;
+  try {
+    payload = Buffer.isBuffer(req.body) ? JSON.parse(rawBodyString) : req.body;
+  } catch {
+    console.error('[PhonePe Webhook] Body is not valid JSON.');
+    return res.status(400).json({ success: false, message: 'Invalid payload.' });
+  }
+
+  const code = payload.code; // PAYMENT_IS_INSTRUMENTED, PAYMENT_ERROR, etc.
 
   console.log(`[PhonePe Webhook] Verified. Code: ${code}`);
 
@@ -593,9 +629,27 @@ export const handleWebhook = async (req, res) => {
 
   try {
     if (code === 'PAYMENT_IS_INSTRUMENTED' || code === 'PAYMENT_SUCCESS') {
-      const notes = responseData.merchantOrderId?.includes('mem')
-        ? { purpose: 'membership', guestEmail: responseData.guestEmail, guestName: responseData.guestName }
-        : { purpose: 'event_registration' };
+      // BUG-03 FIX: Derive payment purpose from our own Transaction record —
+      // not from PhonePe's webhook payload (whose merchantOrderId we don't control,
+      // and whose response never contains our guestEmail/guestName fields).
+      // Logic: membership purchase → transaction.user=null & transaction.event=null.
+      //        guest event ticket   → transaction.user=null & transaction.event set.
+      //        member registration  → transaction.user set.
+      let notes = {};
+      if (merchantTransactionId) {
+        const txn = await Transaction.findOne({ merchantTransactionId });
+        if (txn) {
+          if (txn.guestEmail && !txn.event) {
+            notes = {
+              purpose:    'membership',
+              guestEmail: txn.guestEmail,
+              guestName:  txn.guestName,
+            };
+          } else {
+            notes = { purpose: 'event_registration' };
+          }
+        }
+      }
 
       await handlePaymentSuccess(merchantTransactionId, phonePeTxnId, payload, notes);
     } else if (code === 'PAYMENT_ERROR' || code === 'PAYMENT_CANCELLED') {

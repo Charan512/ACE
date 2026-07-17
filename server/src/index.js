@@ -16,9 +16,11 @@ import rateLimit from 'express-rate-limit';
 // Express. On Render's free tier there is only one web service — a separate
 // worker process is not available without paying for a Background Worker.
 // All workers are async/event-driven and never block the HTTP event loop.
-import emailWorker         from './workers/emailWorker.js';
-import lateConverterWorker from './workers/lateConverterWorker.js';
-import certificateWorker   from './workers/certificateWorker.js';
+import emailWorker           from './workers/emailWorker.js';
+import lateConverterWorker   from './workers/lateConverterWorker.js';
+import certificateWorker     from './workers/certificateWorker.js';
+import eventDeactivateWorker from './workers/eventDeactivateWorker.js';
+import treasurerWorker       from './workers/treasurerWorker.js';
 
 // Route imports (activated progressively per phase)
 import paymentRoutes from './routes/payment.routes.js';
@@ -69,7 +71,12 @@ const globalLimiter = rateLimit({
 app.use('/api', globalLimiter);
 
 // ── Body Parsers ─────────────────────────────────────────────
-// PhonePe webhooks are processed using standard JSON payload parsing.
+// SEC-02 FIX: The PhonePe webhook MUST receive the raw body bytes so the
+// HMAC-SHA256 X-VERIFY checksum can be computed against the exact bytes
+// PhonePe signed — NOT a re-serialized JSON object. express.raw() is
+// registered for /api/payments/webhook BEFORE express.json() so that
+// once express.raw() sets req._body=true, express.json() skips the route.
+app.use('/api/payments/webhook', express.raw({ type: '*/*' }));
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
@@ -164,9 +171,11 @@ const startServer = async () => {
         // Workers are already imported above; importing them registers their
         // BullMQ Worker instances. Log confirmation here.
         const workerNames = [
-          emailWorker.name         || 'ace-email',
-          lateConverterWorker.name || 'ace-late-converter',
-          certificateWorker.name   || 'ace-certificates',
+          emailWorker.name           || 'ace-email',
+          lateConverterWorker.name   || 'ace-late-converter',
+          certificateWorker.name     || 'ace-certificates',
+          eventDeactivateWorker.name || 'ace-event-deactivate',
+          treasurerWorker.name       || 'ace-treasurer',
         ];
         console.log(`[Workers] Active queues: ${workerNames.join(', ')}`);
       } catch (workerErr) {
@@ -185,10 +194,14 @@ const startServer = async () => {
 // Close workers cleanly to avoid leaving jobs in an active/stalled state.
 const shutdown = async (signal) => {
   console.log(`\n[Server] ${signal} received — graceful shutdown initiated.`);
+  // BUG-07 FIX: eventDeactivateWorker is now included so its delayed jobs
+  // are cleanly paused on Render restart — no orphaned active jobs.
   await Promise.allSettled([
     emailWorker.close(),
     lateConverterWorker.close(),
     certificateWorker.close(),
+    eventDeactivateWorker.close(),
+    treasurerWorker.close(),
   ]);
   console.log('[Workers] All workers closed.');
   process.exit(0);

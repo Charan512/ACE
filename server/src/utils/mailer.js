@@ -13,15 +13,20 @@ const sendEmail = async ({ to, subject, html, text, attachments }) => {
     throw new Error('[Mailer] BREVO_API_KEY is not defined in environment variables.');
   }
 
-  // Parse sender from "Name <email@domain.com>" or just "email@domain.com"
-  // Note: Hardcoding this temporarily because nodemon caches .env on restarts
-  // and dotenv doesn't override existing environment variables.
-  const fromEnv = "SRKR ACE <srkraceofficial@gmail.com>";
+  // Parse sender from EMAIL_FROM env var.
+  // Expected format: "Org Name <sender@domain.com>" or just "sender@domain.com"
+  const fromEnv = process.env.EMAIL_FROM;
+  if (!fromEnv) {
+    throw new Error('[Mailer] EMAIL_FROM is not defined in environment variables.');
+  }
+
   let sender = { email: fromEnv.trim() };
-  
-  const match = fromEnv.match(/(.*?)\s*<(.+)>/);
+  const match = fromEnv.match(/^([^<]*)<([^>]+)>$/);
   if (match) {
-    sender = { name: match[1].replace(/"/g, '').trim(), email: match[2].trim() };
+    // Strip quotes and limit name length to prevent header injection
+    const parsedName  = match[1].replace(/"/g, '').trim().substring(0, 100);
+    const parsedEmail = match[2].trim();
+    sender = { name: parsedName, email: parsedEmail };
   }
 
   const payload = {

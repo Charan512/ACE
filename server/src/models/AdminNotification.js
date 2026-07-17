@@ -39,6 +39,7 @@ const adminNotificationSchema = new mongoose.Schema(
     amount:           { type: Number, default: 0 },
     paymentMethod:    { type: String, default: 'cash' },
     isRead:           { type: Boolean, default: false },
+    isNotified:       { type: Boolean, default: false }, // For Treasurer digest
   },
   { timestamps: true, versionKey: false }
 );

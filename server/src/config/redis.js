@@ -16,9 +16,15 @@ function buildRedisUrl() {
   const restUrl   = process.env.UPSTASH_REDIS_REST_URL;
   const restToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
+  // Fallback to local Redis for development if Upstash variables are commented out
   if (!restUrl || !restToken) {
-    console.error('[Redis] FATAL: UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set in .env');
-    process.exit(1);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[Redis] Using local Redis for development (redis://127.0.0.1:6379)`);
+      return `redis://127.0.0.1:6379`;
+    } else {
+      console.error('[Redis] FATAL: UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set in production .env');
+      process.exit(1);
+    }
   }
 
   const host = restUrl.replace(/^https?:\/\//, '');

@@ -4,7 +4,8 @@ import Registration from '../models/Registration.js';
 import User from '../models/User.js';
 import catchAsync from '../utils/catchAsync.js';
 import AppError from '../utils/appError.js';
-import { emailQueue } from '../queues/index.js';
+import { emailQueue, treasurerQueue } from '../queues/index.js';
+import redis from '../config/redis.js';
 
 /**
  * Helper: create an AdminNotification for a cash registration.
@@ -13,6 +14,46 @@ import { emailQueue } from '../queues/index.js';
 const createCashNotification = async (payload) => {
   const AdminNotification = (await import('../models/AdminNotification.js')).default;
   await AdminNotification.create(payload);
+
+  try {
+    await triggerTreasurerDigest();
+  } catch (err) {
+    console.error('[TreasurerDigest] Failed to trigger digest job:', err);
+  }
+};
+
+/**
+ * Implements the 2.5-hour debounce (10-hour ceiling) Treasurer Digest logic.
+ */
+const triggerTreasurerDigest = async () => {
+  const now = Date.now();
+  const DEBOUNCE_MS = 2.5 * 60 * 60 * 1000;
+  const CEILING_MS = 10 * 60 * 60 * 1000;
+
+  let firstTriggerStr = await redis.get('treasurer_digest_first_trigger');
+  let firstTrigger = firstTriggerStr ? parseInt(firstTriggerStr, 10) : now;
+
+  if (!firstTriggerStr) {
+    await redis.set('treasurer_digest_first_trigger', now);
+  }
+
+  let delay = DEBOUNCE_MS;
+  // If delaying by another 2.5h exceeds the 10h ceiling, cap the delay
+  if (now + delay - firstTrigger > CEILING_MS) {
+    delay = Math.max(0, firstTrigger + CEILING_MS - now);
+  }
+
+  // Remove existing delayed job if it exists so we can push it back by another 2.5h
+  const existingJob = await treasurerQueue.getJob('treasurer-digest');
+  if (existingJob) {
+    const state = await existingJob.getState();
+    if (state === 'delayed' || state === 'waiting') {
+      await existingJob.remove();
+    }
+  }
+
+  // Enqueue the new debounced job
+  await treasurerQueue.add('sendDigest', {}, { jobId: 'treasurer-digest', delay });
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -217,28 +258,52 @@ export const cashRegisterGuest = catchAsync(async (req, res, next) => {
     return next(new AppError(`${email} is already registered for this event.`, 409));
   }
 
-  // ── 3. Create Registration directly as confirmed ──────────
-  const registration = await Registration.create({
-    eventId,
-    userId:           null,
-    guestName:        name,
-    guestEmail:       email.toLowerCase(),
-    name,
-    email:            email.toLowerCase(),
-    phone:            phone || null,
-    tier:             'non_member',
-    status:           'confirmed',
-    paymentMethod:    'cash',
-    amount:           event.standardFee,
-    cashRegisteredBy: req.user._id,
-    customResponses:  customResponses || {},
-  });
+  // ── 3. Create Registration + Event $inc atomically ────────
+  // BUG-01 FIX: Both writes are wrapped in a session so a partial failure
+  // (e.g. Registration created but Event $inc fails) cannot leave registeredCount
+  // permanently out of sync.
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  // Increment event count (not in a session — single op, acceptable)
-  await Event.findByIdAndUpdate(eventId, { $inc: { registeredCount: 1 } });
+  let registration;
+  try {
+    [registration] = await Registration.create(
+      [{
+        eventId,
+        userId:           null,
+        guestName:        name,
+        guestEmail:       email.toLowerCase(),
+        name,
+        email:            email.toLowerCase(),
+        phone:            phone || null,
+        tier:             'non_member',
+        status:           'confirmed',
+        paymentMethod:    'cash',
+        amount:           event.standardFee,
+        cashRegisteredBy: req.user._id,
+        customResponses:  customResponses || {},
+      }],
+      { session }
+    );
+
+    await Event.findByIdAndUpdate(
+      eventId,
+      { $inc: { registeredCount: 1 } },
+      { session }
+    );
+
+    await session.commitTransaction();
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    session.endSession();
+  }
 
   // ── 4. Enqueue QR confirmation email ──────────────────────
-  // Same QR flow as online guest registration.
+  // Fired AFTER the transaction commits — safe because BullMQ is durable.
+  // FIX: Added missing `eventId` so the emailWorker can load the admin-configured
+  // confirmation email template for this specific event.
   await emailQueue.add('guestQrEmail', {
     registrationId: registration._id.toString(),
     guestEmail:     email.toLowerCase(),
@@ -247,6 +312,7 @@ export const cashRegisterGuest = catchAsync(async (req, res, next) => {
     eventDate:      event.eventDate,
     venue:          event.venue || '',
     paymentMethod:  'cash',
+    eventId:        eventId,
   });
 
   // ── 5. Write admin notification ───────────────────────────
