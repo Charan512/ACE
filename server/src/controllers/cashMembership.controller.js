@@ -88,7 +88,6 @@ export const cashRegisterMembership = catchAsync(async (req, res, next) => {
           aceId,
           role:                    'member',
           requiresPasswordChange:  true,
-          isEmailVerified:         true,
           phone:                   phone   || undefined,
           branch:                  branch  || undefined,
           year:                    year    ? Number(year) : undefined,

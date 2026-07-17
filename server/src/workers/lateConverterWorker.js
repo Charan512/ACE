@@ -119,6 +119,10 @@ const lateConverterWorker = new Worker(
   {
     connection:  createRedisConnection(),
     concurrency: 2, // Low concurrency — each job does multiple DB writes
+    settings: {
+      stalledInterval: 300000,
+      maxStalledCount: 1,
+    }
   }
 );
 

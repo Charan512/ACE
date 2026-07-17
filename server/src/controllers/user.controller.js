@@ -48,7 +48,7 @@ export const getMyVault = catchAsync(async (req, res, next) => {
         : null,
       hasCertificate,
       resources:     (entry.event.resources || []),
-      hasResources:  !!(entry.event.certificatesReleased && entry.event.resources?.length > 0),
+      hasResources:  !!(entry.event.resources?.length > 0),
       attendedAt:    entry.attendedAt,
       transactionId: entry.transaction,
     };
@@ -67,7 +67,13 @@ export const getMyVault = catchAsync(async (req, res, next) => {
  * @access  Private
  */
 export const updateMe = catchAsync(async (req, res, next) => {
-  const { name, phone, branch, year, section, registrationNumber, gender, domain, designation, profilePhoto, linkedin } = req.body;
+  // NOTE: These fields are intentionally excluded from self-service updates:
+  //   • domain        — SBM/EBM-only; set by admin via role promotion
+  //   • designation   — e.g. 'Treasurer'; set by admin only. Allowing self-write
+  //                     would let any SBM escalate their own Treasurer access.
+  //   • registrationNumber — set at membership creation; should not change
+  //   • role, aceId, email — never self-writable
+  const { name, phone, branch, year, section, gender, profilePhoto, linkedin } = req.body;
 
   const updates = {};
   if (name !== undefined) updates.name = name;
@@ -75,10 +81,7 @@ export const updateMe = catchAsync(async (req, res, next) => {
   if (branch !== undefined) updates.branch = branch;
   if (year !== undefined) updates.year = year;
   if (section !== undefined) updates.section = section;
-  if (registrationNumber !== undefined) updates.registrationNumber = registrationNumber;
   if (gender !== undefined) updates.gender = gender;
-  if (domain !== undefined) updates.domain = domain;
-  if (designation !== undefined) updates.designation = designation;
   if (profilePhoto !== undefined) updates.profilePhoto = profilePhoto;
   if (linkedin !== undefined) updates.linkedin = linkedin;
 

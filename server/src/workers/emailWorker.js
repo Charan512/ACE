@@ -346,6 +346,10 @@ const emailWorker = new Worker(
   {
     connection: createRedisConnection(),
     concurrency: 5,
+    settings: {
+      stalledInterval: 300000, // 5 minutes (saves Upstash quotas)
+      maxStalledCount: 1,
+    }
   }
 );
 

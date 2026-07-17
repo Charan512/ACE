@@ -133,6 +133,10 @@ const certificateWorker = new Worker(
   {
     connection: createRedisConnection(),
     concurrency: 1, // Serial processing — canvas renders are CPU/memory intensive
+    settings: {
+      stalledInterval: 300000,
+      maxStalledCount: 1,
+    }
   }
 );
 

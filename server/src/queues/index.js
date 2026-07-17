@@ -10,4 +10,3 @@ export { default as emailQueue } from './emailQueue.js';
 export { default as lateConverterQueue } from './lateConverterQueue.js';
 export { default as certificateQueue } from './certificateQueue.js';
 export { default as eventDeactivateQueue } from './eventDeactivateQueue.js';
-export { default as treasurerQueue } from './treasurerQueue.js';

@@ -20,7 +20,7 @@ import emailWorker           from './workers/emailWorker.js';
 import lateConverterWorker   from './workers/lateConverterWorker.js';
 import certificateWorker     from './workers/certificateWorker.js';
 import eventDeactivateWorker from './workers/eventDeactivateWorker.js';
-import treasurerWorker       from './workers/treasurerWorker.js';
+
 
 // Route imports (activated progressively per phase)
 import paymentRoutes from './routes/payment.routes.js';
@@ -175,7 +175,6 @@ const startServer = async () => {
           lateConverterWorker.name   || 'ace-late-converter',
           certificateWorker.name     || 'ace-certificates',
           eventDeactivateWorker.name || 'ace-event-deactivate',
-          treasurerWorker.name       || 'ace-treasurer',
         ];
         console.log(`[Workers] Active queues: ${workerNames.join(', ')}`);
       } catch (workerErr) {
@@ -201,7 +200,6 @@ const shutdown = async (signal) => {
     lateConverterWorker.close(),
     certificateWorker.close(),
     eventDeactivateWorker.close(),
-    treasurerWorker.close(),
   ]);
   console.log('[Workers] All workers closed.');
   process.exit(0);

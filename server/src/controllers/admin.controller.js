@@ -170,7 +170,11 @@ export const updateAdminUserRole = catchAsync(async (req, res, next) => {
 
   if (!role) return next(new AppError('Role is required.', 400));
 
-  const validRoles = ['admin', 'ebm', 'sbm', 'member'];
+  if (role === 'admin') {
+    return next(new AppError('Cannot assign admin role via API.', 403));
+  }
+
+  const validRoles = ['ebm', 'sbm', 'member'];
   if (!validRoles.includes(role)) {
     return next(new AppError(`Invalid role. Must be one of: ${validRoles.join(', ')}.`, 400));
   }

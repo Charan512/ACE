@@ -124,10 +124,6 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    isEmailVerified: {
-      type: Boolean,
-      default: false,
-    },
     otp: otpSchema,
 
     // ── Profile ─────────────────────────────────────────────
@@ -279,6 +275,13 @@ userSchema.pre('validate', function (next) {
   // 3. EBM Designation — stripped entirely per spec.
   // EBMs are identified solely by their domain and role, not a designation title.
   if (this.role === 'ebm') {
+    this.designation = undefined;
+  }
+
+  // 4. Member Enforcement
+  // Members are students — domain and designation are SBM/EBM-only fields.
+  if (this.role === 'member') {
+    this.domain      = undefined;
     this.designation = undefined;
   }
 

@@ -40,7 +40,6 @@ const sendAuthResponse = (user, statusCode, res) => {
     role: user.role,
     aceId: user.aceId ?? null,
     requiresPasswordChange: user.requiresPasswordChange,
-    isEmailVerified: user.isEmailVerified,
     branch: user.branch ?? null,
     year: user.year ?? null,
     section: user.section ?? null,

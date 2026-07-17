@@ -36,6 +36,10 @@ const eventDeactivateWorker = new Worker(
   {
     connection: createRedisConnection(),
     concurrency: 5,
+    settings: {
+      stalledInterval: 300000,
+      maxStalledCount: 1,
+    }
   }
 );
 

@@ -123,7 +123,7 @@ export const downloadCertificate = catchAsync(async (req, res, next) => {
  * Returns a low-res JPEG preview of the certificate (no eligibility check).
  * Used by the Admin Command Center to preview templates during setup.
  *
- * Admin-only: requires restrictTo('admin', 'body_member').
+ * Admin-only: requires restrictTo('admin').
  */
 export const previewCertificate = catchAsync(async (req, res, next) => {
   const { eventId } = req.params;

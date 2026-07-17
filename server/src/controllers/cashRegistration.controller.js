@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
 import Event from '../models/Event.js';
 import Registration from '../models/Registration.js';
+import Transaction from '../models/Transaction.js';
 import User from '../models/User.js';
 import catchAsync from '../utils/catchAsync.js';
 import AppError from '../utils/appError.js';
-import { emailQueue, treasurerQueue } from '../queues/index.js';
-import redis from '../config/redis.js';
+import { emailQueue } from '../queues/index.js';
 
 /**
  * Helper: create an AdminNotification for a cash registration.
@@ -14,47 +14,9 @@ import redis from '../config/redis.js';
 const createCashNotification = async (payload) => {
   const AdminNotification = (await import('../models/AdminNotification.js')).default;
   await AdminNotification.create(payload);
-
-  try {
-    await triggerTreasurerDigest();
-  } catch (err) {
-    console.error('[TreasurerDigest] Failed to trigger digest job:', err);
-  }
 };
 
-/**
- * Implements the 2.5-hour debounce (10-hour ceiling) Treasurer Digest logic.
- */
-const triggerTreasurerDigest = async () => {
-  const now = Date.now();
-  const DEBOUNCE_MS = 2.5 * 60 * 60 * 1000;
-  const CEILING_MS = 10 * 60 * 60 * 1000;
 
-  let firstTriggerStr = await redis.get('treasurer_digest_first_trigger');
-  let firstTrigger = firstTriggerStr ? parseInt(firstTriggerStr, 10) : now;
-
-  if (!firstTriggerStr) {
-    await redis.set('treasurer_digest_first_trigger', now);
-  }
-
-  let delay = DEBOUNCE_MS;
-  // If delaying by another 2.5h exceeds the 10h ceiling, cap the delay
-  if (now + delay - firstTrigger > CEILING_MS) {
-    delay = Math.max(0, firstTrigger + CEILING_MS - now);
-  }
-
-  // Remove existing delayed job if it exists so we can push it back by another 2.5h
-  const existingJob = await treasurerQueue.getJob('treasurer-digest');
-  if (existingJob) {
-    const state = await existingJob.getState();
-    if (state === 'delayed' || state === 'waiting') {
-      await existingJob.remove();
-    }
-  }
-
-  // Enqueue the new debounced job
-  await treasurerQueue.add('sendDigest', {}, { jobId: 'treasurer-digest', delay });
-};
 
 // ─────────────────────────────────────────────────────────────
 // CASH REGISTER — MEMBER
@@ -145,6 +107,20 @@ export const cashRegisterMember = catchAsync(async (req, res, next) => {
       { session }
     );
 
+    const [transaction] = await Transaction.create(
+      [{
+        merchantTransactionId: `CASH_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        user: member._id,
+        event: event._id,
+        amount: event.memberFee * 100,
+        tier: 'member',
+        status: 'paid',
+        processedAt: new Date(),
+        customResponses: customResponses || {},
+      }],
+      { session }
+    );
+
     await Event.findByIdAndUpdate(
       eventId,
       { $inc: { registeredCount: 1 } },
@@ -158,6 +134,7 @@ export const cashRegisterMember = catchAsync(async (req, res, next) => {
         $push: {
           'history.attendedEvents': {
             event:      event._id,
+            transaction: transaction._id,
             attendedAt: new Date(),
           },
         },
@@ -282,6 +259,22 @@ export const cashRegisterGuest = catchAsync(async (req, res, next) => {
         amount:           event.standardFee,
         cashRegisteredBy: req.user._id,
         customResponses:  customResponses || {},
+      }],
+      { session }
+    );
+
+    await Transaction.create(
+      [{
+        merchantTransactionId: `CASH_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        user: null,
+        guestEmail: email.toLowerCase(),
+        guestName: name,
+        event: event._id,
+        amount: event.standardFee * 100,
+        tier: 'non_member',
+        status: 'paid',
+        processedAt: new Date(),
+        customResponses: customResponses || {},
       }],
       { session }
     );

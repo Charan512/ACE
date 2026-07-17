@@ -383,42 +383,38 @@ export const toggleRegistration = catchAsync(async (req, res, next) => {
  *  2. Delete all Transaction documents referencing this event
  *  3. Delete the Event document itself
  */
-export const deleteEvent = async (req, res, next) => {
-  try {
-    const { id } = req.params;
+export const deleteEvent = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
 
-    const event = await Event.findById(id);
-    if (!event) {
-      return next(new AppError('Event not found.', 404));
-    }
-
-    // Cascade: remove all linked registrations
-    const Registration = (await import('../models/Registration.js')).default;
-    const Transaction  = (await import('../models/Transaction.js')).default;
-
-    const regResult = await Registration.deleteMany({ eventId: id });
-    const txnResult = await Transaction.deleteMany({ eventId: id });
-
-    // Delete the event itself
-    await Event.findByIdAndDelete(id);
-
-    console.log(
-      `[EventController] ${req.user.email} deleted event "${event.title}". ` +
-      `Cascade: ${regResult.deletedCount} registrations, ${txnResult.deletedCount} transactions removed.`
-    );
-
-    res.status(200).json({
-      success: true,
-      message: `Event "${event.title}" and all its data have been permanently deleted.`,
-      data: {
-        deletedRegistrations: regResult.deletedCount,
-        deletedTransactions:  txnResult.deletedCount,
-      },
-    });
-  } catch (err) {
-    next(err);
+  const event = await Event.findById(id);
+  if (!event) {
+    return next(new AppError('Event not found.', 404));
   }
-};
+
+  // Cascade: remove all linked registrations
+  const Registration = (await import('../models/Registration.js')).default;
+  const Transaction  = (await import('../models/Transaction.js')).default;
+
+  const regResult = await Registration.deleteMany({ eventId: id });
+  const txnResult = await Transaction.deleteMany({ eventId: id });
+
+  // Delete the event itself
+  await Event.findByIdAndDelete(id);
+
+  console.log(
+    `[EventController] ${req.user.email} deleted event "${event.title}". ` +
+    `Cascade: ${regResult.deletedCount} registrations, ${txnResult.deletedCount} transactions removed.`
+  );
+
+  res.status(200).json({
+    success: true,
+    message: `Event "${event.title}" and all its data have been permanently deleted.`,
+    data: {
+      deletedRegistrations: regResult.deletedCount,
+      deletedTransactions:  txnResult.deletedCount,
+    },
+  });
+});
 
 /**
  * PATCH /api/admin/events/:id/publish

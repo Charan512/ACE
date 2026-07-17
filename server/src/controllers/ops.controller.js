@@ -17,8 +17,8 @@ const ACE_ID_REGEX = /^26ACE\d{4}$/;
  * @access  Private (Admin / EBM / SBM)
  */
 export const getOpsEvents = catchAsync(async (req, res, _next) => {
-  const events = await Event.find({ isActive: true })
-    .select('title description eventDate venue registeredCount maxCapacity memberFee standardFee customFormFields')
+  const events = await Event.find({ status: 'published' })
+    .select('title description eventDate venue registeredCount maxCapacity memberFee standardFee customFormFields bannerImage posterImage isActive')
     .sort({ eventDate: 1 });
 
   res.status(200).json({
