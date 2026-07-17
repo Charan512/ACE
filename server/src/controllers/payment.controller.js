@@ -396,6 +396,13 @@ export const createMembershipOrder = catchAsync(async (req, res, next) => {
     return next(new AppError('An ACE membership already exists for this email.', 409));
   }
 
+  if (collegeId) {
+    const existingCollegeId = await User.findOne({ registrationNumber: collegeId });
+    if (existingCollegeId) {
+      return next(new AppError(`An ACE membership already exists for the registration number: ${collegeId}.`, 409));
+    }
+  }
+
   // Read membership fee dynamically from AppSettings (DB) — not hardcoded
   const settings   = await AppSettings.getSingleton();
   let totalAmount  = settings.membershipFee * 100; // Convert INR to paise
@@ -704,6 +711,10 @@ export const devConfirm = catchAsync(async (req, res, next) => {
     res.status(200).json({ success: true, message: 'Dev confirmation successful.' });
   } catch (err) {
     console.error(`[DevConfirm] Error: ${err.message}`);
+    // Catch duplicate key errors specifically and format them
+    if (err.code === 11000) {
+      return next(new AppError(`Duplicate key error: A user with this ${Object.keys(err.keyValue)[0]} already exists.`, 409));
+    }
     return next(new AppError('Dev confirm failed. See server logs.', 500));
   }
 });
