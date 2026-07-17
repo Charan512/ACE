@@ -76,22 +76,32 @@ const GuestPortal = () => {
               </div>
             </div>
 
-            <div className="absolute top-20 right-0 transform rotate-12 hidden lg:block">
-              <div className="brutal-badge brutal-pink px-4 py-2 text-white text-sm -rotate-6 flex items-center gap-2">
-                <Code2 className="w-4 h-4" /> EST. 2006
-              </div>
+
+            <div className="mb-6">
+              <p className="brutal-badge brutal-white inline-block px-4 py-1.5 text-xs sm:text-sm text-slate-900">
+                SRKR Engineering College · CSE
+              </p>
             </div>
 
-            <p className="brutal-badge brutal-white px-4 py-1.5 text-xs sm:text-sm text-slate-900 mb-6">
-              SRKR Engineering College · CSE
-            </p>
-
-            <h1 className="text-6xl sm:text-7xl md:text-8xl font-black tracking-tighter leading-[0.95] text-slate-900 mb-8 uppercase">
-              Ignite <br className="hidden sm:block lg:hidden" />
-              <span style={{ WebkitTextStroke: '3px #0f172a', WebkitTextFillColor: '#e11d48' }}>Innovation.</span>
+            <h1 className="font-black tracking-tighter text-slate-900 uppercase mb-8 leading-[0.92]">
+              <span className="flex flex-wrap items-center gap-4 text-4xl sm:text-5xl md:text-6xl">
+                <span>Association of</span>
+                <div className="brutal-badge brutal-pink px-4 py-1.5 text-white text-xs sm:text-base rotate-7 flex items-center gap-2 tracking-normal font-bold align-middle mt-2">
+                  <Code2 className="w-4 h-4 sm:w-5 sm:h-5" /> EST. 2006
+                </div>
+              </span>
+              <span
+                className="block text-4xl sm:text-5xl md:text-6xl"
+                style={{ WebkitTextStroke: '3px #0f172a', WebkitTextFillColor: '#e11d48' }}
+              >
+                Computer Engineers.
+              </span>
             </h1>
 
-            <p className="text-lg sm:text-2xl text-slate-800 font-bold max-w-lg leading-relaxed mb-10 border-l-4 border-slate-900 pl-4 ml-2">
+            <p
+              className="text-base sm:text-xl font-bold max-w-md leading-relaxed mb-10 border-l-4 border-slate-900 pl-4 ml-2 text-slate-950"
+              style={{ textShadow: '0 1px 4px rgba(255,255,255,0.9), 0 -1px 4px rgba(255,255,255,0.9)' }}
+            >
               The official student club to ignite passion on tech and guide innovations.
             </p>
 

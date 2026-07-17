@@ -196,6 +196,7 @@ const handlePaymentSuccess = async (merchantTransactionId, phonePeTransactionId,
           year:                    transaction.customResponses?.year,
           section:                 transaction.customResponses?.section,
           registrationNumber:      transaction.customResponses?.collegeId,
+          studentType:             transaction.customResponses?.studentType || 'regular',
         });
         await newUser.save({ session });
 

@@ -94,7 +94,23 @@ const userSchema = new mongoose.Schema(
       type: String,
       unique: true,
       sparse: true, // Guests do not have an aceId — sparse allows multiple nulls
-      match: [/^26ACE\d{4}$/, 'ACE ID must be in format 26ACE0001.'],
+      match: [/^\d{2}ACE\d{4}$/, 'ACE ID must be in format 26ACE0001.'],
+    },
+    /**
+     * Membership type — determines the length of the student's program:
+     *   'regular' → 4-year B.Tech (joins Year 1, graduates Year 4)
+     *   'lateral'  → 3-year lateral entry (joins Year 2, graduates Year 4)
+     *
+     * Used by the April academicRolloverWorker to compute the graduation year
+     * and permanently delete members who have completed their program.
+     */
+    studentType: {
+      type:    String,
+      enum: {
+        values:   ['regular', 'lateral'],
+        message:  '{VALUE} is not a valid student type. Must be regular or lateral.',
+      },
+      default: 'regular',
     },
     role: {
       type: String,
@@ -318,13 +334,32 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
  * This is the ONLY safe pattern — a read + write in two steps would
  * create a race condition under concurrent registrations.
  *
- * Format: 26ACE0001, 26ACE0002, ... 26ACE9999
+ * Academic Year Logic:
+ *   The prefix is a 2-digit year representing the academic year the member joined.
+ *   Academic year starts on April 1st (month index 3).
+ *   - Any registration between April 1, 2026 and March 31, 2027 → prefix "26"
+ *   - Any registration between April 1, 2027 and March 31, 2028 → prefix "27"
+ *   This means the prefix does NOT need a cron job — it auto-increments based on date.
+ *
+ *   A separate counter is maintained per academic year (e.g., aceId_26, aceId_27)
+ *   so the sequence resets to 0001 each year automatically.
+ *
+ * Format: 26ACE0001, 26ACE0002, ..., 27ACE0001, 27ACE0002
  *
  * @returns {Promise<string>} e.g., "26ACE0042"
  */
 userSchema.statics.generateAceId = async function () {
+  // Determine current academic year (April 1 cutoff)
+  const now   = new Date();
+  const month = now.getMonth(); // 0 = Jan, 3 = April
+  const year  = now.getFullYear();
+  // If we're in Jan–Mar, the academic year is still the previous calendar year
+  const academicYear = month >= 3 ? year : year - 1;
+  const yearPrefix   = String(academicYear).slice(-2); // e.g., 2026 → "26"
+  const counterId    = `aceId_${yearPrefix}`;           // e.g., "aceId_26"
+
   const counter = await Counter.findOneAndUpdate(
-    { _id: 'aceId' },
+    { _id: counterId },
     { $inc: { seq: 1 } },
     {
       new: true,       // Return the document AFTER the increment
@@ -335,7 +370,7 @@ userSchema.statics.generateAceId = async function () {
 
   // Zero-pad to 4 digits: 1 → "0001", 42 → "0042"
   const paddedSeq = String(counter.seq).padStart(4, '0');
-  return `26ACE${paddedSeq}`;
+  return `${yearPrefix}ACE${paddedSeq}`;
 };
 
 const User = mongoose.model('User', userSchema);

@@ -29,13 +29,14 @@ const createMembershipNotification = async (payload) => {
  *
  * Body:
  *   {
- *     name:       string (required)
- *     email:      string (required)
- *     phone?:     string
- *     gender?:    string
- *     branch?:    string
- *     year?:      string
- *     collegeId?: string
+ *     name:         string (required)
+ *     email:        string (required)
+ *     phone?:       string
+ *     gender?:      string
+ *     branch?:      string
+ *     year?:        string
+ *     collegeId?:   string
+ *     studentType?: 'regular' | 'lateral'  (defaults to 'regular')
  *   }
  *
  * On success:
@@ -46,7 +47,7 @@ const createMembershipNotification = async (payload) => {
  *   5. Returns the new user's aceId + membership fee charged
  */
 export const cashRegisterMembership = catchAsync(async (req, res, next) => {
-  const { name, email, phone, branch, year } = req.body;
+  const { name, email, phone, branch, year, studentType } = req.body;
 
   if (!name || !email) {
     return next(new AppError('name and email are required for membership registration.', 400));
@@ -88,9 +89,10 @@ export const cashRegisterMembership = catchAsync(async (req, res, next) => {
           aceId,
           role:                    'member',
           requiresPasswordChange:  true,
-          phone:                   phone   || undefined,
-          branch:                  branch  || undefined,
-          year:                    year    ? Number(year) : undefined,
+          phone:                   phone       || undefined,
+          branch:                  branch      || undefined,
+          year:                    year        ? Number(year) : undefined,
+          studentType:             studentType || 'regular',
           // Track that this membership was registered via cash by ops staff
           membershipPaymentMethod: 'cash',
           membershipRegisteredBy:  req.user._id,

@@ -20,6 +20,7 @@ import emailWorker           from './workers/emailWorker.js';
 import lateConverterWorker   from './workers/lateConverterWorker.js';
 import certificateWorker     from './workers/certificateWorker.js';
 import eventDeactivateWorker from './workers/eventDeactivateWorker.js';
+import academicRolloverWorker from './workers/academicRolloverWorker.js';
 
 
 // Route imports (activated progressively per phase)
@@ -171,10 +172,11 @@ const startServer = async () => {
         // Workers are already imported above; importing them registers their
         // BullMQ Worker instances. Log confirmation here.
         const workerNames = [
-          emailWorker.name           || 'ace-email',
-          lateConverterWorker.name   || 'ace-late-converter',
-          certificateWorker.name     || 'ace-certificates',
-          eventDeactivateWorker.name || 'ace-event-deactivate',
+          emailWorker.name             || 'ace-email',
+          lateConverterWorker.name     || 'ace-late-converter',
+          certificateWorker.name       || 'ace-certificates',
+          eventDeactivateWorker.name   || 'ace-event-deactivate',
+          academicRolloverWorker.name  || 'ace-academic-rollover',
         ];
         console.log(`[Workers] Active queues: ${workerNames.join(', ')}`);
       } catch (workerErr) {
@@ -200,6 +202,7 @@ const shutdown = async (signal) => {
     lateConverterWorker.close(),
     certificateWorker.close(),
     eventDeactivateWorker.close(),
+    academicRolloverWorker.close(),
   ]);
   console.log('[Workers] All workers closed.');
   process.exit(0);

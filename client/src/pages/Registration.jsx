@@ -11,7 +11,8 @@ const Registration = () => {
     gender: '',
     branch: '',
     year: '',
-    collegeId: ''
+    collegeId: '',
+    studentType: 'regular',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -268,6 +269,39 @@ const Registration = () => {
                   <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Membership Type */}
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">
+              Membership Type
+              <span className="text-slate-400 font-normal text-xs ml-2">(Select your program entry type)</span>
+            </label>
+            <div className="flex gap-3">
+              {[
+                { value: 'regular', label: 'Regular (4-year B.Tech)' },
+                { value: 'lateral', label: 'Lateral Entry (3-year)' },
+              ].map(option => (
+                <label
+                  key={option.value}
+                  className={`flex-1 flex items-center justify-center py-[9px] rounded-xl border cursor-pointer transition-all text-sm shadow-sm ${
+                    formData.studentType === option.value
+                      ? 'border-primary bg-blue-50 text-primary font-bold shadow-blue-100'
+                      : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 bg-white'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="studentType"
+                    value={option.value}
+                    checked={formData.studentType === option.value}
+                    onChange={handleChange}
+                    className="hidden"
+                  />
+                  {option.label}
+                </label>
+              ))}
             </div>
           </div>
 
