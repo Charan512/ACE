@@ -189,18 +189,15 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
     return next(new AppError('Please provide your email address.', 400));
   }
 
-  const genericSuccess = () =>
-    res.status(200).json({
-      success: true,
-      message: 'If an account with that email exists, an OTP has been sent.',
-    });
-
-  // ── 1. Find user — silent fail to prevent enumeration ─────
+  // ── 1. Find user ─────
   const searchEmail = email.toLowerCase().trim();
   const user = await User.findOne({
     $or: [{ email: searchEmail }, { personalEmail: searchEmail }]
   });
-  if (!user) return genericSuccess();
+  
+  if (!user) {
+    return next(new AppError('No account found with that email address. Please check and try again.', 404));
+  }
 
   // ── 2. 60-second debounce rate limit ──────────────────────
   const debounceSeconds = parseInt(process.env.OTP_DEBOUNCE_SECONDS, 10) || 60;
@@ -244,7 +241,10 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
 
   console.log(`[AuthController] OTP queued for ${targetEmail}. Expires in ${expiryMinutes}min.`);
 
-  return genericSuccess();
+  return res.status(200).json({
+    success: true,
+    message: 'OTP has been successfully sent to your email.'
+  });
 });
 
 /**
