@@ -272,16 +272,16 @@ const Registration = () => {
             </div>
           </div>
 
-          {/* Membership Type */}
+          {/* Admission Type */}
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-2">
-              Membership Type
+              Admission Type
               <span className="text-slate-400 font-normal text-xs ml-2">(Select your program entry type)</span>
             </label>
             <div className="flex gap-3">
               {[
-                { value: 'regular', label: 'Regular (4-year B.Tech)' },
-                { value: 'lateral', label: 'Lateral Entry (3-year)' },
+                { value: 'regular', label: 'Regular' },
+                { value: 'lateral', label: 'Lateral' },
               ].map(option => (
                 <label
                   key={option.value}
