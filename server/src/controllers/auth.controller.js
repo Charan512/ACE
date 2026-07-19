@@ -196,7 +196,10 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
     });
 
   // ── 1. Find user — silent fail to prevent enumeration ─────
-  const user = await User.findOne({ email: email.toLowerCase().trim() });
+  const searchEmail = email.toLowerCase().trim();
+  const user = await User.findOne({
+    $or: [{ email: searchEmail }, { personalEmail: searchEmail }]
+  });
   if (!user) return genericSuccess();
 
   // ── 2. 60-second debounce rate limit ──────────────────────
@@ -232,12 +235,14 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   // ── 6. Enqueue OTP email via BullMQ (never use setTimeout) ─
+  const targetEmail = user.personalEmail || user.email;
+  
   await emailQueue.add('otpEmail', {
-    email: user.email,
+    email: targetEmail,
     otp: rawOtp, // Worker embeds raw OTP into email body
   });
 
-  console.log(`[AuthController] OTP queued for ${user.email}. Expires in ${expiryMinutes}min.`);
+  console.log(`[AuthController] OTP queued for ${targetEmail}. Expires in ${expiryMinutes}min.`);
 
   return genericSuccess();
 });

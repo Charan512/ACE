@@ -45,7 +45,7 @@ const Login = () => {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12 sm:px-6 lg:px-8 overflow-hidden">
+    <div className="relative flex min-h-screen items-center justify-center bg-slate-50 px-4 pt-32 pb-12 sm:px-6 lg:px-8 overflow-hidden">
 
       {/* Decorative Background Icons */}
       <div className="absolute top-10 left-10 text-slate-200/50 -rotate-12 pointer-events-none">

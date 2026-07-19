@@ -69,7 +69,7 @@ const ForcePasswordChange = () => {
 
   if (success) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12 overflow-hidden">
+      <div className="relative flex min-h-screen items-center justify-center bg-slate-50 px-4 pt-32 pb-12 overflow-hidden">
         <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-100 p-8 sm:p-10 text-center">
           <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="w-8 h-8" />
@@ -84,7 +84,7 @@ const ForcePasswordChange = () => {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12 sm:px-6 lg:px-8 overflow-hidden">
+    <div className="relative flex min-h-screen items-center justify-center bg-slate-50 px-4 pt-32 pb-12 sm:px-6 lg:px-8 overflow-hidden">
       
       {/* Background decoration */}
       <div className="absolute top-1/4 left-1/4 text-slate-200/40 pointer-events-none -rotate-12">
