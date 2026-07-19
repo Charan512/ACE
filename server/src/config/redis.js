@@ -1,7 +1,7 @@
 import { Redis } from 'ioredis';
 
 /**
- * Redis connection factory for ACE ERP.
+ * Redis connection factory for ACE Web Portal.
  *
  * Requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to be set.
  * Crashes at startup if either is missing — no silent fallback to localhost.

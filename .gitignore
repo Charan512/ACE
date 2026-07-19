@@ -1,5 +1,5 @@
 # ============================================================
-# ACE ERP — Comprehensive .gitignore
+# ACE Web Portal — Comprehensive .gitignore
 # ============================================================
 # Structure: /server (Express/Node) + /client (React/Vite)
 # Each service owns its own .env — never store secrets at root.

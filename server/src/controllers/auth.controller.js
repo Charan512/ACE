@@ -275,8 +275,9 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   }
 
   // ── 1. Find user with a valid (non-expired) OTP ───────────
+  const searchEmail = email.toLowerCase().trim();
   const user = await User.findOne({
-    email: email.toLowerCase().trim(),
+    $or: [{ email: searchEmail }, { personalEmail: searchEmail }],
     'otp.expiresAt': { $gt: new Date() }, // OTP must not be expired
   }).select('+password');
 

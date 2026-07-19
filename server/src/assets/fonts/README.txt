@@ -1,7 +1,7 @@
 // Placeholder — place your font files here for certificate rendering.
 // Supported formats: .ttf, .otf
 //
-// Recommended fonts for ACE ERP certificates:
+// Recommended fonts for ACE Web Portal certificates:
 //   JetBrainsMono-Bold.ttf          → member IDs and data fields
 //   PlusJakartaSans-Bold.ttf        → recipient names and headings
 //   PlusJakartaSans-Regular.ttf     → body text

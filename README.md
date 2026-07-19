@@ -1,4 +1,4 @@
-# ACE ERP
+# ACE Web Portal
 Platform for the **Association of Computer Engineers (ACE)**.  
 Built on the MERN stack (MongoDB, Express, React, Node.js), powered by PhonePe PG v1, BullMQ + Redis, and a zero-storage headless canvas certificate engine.
 
@@ -300,7 +300,7 @@ The repository includes a [`render.yaml`](file:///Users/sriramcharannalla/Projec
    | `MONGO_URI` | MongoDB Atlas → Connect → Drivers |
    | `REDIS_URL` | Upstash dashboard → `rediss://` URL |
    | `BREVO_API_KEY` | Brevo dashboard → API Keys |
-   | `EMAIL_FROM` | e.g. `ACE ERP <noreply@yourdomain.com>` |
+   | `EMAIL_FROM` | e.g. `ACE Web Portal <noreply@yourdomain.com>` |
    | `PHONEPE_MERCHANT_ID` | PhonePe merchant dashboard |
    | `PHONEPE_SALT_KEY` | PhonePe merchant dashboard |
    | `CLIENT_URL` | Your deployed frontend URL (e.g. Vercel) |
@@ -311,7 +311,7 @@ The repository includes a [`render.yaml`](file:///Users/sriramcharannalla/Projec
 7. Verify the deployment by hitting the health endpoint:
    ```
    GET https://<your-render-url>/api/health
-   → { "success": true, "message": "ACE ERP Server is operational." }
+   → { "success": true, "message": "ACE Web Portal Server is operational." }
    ```
 
 > **Note on BullMQ workers:** Workers (email, late converter) are co-located inside the Express process on the same Render web service. Render's `SIGTERM` is handled gracefully — workers complete in-flight jobs before shutdown.

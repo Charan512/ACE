@@ -1,7 +1,7 @@
 {
-  "name": "ace-erp-server",
+  "name": "ace-web-portal-server",
   "version": "1.0.0",
-  "description": "ACE ERP — Express/Node.js Backend",
+  "description": "ACE Web Portal — Express/Node.js Backend",
   "main": "src/index.js",
   "type": "module",
   "scripts": {

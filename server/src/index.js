@@ -1,5 +1,5 @@
 // ============================================================
-// ACE ERP — Server Entry Point
+// ACE Web Portal — Server Entry Point
 // ============================================================
 import 'dotenv/config';
 import express from 'express';
@@ -90,7 +90,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // ── Health Check ─────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
-  res.status(200).json({ success: true, message: 'ACE ERP Server is operational.' });
+  res.status(200).json({ success: true, message: 'ACE Web Portal Server is operational.' });
 });
 
 // ── Route Registration ───────────────────────────────────────
@@ -165,7 +165,7 @@ const startServer = async () => {
     await connectDB();
 
     app.listen(PORT, () => {
-      console.log(`\n[Server] ACE ERP running on port ${PORT} [${process.env.NODE_ENV}]`);
+      console.log(`\n[Server] ACE Web Portal running on port ${PORT} [${process.env.NODE_ENV}]`);
 
       // Start BullMQ workers AFTER the server is listening.
       // They connect to Redis independently — a Redis failure here logs a warning

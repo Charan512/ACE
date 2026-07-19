@@ -1,5 +1,5 @@
 /**
- * ACE ERP — Custom Application Error
+ * ACE Web Portal — Custom Application Error
  *
  * Extends the native Error with an HTTP statusCode and an `isOperational` flag.
  * Operational errors (e.g., 404, 400) are expected and safe to expose to clients.

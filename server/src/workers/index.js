@@ -8,7 +8,7 @@ import './certificateWorker.js';
 import './eventDeactivateWorker.js';
 
 /**
- * ACE ERP — Background Worker Entry Point
+ * ACE Web Portal — Background Worker Entry Point
  *
  * This file is meant to be run as a separate Node process (e.g. `node src/workers/index.js`)
  * in production. BullMQ workers should not share the Express event loop to prevent

@@ -1,4 +1,4 @@
-# render.yaml — ACE ERP Render Deployment Configuration
+# render.yaml — ACE Web Portal Render Deployment Configuration
 # ---------------------------------------------------------
 # This file defines how Render builds and runs your backend.
 # Commit this to your repository. Render reads it automatically
@@ -9,7 +9,7 @@
 
 services:
   - type: web
-    name: ace-erp-backend
+    name: ace-web-portal-backend
     runtime: node
     region: singapore          # Change to: oregon | frankfurt | ohio — pick closest to your users
     plan: free                 # Change to: starter | standard when ready to scale
@@ -56,7 +56,7 @@ services:
         sync: false             # Set in Render dashboard → Resend API key (re_xxxx)
 
       - key: EMAIL_FROM
-        sync: false             # e.g. "ACE ERP <noreply@yourdomain.com>"
+        sync: false             # e.g. "ACE Web Portal <noreply@yourdomain.com>"
 
       - key: R2_ACCOUNT_ID
         sync: false

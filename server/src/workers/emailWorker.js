@@ -155,11 +155,11 @@ const emailWorker = new Worker(
 
         await sendEmail({
           to:      email,
-          subject: 'ACE ERP — Your OTP for Password Reset',
+          subject: 'ACE Web Portal — Your OTP for Password Reset',
           html: `
             <div style="font-family:sans-serif;background:#0B0F19;padding:32px;color:#f1f5f9;">
               <div style="max-width:480px;margin:0 auto;background:#111827;border:1px solid #1e293b;border-radius:4px;padding:32px;">
-                <p style="color:#94a3b8;margin:0 0 16px;">Your ACE ERP password reset OTP:</p>
+                <p style="color:#94a3b8;margin:0 0 16px;">Your ACE Web Portal password reset OTP:</p>
                 <code style="display:block;background:#020617;border:1px solid #1e293b;padding:14px 20px;
                   font-size:28px;letter-spacing:0.3em;color:#00d4ff;font-family:monospace;text-align:center;
                   border-radius:2px;margin:0 0 16px;">${otp}</code>
@@ -427,7 +427,7 @@ function buildDefaultCertEmailHtml({ name, eventTitle, eventDate, resourcesHtml 
           ${resourcesHtml}
         </div>
         <div style="padding:16px 32px;border-top:1px solid #1e293b;font-size:12px;color:#475569;text-align:center;">
-          This is an automated message from ACE ERP. Do not reply to this email.
+          This is an automated message from ACE Web Portal. Do not reply to this email.
         </div>
       </div>
     </div>
