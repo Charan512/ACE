@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   User, Phone, BookOpen, Hash, GraduationCap, Building,
   CheckCircle2, AlertTriangle, Loader2, ShieldCheck, UserCog,
-  ChevronDown, Camera, X, Edit3, Lock, Users, Trash2
+  ChevronDown, Camera, X, Edit3, Lock, Users, Trash2, Mail
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import BlurText from '../components/react-bits/BlurText';

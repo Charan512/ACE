@@ -47,7 +47,13 @@ const ForcePasswordChange = () => {
       
       // Delay navigation slightly so the user reads the success message
       setTimeout(() => {
-        navigate('/member/dashboard', { replace: true });
+        if (user.role === 'admin') {
+          navigate('/admin', { replace: true });
+        } else if (user.role === 'ebm' || user.role === 'sbm') {
+          navigate('/ops', { replace: true });
+        } else {
+          navigate('/member/dashboard', { replace: true });
+        }
       }, 1500);
     } catch (err) {
       setError(

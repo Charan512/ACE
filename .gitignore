@@ -71,3 +71,4 @@ dump.rdb
 *.md
 !README.md
 scripts/
+*.csv
