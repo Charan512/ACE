@@ -45,6 +45,8 @@ if (process.env.NODE_ENV === 'production' && (process.env.JWT_SECRET.length < 32
 }
 
 const app = express();
+app.set('trust proxy', 1); // Trust Render's reverse proxy for accurate IP rate limiting
+
 const PORT = process.env.PORT || 5001;
 
 // ── Security Middleware ──────────────────────────────────────
