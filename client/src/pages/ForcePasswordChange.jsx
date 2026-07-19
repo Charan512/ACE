@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, KeyRound, ShieldAlert, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Lock, KeyRound, ShieldAlert, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 
 const ForcePasswordChange = () => {
@@ -10,6 +10,9 @@ const ForcePasswordChange = () => {
   const [isLoading, setIsLoading]             = useState(false);
   const [error, setError]                     = useState(null);
   const [success, setSuccess]                 = useState(false);
+  const [showCurrent, setShowCurrent]         = useState(false);
+  const [showNew, setShowNew]                 = useState(false);
+  const [showConfirm, setShowConfirm]         = useState(false);
 
   const navigate = useNavigate();
   const changePassword = useAuthStore((state) => state.changePassword);
@@ -42,7 +45,7 @@ const ForcePasswordChange = () => {
       // ── API Submission ────────────────────────────────────────
       // store.changePassword will POST /auth/change-password,
       // update Zustand, sync localstorage, and return user payload.
-      await changePassword(currentPassword, newPassword);
+      const user = await changePassword(currentPassword, newPassword);
       setSuccess(true);
       
       // Delay navigation slightly so the user reads the success message
@@ -117,14 +120,22 @@ const ForcePasswordChange = () => {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
               <input
                 id="current-password"
-                type="password"
+                type={showCurrent ? "text" : "password"}
                 required
-                className="input-modern pl-12 w-full font-mono"
+                className="input-modern pl-12 pr-12 w-full font-mono"
                 placeholder="Enter temporary password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 disabled={isLoading}
               />
+              <button
+                type="button"
+                onClick={() => setShowCurrent(!showCurrent)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                tabIndex="-1"
+              >
+                {showCurrent ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
           </div>
 
@@ -137,14 +148,22 @@ const ForcePasswordChange = () => {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
               <input
                 id="new-password"
-                type="password"
+                type={showNew ? "text" : "password"}
                 required
-                className="input-modern pl-12 w-full font-mono"
+                className="input-modern pl-12 pr-12 w-full font-mono"
                 placeholder="At least 8 characters"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 disabled={isLoading}
               />
+              <button
+                type="button"
+                onClick={() => setShowNew(!showNew)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                tabIndex="-1"
+              >
+                {showNew ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
           </div>
 
@@ -157,14 +176,22 @@ const ForcePasswordChange = () => {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
               <input
                 id="confirm-password"
-                type="password"
+                type={showConfirm ? "text" : "password"}
                 required
-                className="input-modern pl-12 w-full font-mono"
+                className="input-modern pl-12 pr-12 w-full font-mono"
                 placeholder="Confirm your new password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={isLoading}
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                tabIndex="-1"
+              >
+                {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
           </div>
 
