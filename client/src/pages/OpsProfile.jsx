@@ -80,6 +80,7 @@ const OpsProfile = () => {
     registrationNumber: user?.registrationNumber || '',
     gender:             user?.gender             || '',
     linkedin:           user?.linkedin           || '',
+    personalEmail:      user?.personalEmail      || '',
   });
   
   const [saving, setSaving]         = useState(false);
@@ -99,6 +100,7 @@ const OpsProfile = () => {
     registrationNumber: false,
     gender: false,
     linkedin: false,
+    personalEmail: false,
   });
 
   const setField = (field) => (e) =>
@@ -124,6 +126,7 @@ const OpsProfile = () => {
         registrationNumber: user?.registrationNumber || '',
         gender:             user?.gender             || '',
         linkedin:           user?.linkedin           || '',
+        personalEmail:      user?.personalEmail      || '',
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -152,6 +155,7 @@ const OpsProfile = () => {
       registrationNumber: user?.registrationNumber || '',
       gender:             user?.gender             || '',
       linkedin:           user?.linkedin           || '',
+      personalEmail:      user?.personalEmail      || '',
     });
     setIsEditing(false);
   };
@@ -170,6 +174,7 @@ const OpsProfile = () => {
         registrationNumber: formData.registrationNumber || undefined,
         gender:             formData.gender             || undefined,
         linkedin:           formData.linkedin           || undefined,
+        personalEmail:      formData.personalEmail      || undefined,
       });
       showToast('Profile updated successfully.', 'success');
       setIsEditing(false);
@@ -613,6 +618,24 @@ const OpsProfile = () => {
               </p>
             </div>
             <div className="p-5 sm:p-6 grid grid-cols-1 gap-x-5 gap-y-3">
+              <Field isEbm={isEbm}
+                label="Personal Email (For Public Profile)" 
+                icon={Mail} 
+                focused={focusState.personalEmail} 
+                hasValue={!!formData.personalEmail}
+              >
+                <input
+                  type="email"
+                  placeholder={focusState.personalEmail ? "you@example.com" : ""}
+                  value={formData.personalEmail}
+                  onChange={setField('personalEmail')}
+                  disabled={!isEditing}
+                  style={inputStyle(focusState.personalEmail, !isEditing, isEbm)}
+                  onFocus={() => setFocusState(prev => ({ ...prev, personalEmail: true }))}
+                  onBlur={() => setFocusState(prev => ({ ...prev, personalEmail: false }))}
+                />
+              </Field>
+
               <Field isEbm={isEbm}
                 label="LinkedIn URL" 
                 icon={LinkedinIcon} 

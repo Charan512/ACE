@@ -141,7 +141,7 @@ const TeamDirectory = () => {
                           <LinkedinIcon className="w-4 h-4" />
                         </a>
                       )}
-                      <a href={`mailto:${member.email || '#'}`} className="clay-btn clay-btn-white w-10 h-10 p-0 flex items-center justify-center text-slate-700 hover:text-slate-900">
+                      <a href={`mailto:${member.personalEmail || member.email || '#'}`} className="clay-btn clay-btn-white w-10 h-10 p-0 flex items-center justify-center text-slate-700 hover:text-slate-900">
                         <Mail className="w-4 h-4" />
                       </a>
                     </div>

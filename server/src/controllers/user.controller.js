@@ -73,7 +73,7 @@ export const updateMe = catchAsync(async (req, res, next) => {
   //                     would let any SBM escalate their own Treasurer access.
   //   • registrationNumber — set at membership creation; should not change
   //   • role, aceId, email — never self-writable
-  const { name, phone, branch, year, section, gender, profilePhoto, linkedin } = req.body;
+  const { name, phone, branch, year, section, gender, profilePhoto, linkedin, personalEmail } = req.body;
 
   const updates = {};
   if (name !== undefined) updates.name = name;
@@ -84,6 +84,7 @@ export const updateMe = catchAsync(async (req, res, next) => {
   if (gender !== undefined) updates.gender = gender;
   if (profilePhoto !== undefined) updates.profilePhoto = profilePhoto;
   if (linkedin !== undefined) updates.linkedin = linkedin;
+  if (personalEmail !== undefined) updates.personalEmail = personalEmail;
 
   // Run Mongoose schema validation on updates
   const user = await User.findByIdAndUpdate(
@@ -109,7 +110,7 @@ export const updateMe = catchAsync(async (req, res, next) => {
  */
 export const getTeamMembers = catchAsync(async (req, res, next) => {
   const team = await User.find({ role: { $in: ['ebm', 'sbm'] } })
-    .select('name role branch domain designation profilePhoto linkedin')
+    .select('name role branch domain designation profilePhoto linkedin personalEmail email')
     .sort({ role: 1, name: 1 }); // Sort by role, then name
 
   res.status(200).json({

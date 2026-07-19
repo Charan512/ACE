@@ -53,7 +53,7 @@ const Navbar = () => {
   return (
     <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
       <nav
-        className="clay-card clay-slate px-6 py-3 flex items-center justify-between w-full max-w-5xl"
+        className="bg-white border-[3px] border-slate-900 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] px-6 py-3 flex items-center justify-between w-full max-w-5xl"
         onMouseLeave={() => setHoveredPath(null)}
       >
 
@@ -72,12 +72,12 @@ const Navbar = () => {
                 key={link.name}
                 href={link.path}
                 onMouseEnter={() => setHoveredPath(link.path)}
-                className="relative px-4 py-2 text-sm font-black text-slate-600 hover:text-slate-950 transition-colors z-10"
+                className="relative px-4 py-2 text-sm font-black text-slate-700 hover:text-slate-900 transition-colors z-10"
               >
                 {isActive && (
                   <motion.div
                     layoutId="nav-pill"
-                    className="absolute inset-0 bg-yellow-100 border-2 border-yellow-200 rounded-full -z-10"
+                    className="absolute inset-0 bg-yellow-300 border-2 border-slate-900 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] -z-10"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -89,10 +89,10 @@ const Navbar = () => {
 
         {/* Actions */}
         <div className="flex items-center gap-4">
-          <Link to="/team" className="clay-btn clay-btn-ghost text-sm py-2 px-5 hidden sm:block">
+          <Link to="/team" className="font-bold text-slate-800 hover:text-slate-950 transition-colors hidden sm:block">
             Team
           </Link>
-          <Link to="/login" className="clay-btn clay-btn-blue text-sm py-2 px-5">
+          <Link to="/login" className="bg-primary text-slate-900 font-bold border-2 border-slate-900 px-5 py-2 hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all">
             Member Login
           </Link>
         </div>

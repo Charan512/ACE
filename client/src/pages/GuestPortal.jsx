@@ -64,13 +64,13 @@ const GuestPortal = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-7xl mx-auto px-6 w-full relative z-10 pt-32 pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-7xl mx-auto px-6 w-full relative z-10 pt-40 lg:pt-48 pb-20">
 
           {/* Left Column */}
-          <div className="lg:col-span-7 text-center lg:text-left flex flex-col items-center lg:items-start relative">
+          <div className="lg:col-span-7 text-center lg:text-left flex flex-col items-center lg:items-start relative pt-8 lg:pt-0">
 
             {/* Playful Stickers */}
-            <div className="absolute -top-10 -left-6 transform -rotate-12 hidden md:block">
+            <div className="absolute -top-12 left-0 lg:-top-10 lg:-left-6 transform -rotate-12 hidden md:block">
               <div className="brutal-badge brutal-yellow px-4 py-2 text-amber-900 text-sm rotate-3 flex items-center gap-2">
                 <Star className="w-4 h-4" /> TRENDING
               </div>
@@ -83,16 +83,16 @@ const GuestPortal = () => {
               </p>
             </div>
 
-            <h1 className="font-black tracking-tighter text-slate-900 uppercase mb-8 leading-[0.92]">
-              <span className="flex flex-wrap items-center gap-4 text-4xl sm:text-5xl md:text-6xl">
+            <h1 className="font-black tracking-tighter text-slate-900 uppercase mb-8 leading-[1.1] md:leading-[0.92]">
+              <span className="flex flex-wrap items-center justify-center lg:justify-start gap-4 text-4xl sm:text-5xl lg:text-6xl">
                 <span>Association of</span>
-                <div className="brutal-badge brutal-pink px-4 py-1.5 text-white text-xs sm:text-base rotate-7 flex items-center gap-2 tracking-normal font-bold align-middle mt-2">
+                <div className="brutal-badge brutal-pink px-3 py-1 text-white text-xs sm:text-sm lg:text-base rotate-7 flex items-center gap-1.5 tracking-normal font-bold align-middle mt-1 lg:mt-2">
                   <Code2 className="w-4 h-4 sm:w-5 sm:h-5" /> EST. 2006
                 </div>
               </span>
               <span
-                className="block text-4xl sm:text-5xl md:text-6xl"
-                style={{ WebkitTextStroke: '3px #0f172a', WebkitTextFillColor: '#e11d48' }}
+                className="block text-4xl sm:text-5xl lg:text-6xl mt-2 lg:mt-0"
+                style={{ WebkitTextStroke: '2px #0f172a', WebkitTextFillColor: '#e11d48' }}
               >
                 Computer Engineers.
               </span>
