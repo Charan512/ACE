@@ -9,8 +9,8 @@ import BlurText from '../components/react-bits/BlurText';
 // ── Shared Styles removed — using clay-card from index.css now
 
 // ── Stat Block ────────────────────────────────────────────────
-const StatBlock = ({ value, label, valueColor = 'text-indigo-400', bgClass = 'border-indigo-500/30 bg-indigo-500/5' }) => (
-  <div className={`bg-[#0B0F19]/80 backdrop-blur-xl border ${bgClass} shadow-2xl rounded-3xl flex-1 p-4 sm:p-5`}>
+const StatBlock = ({ value, label, valueColor = 'text-cyan-400', bgClass = 'border-cyan-500/30 bg-cyan-500/5' }) => (
+  <div className={`bg-[#0B0F19]/80 backdrop-blur-xl border ${bgClass} shadow-[0_0_15px_rgba(0,229,255,0.05)] rounded-3xl flex-1 p-4 sm:p-5`}>
     <p className={`text-2xl sm:text-3xl font-mono font-black ${valueColor}`}>
       {value}
     </p>
@@ -33,7 +33,7 @@ const CertCell = ({ ev, downloadingId, onDownload, mobile = false }) => {
   if (!ev.hasCertificate) {
     return (
       <span
-        className={`inline-flex items-center justify-center gap-1 glass-badge bg-amber-500/10 border border-amber-500/30 px-2.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-amber-400 whitespace-nowrap ${mobile ? 'w-full' : ''}`}
+        className={`inline-flex items-center justify-center gap-1 glass-badge bg-cyan-500/10 border border-cyan-500/30 px-2.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-cyan-400 whitespace-nowrap ${mobile ? 'w-full' : ''}`}
         title="The admin has not released a certificate for this event yet."
       >
         <Clock className="w-3 h-3 shrink-0 mr-1" />
@@ -47,7 +47,7 @@ const CertCell = ({ ev, downloadingId, onDownload, mobile = false }) => {
       id={`dl-cert-${ev._id}`}
       onClick={() => onDownload(ev._id, ev.title)}
       disabled={isDownloading}
-      className={`glass-btn bg-emerald-500 hover:bg-emerald-400 border border-emerald-400 text-slate-900 flex items-center justify-center rounded-xl text-[10px] font-mono font-bold uppercase tracking-wide whitespace-nowrap shadow-[0_0_15px_rgba(16,185,129,0.3)] ${mobile ? 'w-full min-h-[44px] gap-2 px-4 py-2' : 'gap-2 px-3 py-1.5 min-h-[36px]'}`}
+      className={`glass-btn bg-[#00ffa3] hover:bg-[#39FF14] border border-[#00ffa3] text-[#0B0F19] flex items-center justify-center rounded-xl text-[10px] font-mono font-bold uppercase tracking-wide whitespace-nowrap shadow-[0_0_15px_rgba(0,255,163,0.3)] ${mobile ? 'w-full min-h-[44px] gap-2 px-4 py-2' : 'gap-2 px-3 py-1.5 min-h-[36px]'}`}
     >
       {isDownloading
         ? <><Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" /> Generating…</>
@@ -63,8 +63,8 @@ const ResourcesModal = ({ event, onClose }) => (
     <div className="bg-[#0B0F19]/95 border border-white/10 rounded-3xl shadow-2xl w-full max-w-md">
       <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
-            <BookOpen className="w-4 h-4 text-indigo-400" />
+          <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
+            <BookOpen className="w-4 h-4 text-cyan-400" />
           </div>
           <div>
             <p className="text-sm font-bold text-slate-100 leading-tight">{event.title}</p>
@@ -78,14 +78,14 @@ const ResourcesModal = ({ event, onClose }) => (
       <div className="p-6 space-y-2 max-h-[55vh] overflow-y-auto">
         {event.resources.map((res, i) => (
           <a key={i} href={res.url} target="_blank" rel="noopener noreferrer"
-            className="flex items-center justify-between gap-3 p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-500/30 rounded-2xl transition-all group">
+            className="flex items-center justify-between gap-3 p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/30 rounded-2xl transition-all group">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
-                <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
+                <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
               </div>
-              <span className="text-sm font-semibold text-slate-200 truncate group-hover:text-indigo-300 transition-colors">{res.name}</span>
+              <span className="text-sm font-semibold text-slate-200 truncate group-hover:text-cyan-300 transition-colors">{res.name}</span>
             </div>
-            <ExternalLink className="w-4 h-4 text-slate-500 group-hover:text-indigo-400 transition-colors shrink-0" />
+            <ExternalLink className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors shrink-0" />
           </a>
         ))}
       </div>
@@ -206,7 +206,7 @@ const MemberHistory = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-8 sm:mb-10">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-white/5 border border-white/10">
-              <History className="w-5 h-5 text-indigo-400" />
+              <History className="w-5 h-5 text-cyan-400" />
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight flex">
@@ -227,7 +227,7 @@ const MemberHistory = () => {
                   onClick={() => setFilter(f)}
                   className={`px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all duration-200 ${
                     filter === f 
-                      ? 'bg-indigo-500/20 text-indigo-300 shadow-sm border border-indigo-500/30' 
+                      ? 'bg-cyan-500/20 text-cyan-300 shadow-sm border border-cyan-500/30' 
                       : 'text-slate-400 hover:text-slate-200 hover:bg-white/10'
                   }`}
                 >
@@ -241,7 +241,7 @@ const MemberHistory = () => {
         {/* ── States ──────────────────────────────────────── */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
-            <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#818cf8' }} />
+            <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#00e5ff' }} />
             <p className="text-xs font-mono" style={{ color: '#475569' }}>Loading your vault…</p>
           </div>
         ) : error ? (
@@ -273,10 +273,10 @@ const MemberHistory = () => {
           <>
             {/* ── Stats Row ───────────────────────────────── */}
             <div className="flex gap-4 mb-8">
-              <StatBlock value={filteredVault.length} label={filter === 'all' ? "Events Attended" : filter === 'active' ? "Active Events" : "Completed Events"} valueColor="text-indigo-400" bgClass="border-indigo-500/30 bg-indigo-500/5" />
-              <StatBlock value={certCount} label="Certs Available" valueColor="text-emerald-400" bgClass="border-emerald-500/30 bg-emerald-500/5" />
+              <StatBlock value={filteredVault.length} label={filter === 'all' ? "Events Attended" : filter === 'active' ? "Active Events" : "Completed Events"} valueColor="text-cyan-400" bgClass="border-cyan-500/30 bg-cyan-500/5" />
+              <StatBlock value={certCount} label="Certs Available" valueColor="text-[#00ffa3]" bgClass="border-[#00ffa3]/30 bg-[#00ffa3]/5" />
               {pendingCertCount > 0 && (
-                <StatBlock value={pendingCertCount} label="Certs Pending" valueColor="text-amber-400" bgClass="border-amber-500/30 bg-amber-500/5" />
+                <StatBlock value={pendingCertCount} label="Certs Pending" valueColor="text-cyan-400" bgClass="border-cyan-500/30 bg-cyan-500/5" />
               )}
             </div>
 
@@ -326,7 +326,7 @@ const MemberHistory = () => {
                             <button
                               id={`resources-btn-${ev._id}`}
                               onClick={() => setResourcesModalEvent(ev)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-mono font-bold uppercase tracking-wide bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20 transition-colors whitespace-nowrap"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-mono font-bold uppercase tracking-wide bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20 transition-colors whitespace-nowrap"
                             >
                               <BookOpen className="w-3 h-3" />
                               {ev.resources.length} {ev.resources.length === 1 ? 'Resource' : 'Resources'}
@@ -369,7 +369,7 @@ const MemberHistory = () => {
                     <button
                       id={`resources-mobile-btn-${ev._id}`}
                       onClick={() => setResourcesModalEvent(ev)}
-                      className="w-full flex items-center justify-center gap-2 mb-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wide bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20 transition-colors"
+                      className="w-full flex items-center justify-center gap-2 mb-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wide bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20 transition-colors"
                     >
                       <BookOpen className="w-3.5 h-3.5" />
                       View {ev.resources.length} {ev.resources.length === 1 ? 'Resource' : 'Resources'}

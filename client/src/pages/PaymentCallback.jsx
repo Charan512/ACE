@@ -34,7 +34,7 @@ const PaymentCallback = () => {
       try {
         // In DEV mode: call dev-confirm FIRST so the transaction is confirmed
         // in the DB, then the verify call below will correctly read SUCCESS.
-        if (import.meta.env.DEV && searchParams.get('mode') === 'dev') {
+        if (searchParams.get('mode') === 'dev') {
           await api.post('/payments/dev-confirm', {
             merchantTransactionId: txnId,
             purpose: searchParams.get('purpose'),

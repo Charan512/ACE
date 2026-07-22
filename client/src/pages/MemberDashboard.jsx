@@ -15,9 +15,9 @@ const Toast = ({ toast }) => {
   if (!toast) return null;
   const ok = toast.type === 'success';
   return (
-    <div className={`fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 z-50 flex items-center gap-3 p-4 rounded-2xl glass-panel ${ok ? 'bg-orange-500/20 border-orange-400/50' : 'bg-rose-500/20 border-rose-400/50'}`}>
-      {ok ? <CheckCircle className="w-5 h-5 shrink-0 text-orange-600" /> : <XCircle className="w-5 h-5 shrink-0 text-rose-600" />}
-      <p className={`text-sm font-bold uppercase tracking-widest leading-snug ${ok ? 'text-orange-200' : 'text-rose-900'}`}>
+    <div className={`fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 z-50 flex items-center gap-3 p-4 rounded-2xl glass-panel ${ok ? 'bg-[#00ffa3]/20 border-[#00ffa3]/50' : 'bg-rose-500/20 border-rose-400/50'}`}>
+      {ok ? <CheckCircle className="w-5 h-5 shrink-0 text-[#00ffa3]" /> : <XCircle className="w-5 h-5 shrink-0 text-rose-600" />}
+      <p className={`text-sm font-bold uppercase tracking-widest leading-snug ${ok ? 'text-[#00ffa3]' : 'text-rose-900'}`}>
         {toast.message}
       </p>
     </div>
@@ -27,7 +27,7 @@ const Toast = ({ toast }) => {
 // ── Section Label ─────────────────────────────────────────────
 const SectionLabel = ({ children }) => (
   <div className="flex items-center gap-4 mb-6">
-    <p className="text-xs font-bold uppercase tracking-widest text-amber-200 glass-badge px-4 py-2 rounded-full border border-orange-500/20 bg-orange-900/20">
+    <p className="text-xs font-bold uppercase tracking-widest text-cyan-200 glass-badge px-4 py-2 rounded-full border border-cyan-500/20 bg-cyan-900/20">
       {children}
     </p>
     <div className="flex-1 h-[1px] bg-white/20" />
@@ -54,17 +54,17 @@ const SmartFastPassModal = ({ event, onSubmit, onCancel, isSubmitting }) => {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-      style={{ backgroundColor: 'rgba(15, 15, 15, 0.6)' }}
+      style={{ backgroundColor: 'rgba(11, 15, 25, 0.6)' }}
     >
-      <div className="bg-[#111214]/95 backdrop-blur-xl border border-white/10 shadow-2xl w-full max-w-md p-0 overflow-hidden rounded-3xl">
+      <div className="bg-[#0B0F19]/95 backdrop-blur-xl border border-cyan-500/10 shadow-[0_0_30px_rgba(0,229,255,0.1)] w-full max-w-md p-0 overflow-hidden rounded-3xl">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-white/10 bg-white/5">
           <div className="flex items-center gap-3">
-            <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-2">
-              <Zap className="w-4 h-4 text-orange-400" />
+            <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-2">
+              <Zap className="w-4 h-4 text-cyan-400" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-amber-200 uppercase tracking-widest">Smart Fast-Pass</p>
+              <p className="text-[10px] font-bold text-cyan-200 uppercase tracking-widest">Smart Fast-Pass</p>
               <p className="text-sm font-bold text-slate-100 leading-tight truncate max-w-[220px]">{event.title}</p>
             </div>
           </div>
@@ -75,7 +75,7 @@ const SmartFastPassModal = ({ event, onSubmit, onCancel, isSubmitting }) => {
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <p className="text-xs text-amber-200 glass-badge bg-orange-500/10 border-orange-500/20 rounded-xl px-3 py-2 font-bold uppercase tracking-wider text-center">
+          <p className="text-xs text-cyan-200 glass-badge bg-cyan-500/10 border-cyan-500/20 rounded-xl px-3 py-2 font-bold uppercase tracking-wider text-center">
             Required details missing from profile.
           </p>
 
@@ -91,7 +91,7 @@ const SmartFastPassModal = ({ event, onSubmit, onCancel, isSubmitting }) => {
                   value={responses[field.fieldName]}
                   onChange={e => handleChange(field.fieldName, e.target.value)}
                   required={field.required}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                 >
                   <option value="">Select an option...</option>
                   {field.options?.map(opt => (
@@ -105,7 +105,7 @@ const SmartFastPassModal = ({ event, onSubmit, onCancel, isSubmitting }) => {
                       key={opt}
                       className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium cursor-pointer transition-all ${
                         responses[field.fieldName] === opt
-                          ? 'glass-btn bg-orange-500/20 text-orange-200 border-orange-500/30 shadow-md'
+                          ? 'glass-btn bg-cyan-500/20 text-cyan-200 border-cyan-500/30 shadow-md'
                           : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10'
                       }`}
                     >
@@ -128,7 +128,7 @@ const SmartFastPassModal = ({ event, onSubmit, onCancel, isSubmitting }) => {
                   onChange={e => handleChange(field.fieldName, e.target.value)}
                   required={field.required}
                   placeholder={`Enter ${field.fieldName}…`}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                 />
               )}
             </div>
@@ -145,7 +145,7 @@ const SmartFastPassModal = ({ event, onSubmit, onCancel, isSubmitting }) => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 glass-btn bg-orange-500/20 border-orange-500/30 rounded-xl py-3 text-sm font-bold uppercase tracking-widest text-orange-200 flex items-center justify-center gap-2 hover:bg-orange-500/30"
+              className="flex-1 glass-btn bg-cyan-500/20 border-cyan-500/30 rounded-xl py-3 text-sm font-bold uppercase tracking-widest text-cyan-200 flex items-center justify-center gap-2 hover:bg-cyan-500/30"
             >
               {isSubmitting
                 ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -295,75 +295,78 @@ const MemberDashboard = () => {
     <div 
       className="min-h-screen pb-10"
       style={{
-        backgroundColor: '#111214',
-        backgroundImage: 'radial-gradient(rgba(200, 117, 51, 0.08) 1.5px, transparent 1.5px), radial-gradient(rgba(200, 117, 51, 0.05) 1.5px, transparent 1.5px)',
+        backgroundColor: '#0B0F19',
+        backgroundImage: 'radial-gradient(rgba(0, 229, 255, 0.08) 1.5px, transparent 1.5px), radial-gradient(rgba(0, 229, 255, 0.05) 1.5px, transparent 1.5px)',
         backgroundSize: '40px 40px',
         backgroundPosition: '0 0, 20px 20px'
       }}
     >
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-12">
 
+        {/* Profile incomplete warning */}
+        {!isProfileComplete() && (
+          <div className="bg-[#0B0F19]/80 backdrop-blur-xl border border-cyan-500/50 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 p-5 sm:p-6 shadow-[0_0_30px_rgba(0,229,255,0.15)] relative overflow-hidden">
+            {/* Cyan glow */}
+            <div className="absolute inset-0 bg-cyan-500/5 pointer-events-none" />
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="bg-cyan-500/20 p-3 rounded-full border border-cyan-500/30">
+                <AlertTriangle className="w-6 h-6 shrink-0 text-cyan-400" />
+              </div>
+              <p className="text-sm font-bold text-cyan-100 uppercase tracking-widest leading-snug">
+                Profile incomplete<br/><span className="text-xs font-medium text-cyan-300">Required for event registration &amp; certificates</span>
+              </p>
+            </div>
+            <Link
+              to="/member/profile"
+              className="glass-btn bg-cyan-500/20 border-cyan-500/30 hover:bg-cyan-500/30 text-cyan-200 rounded-xl font-bold px-6 py-3 w-full sm:w-auto text-center uppercase tracking-widest shrink-0 transition-colors"
+            >
+              Complete profile
+            </Link>
+          </div>
+        )}
+
+        {/* ── Member Card ───────────────────────────────────── */}
+        <section>
+          <SectionLabel>Member Card</SectionLabel>
+          {user && <DigitalIdCard user={user} />}
+        </section>
+
         {/* ── Welcome Hero ──────────────────────────────────── */}
         <section>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 bg-[#111214]/80 backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(200,117,51,0.05)] p-6 sm:p-8 rounded-3xl relative overflow-hidden">
-            <div className="relative z-10">
-              <div className="inline-block glass-badge bg-orange-500/10 border border-orange-500/20 text-amber-200 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 bg-[#0B0F19]/90 backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(0,229,255,0.05)] p-6 sm:p-8 rounded-3xl relative overflow-hidden">
+            <div className="relative z-10 flex flex-col">
+              <div className="inline-block glass-badge bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-4 w-fit shadow-[0_0_15px_rgba(0,229,255,0.2)]">
                 {greeting}
               </div>
-              <h1 className="text-5xl sm:text-6xl md:text-7xl font-heading font-bold text-slate-100 tracking-tight leading-none flex">
-                <BlurText text={`${firstName},`} delay={100} animateBy="words" direction="top" />
+              <h1 className="text-5xl sm:text-6xl md:text-7xl font-heading font-black text-slate-100 tracking-tight leading-none flex drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                <BlurText text={`${firstName}.sys`} delay={100} animateBy="words" direction="top" />
               </h1>
             </div>
 
             {/* Stats chips */}
             {!loading && (
               <div className="flex sm:flex-col items-start sm:items-end gap-3 relative z-10 mt-6 sm:mt-0">
-                <span className="glass-badge bg-white/5 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest px-4 py-2 text-slate-200 inline-flex items-center shadow-sm">
-                  <CalendarDays className="w-4 h-4 mr-2 text-orange-400" />
-                  {vaultEvents.length} event{vaultEvents.length !== 1 ? 's' : ''}
+                <span className="glass-badge bg-[#0B0F19]/50 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest px-4 py-2 text-slate-200 inline-flex items-center shadow-sm backdrop-blur-md">
+                  <Zap className="w-4 h-4 mr-2 text-cyan-400" />
+                  {vaultEvents.length} event{vaultEvents.length !== 1 ? 's' : ''} logged
                 </span>
                 {certsAvailable > 0 && (
-                  <span className="glass-badge bg-orange-500/10 border border-orange-400/30 rounded-full text-[10px] font-bold uppercase tracking-widest px-4 py-2 text-orange-200 inline-flex items-center shadow-sm">
-                    <Award className="w-4 h-4 mr-2 text-orange-400" />
-                    {certsAvailable} cert{certsAvailable !== 1 ? 's' : ''}
+                  <span className="glass-badge bg-[#00ffa3]/10 border border-[#00ffa3]/30 rounded-full text-[10px] font-bold uppercase tracking-widest px-4 py-2 text-[#00ffa3] inline-flex items-center shadow-[0_0_15px_rgba(0,255,163,0.15)] backdrop-blur-md">
+                    <Award className="w-4 h-4 mr-2 text-[#00ffa3]" />
+                    {certsAvailable} cert{certsAvailable !== 1 ? 's' : ''} acquired
                   </span>
                 )}
               </div>
             )}
             
             {/* Decorative background element */}
-            <div className="absolute -bottom-10 -right-10 text-white pointer-events-none select-none blur-[2px]">
-              <Sparkles className="w-48 h-48 opacity-30" />
+            <div className="absolute top-1/2 -translate-y-1/2 right-10 text-white pointer-events-none select-none">
+              <div className="w-32 h-32 rounded-full border-[1px] border-cyan-500/10 flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 animate-[spin_20s_linear_infinite]">
+                <div className="w-24 h-24 rounded-full border-[1px] border-cyan-500/20 border-dashed" />
+              </div>
+              <div className="w-64 h-64 bg-cyan-500/5 rounded-full blur-[80px] absolute right-[-50px] top-1/2 -translate-y-1/2" />
             </div>
           </div>
-
-          {/* Profile incomplete warning */}
-          {!isProfileComplete() && (
-            <div className="bg-[#111214]/80 backdrop-blur-xl border border-amber-500/30 rounded-3xl mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 p-5 sm:p-6 shadow-[0_0_30px_rgba(245,158,11,0.05)] relative overflow-hidden">
-              {/* Amber glow */}
-              <div className="absolute inset-0 bg-amber-500/5 pointer-events-none" />
-              <div className="flex items-center gap-4 relative z-10">
-                <div className="bg-amber-500/20 p-3 rounded-full border border-amber-500/30">
-                  <AlertTriangle className="w-6 h-6 shrink-0 text-amber-400" />
-                </div>
-                <p className="text-sm font-bold text-amber-100 uppercase tracking-widest leading-snug">
-                  Profile incomplete<br/><span className="text-xs font-medium text-amber-300">Required for event registration &amp; certificates</span>
-                </p>
-              </div>
-              <Link
-                to="/member/profile"
-                className="glass-btn bg-amber-500/20 border-amber-500/30 hover:bg-amber-500/30 text-amber-200 rounded-xl font-bold px-6 py-3 w-full sm:w-auto text-center uppercase tracking-widest shrink-0 transition-colors"
-              >
-                Complete profile
-              </Link>
-            </div>
-          )}
-        </section>
-
-        {/* ── Member Card ───────────────────────────────────── */}
-        <section>
-          <SectionLabel>Member Card</SectionLabel>
-          {user && <DigitalIdCard user={user} />}
         </section>
 
         {/* ── Available Events ──────────────────────────────── */}
@@ -372,11 +375,11 @@ const MemberDashboard = () => {
           <div className="flex flex-col gap-6">
             {loading ? (
               <div className="flex justify-center items-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
+                <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
               </div>
             ) : upcomingEvents.length === 0 ? (
-              <div className="bg-[#111214]/80 backdrop-blur-xl border border-white/10 rounded-3xl w-full flex flex-col items-center justify-center py-16 gap-4 text-slate-300">
-                <CalendarDays className="w-12 h-12 mb-2 text-orange-400/80" />
+              <div className="bg-[#0B0F19]/80 backdrop-blur-xl border border-white/10 rounded-3xl w-full flex flex-col items-center justify-center py-16 gap-4 text-slate-300 shadow-[0_0_20px_rgba(0,229,255,0.02)]">
+                <CalendarDays className="w-12 h-12 mb-2 text-cyan-500/50" />
                 <p className="text-sm font-bold uppercase tracking-widest text-slate-400">No events available right now.</p>
               </div>
             ) : (
@@ -412,24 +415,24 @@ const MemberDashboard = () => {
 
       {/* ── Incomplete Profile Modal ───────────────────────── */}
       {showIncompleteModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md" style={{ backgroundColor: 'rgba(15,15,15,0.6)' }}>
-          <div className="bg-[#111214]/95 backdrop-blur-xl border border-amber-500/30 max-w-sm w-full p-8 relative rounded-3xl shadow-2xl text-center">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md" style={{ backgroundColor: 'rgba(11,15,25,0.8)' }}>
+          <div className="bg-[#0B0F19]/95 backdrop-blur-xl border border-cyan-500/30 max-w-sm w-full p-8 relative rounded-3xl shadow-[0_0_50px_rgba(0,229,255,0.15)] text-center">
             <button 
               onClick={() => setShowIncompleteModal(false)}
               className="absolute top-4 right-4 glass-btn border-white/10 bg-white/5 p-2 rounded-xl text-slate-300 hover:text-white"
             >
               <X className="w-5 h-5" />
             </button>
-            <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <AlertTriangle className="w-8 h-8 text-amber-400" />
+            <div className="w-16 h-16 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
+              <AlertTriangle className="w-8 h-8 text-cyan-400" />
             </div>
-            <h3 className="text-2xl font-bold text-amber-100 tracking-tight mb-3">Profile Incomplete</h3>
-            <p className="text-sm text-amber-200/80 mb-8 font-medium">
+            <h3 className="text-2xl font-bold text-cyan-100 tracking-tight mb-3 font-heading">Profile Incomplete</h3>
+            <p className="text-sm text-cyan-200/80 mb-8 font-medium">
               Your profile is missing required information (like your Section or Roll Number). Please complete your profile before registering for events.
             </p>
             <a 
               href="/member/profile" 
-              className="w-full glass-btn bg-amber-500/20 border-amber-500/30 hover:bg-amber-500/30 rounded-xl py-4 font-bold uppercase tracking-widest flex items-center justify-center gap-2 text-amber-200"
+              className="w-full glass-btn bg-cyan-500/20 border-cyan-500/40 hover:bg-cyan-500/30 rounded-xl py-4 font-bold uppercase tracking-widest flex items-center justify-center gap-2 text-cyan-200 transition-colors shadow-[0_0_20px_rgba(0,229,255,0.15)]"
             >
               Update Profile Now
             </a>

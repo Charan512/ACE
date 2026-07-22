@@ -42,14 +42,14 @@ const MemberLayout = () => {
   const firstName = user?.name?.split(' ')[0] || 'Member';
 
   return (
-    <div className="min-h-screen text-slate-300 flex flex-col selection:bg-orange-500/30 relative bg-[#111214]">
+    <div className="min-h-screen text-slate-300 flex flex-col selection:bg-cyan-500/30 relative bg-[#0B0F19]">
       <div className="fixed inset-0 z-0 opacity-90 overflow-hidden">
         <SoftAurora
           speed={0.6}
           scale={1.5}
           brightness={0.8}
-          color1="#111214"
-          color2="#3a1e0b"
+          color1="#0B0F19"
+          color2="#003b46"
           noiseFrequency={2.5}
           noiseAmplitude={1.0}
           bandHeight={0.5}
@@ -90,7 +90,7 @@ const MemberLayout = () => {
           {/* Logo (Desktop) */}
           <div className="hidden md:flex flex-col leading-tight">
             <span className="text-sm font-black text-slate-100 tracking-tight">ACE Portal</span>
-            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-orange-400">member.access</span>
+            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-cyan-400">member.access</span>
           </div>
 
           {/* Desktop Segmented Nav Links */}
@@ -102,7 +102,7 @@ const MemberLayout = () => {
                 className={({ isActive }) =>
                   `relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm transition-all duration-300 overflow-hidden
                   ${isActive
-                    ? 'text-orange-400 font-bold bg-white/10 shadow-sm ring-1 ring-white/20'
+                    ? 'text-cyan-400 font-bold bg-white/10 shadow-sm ring-1 ring-white/20'
                     : 'text-slate-400 font-medium hover:text-slate-200 hover:bg-white/5'
                   }`
                 }
@@ -140,16 +140,16 @@ const MemberLayout = () => {
             >
               {/* Desktop Name/Role Text */}
               <div className="hidden md:flex flex-col items-end">
-                <span className="text-sm font-bold text-slate-200 tracking-tight group-hover:text-orange-400 transition-colors">{firstName}</span>
+                <span className="text-sm font-bold text-slate-200 tracking-tight group-hover:text-cyan-400 transition-colors">{firstName}</span>
                 {roleLabel !== 'Member' && (
-                  <span className="text-[10px] font-mono font-bold tracking-widest text-orange-400 uppercase">{roleLabel}</span>
+                  <span className="text-[10px] font-mono font-bold tracking-widest text-cyan-400 uppercase">{roleLabel}</span>
                 )}
               </div>
               
               {/* Profile Avatar Image */}
               <div
                 className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl font-mono font-black text-white shrink-0 shadow-inner group-hover:scale-[1.05] transition-transform duration-300 overflow-hidden"
-                style={{ background: user?.profilePhoto ? '#111214' : 'linear-gradient(135deg, #ea580c, #f59e0b)' }}
+                style={{ background: user?.profilePhoto ? '#0B0F19' : 'linear-gradient(135deg, #00e5ff, #0284c7)' }}
               >
                 {user?.profilePhoto ? (
                   <img src={user.profilePhoto} alt={firstName} className="w-full h-full object-cover" />
@@ -157,7 +157,7 @@ const MemberLayout = () => {
                   initials
                 )}
                 {/* Subtle indicator ring on hover */}
-                <div className="absolute inset-0 rounded-xl ring-2 ring-orange-400 ring-offset-2 ring-offset-[#111214] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                <div className="absolute inset-0 rounded-xl ring-2 ring-cyan-400 ring-offset-2 ring-offset-[#0B0F19] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               </div>
             </NavLink>
 
@@ -185,11 +185,11 @@ const MemberLayout = () => {
           MOBILE MENU DRAWER
       ────────────────────────────────────────────────────── */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex flex-col bg-[#111214]/95 backdrop-blur-xl transition-all">
+        <div className="md:hidden fixed inset-0 z-50 flex flex-col bg-[#0B0F19]/95 backdrop-blur-xl transition-all">
           <div className="flex items-center justify-between px-4 h-16 border-b border-white/10 bg-white/5">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-orange-500/10 border border-orange-500/20">
-                <Sparkles className="w-4 h-4 text-orange-400" />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-cyan-500/10 border border-cyan-500/20">
+                <Sparkles className="w-4 h-4 text-cyan-400" />
               </div>
               <span className="text-xs font-bold text-slate-100 tracking-wide">Menu</span>
             </div>
@@ -205,8 +205,8 @@ const MemberLayout = () => {
             {/* Highly Emphasized Profile Section */}
             <div className="flex flex-col items-center text-center p-6 bg-white/5 rounded-3xl border border-white/10 shadow-sm">
               <div
-                className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-mono font-black text-white mb-4 shadow-[0_0_20px_rgba(200,117,51,0.2)] overflow-hidden"
-                style={{ background: user?.profilePhoto ? '#111214' : 'linear-gradient(135deg, #ea580c, #f59e0b)' }}
+                className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-mono font-black text-white mb-4 shadow-[0_0_20px_rgba(0,229,255,0.2)] overflow-hidden"
+                style={{ background: user?.profilePhoto ? '#0B0F19' : 'linear-gradient(135deg, #00e5ff, #0284c7)' }}
               >
                 {user?.profilePhoto ? (
                   <img src={user.profilePhoto} alt={user.name} className="w-full h-full object-cover" />
@@ -216,7 +216,7 @@ const MemberLayout = () => {
               </div>
               <h2 className="text-lg font-bold text-slate-100 mb-1">{user?.name || 'User'}</h2>
               {roleLabel !== 'Member' && (
-                <span className="px-3 py-1 bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider">
+                <span className="px-3 py-1 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider">
                   {roleLabel}
                 </span>
               )}
@@ -232,7 +232,7 @@ const MemberLayout = () => {
                   className={({ isActive }) =>
                     `flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${
                       isActive
-                        ? 'bg-orange-500/10 border border-orange-500/20 text-orange-400 font-bold'
+                        ? 'bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-bold'
                         : 'bg-transparent border border-white/5 text-slate-400 font-medium hover:bg-white/5'
                     }`
                   }
